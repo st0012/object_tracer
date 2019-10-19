@@ -98,35 +98,6 @@ RSpec.describe TappingDevice::Trackable do
         ]
       )
     end
-    it "detects correct arguments" do
-      stan = Student.new("Stan", 18)
-
-      arguments = []
-
-      tap_calls_on!(stan) do |payload|
-        arguments = payload[:arguments]
-      end
-
-      stan.age = (25)
-
-      expect(arguments).to eq([[:age, 25]])
-    end
-    it "returns correct filepath and line number" do
-      stan = Student.new("Stan", 18)
-
-      filepath = ""
-      line_number = 0
-
-      tap_calls_on!(stan) do |payload|
-        filepath = payload[:filepath]
-        line_number = payload[:line_number]
-      end
-
-      stan.age
-
-      expect(filepath).to eq(__FILE__)
-      expect(line_number).to eq("125")
-    end
     it "supports multiple tappings" do
       stan = Student.new("Stan", 18)
 
@@ -156,6 +127,39 @@ RSpec.describe TappingDevice::Trackable do
       stan.alias_name
 
       expect(names).to match_array([:alias_name])
+    end
+
+    describe "yield parameters" do
+      it "detects correct arguments" do
+        stan = Student.new("Stan", 18)
+
+        arguments = []
+
+        tap_calls_on!(stan) do |payload|
+          arguments = payload[:arguments]
+        end
+
+        stan.age = (25)
+
+        expect(arguments).to eq([[:age, 25]])
+      end
+      it "returns correct filepath and line number" do
+        stan = Student.new("Stan", 18)
+
+        filepath = ""
+        line_number = 0
+
+        tap_calls_on!(stan) do |payload|
+          filepath = payload[:filepath]
+          line_number = payload[:line_number]
+        end
+
+        line_mark = __LINE__
+        stan.age
+
+        expect(filepath).to eq(__FILE__)
+        expect(line_number).to eq((line_mark+1).to_s)
+      end
     end
   end
 
