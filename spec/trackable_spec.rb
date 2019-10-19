@@ -15,6 +15,10 @@ class Student
   def age
     @age
   end
+
+  def age=(age)
+    @age = age
+  end
 end
 
 class School
@@ -69,6 +73,51 @@ RSpec.describe TappingDevice::Trackable do
       Student.foo
 
       expect(count).to eq(0)
+    end
+  end
+
+  describe "#tap_calls_on!" do
+    it "tracks method calls on the tapped object" do
+      stan = Student.new("Stan", 18)
+      jane = Student.new("Jane", 23)
+
+      calls = []
+      tap_calls_on!(stan) do |payload|
+        calls << [payload[:receiver].object_id, payload[:method_name], payload[:return_value]]
+      end
+
+      stan.name
+      stan.age
+      jane.name
+      jane.age
+
+      expect(calls).to match_array(
+        [
+          [stan.object_id, :name, "Stan"],
+          [stan.object_id, :age, 18]
+        ]
+      )
+    end
+    it "detects correct arguments" do
+      stan = Student.new("Stan", 18)
+
+      calls = []
+      tap_calls_on!(stan) do |payload|
+        calls << [
+          payload[:receiver].object_id,
+          payload[:method_name],
+          payload[:return_value],
+          payload[:arguments]
+        ]
+      end
+
+      stan.age = (25)
+
+      expect(calls).to match_array(
+        [
+          [stan.object_id, :age=, 25, [[:age, 25]]]
+        ]
+      )
     end
   end
 

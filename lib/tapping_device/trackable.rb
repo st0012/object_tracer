@@ -15,9 +15,9 @@ module TappingDevice
       track(klass, type: INITIALIZATION, condition: condition, block: block)
     end
 
-    def tap_calls!(object)
+    def tap_calls_on!(object, &block)
       condition = -> (arguments) { arguments[:receiver].object_id == object.object_id }
-      track(klass, type: CALL, condition: condition, block: block)
+      track(object, type: CALL, condition: condition, block: block)
     end
 
     def stop_tapping!(object, type: nil)
@@ -34,8 +34,7 @@ module TappingDevice
     private
 
     def track(object, type:, condition:, block:)
-      trace_point = TracePoint.new(:call) do |tp|
-        # binding.pry
+      trace_point = TracePoint.new(:return) do |tp|
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
         yield_parameters = {
           receiver: tp.self,
