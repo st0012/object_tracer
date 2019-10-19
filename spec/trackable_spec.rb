@@ -119,6 +119,20 @@ RSpec.describe TappingDevice::Trackable do
         ]
       )
     end
+    it "supports multiple tappings" do
+      stan = Student.new("Stan", 18)
+
+      count_1 = 0
+      count_2 = 0
+
+      tap_calls_on!(stan) { count_1 += 1 }
+      tap_calls_on!(stan) { count_2 -= 1 }
+
+      stan.name
+
+      expect(count_1).to eq(1)
+      expect(count_2).to eq(-1)
+    end
   end
 
   describe "#stop_tapping!" do
@@ -135,6 +149,27 @@ RSpec.describe TappingDevice::Trackable do
       Student.new("Jane", 23)
 
       expect(count).to eq(1)
+    end
+    it "stops multiple tappings" do
+      stan = Student.new("Stan", 18)
+
+      count_1 = 0
+      count_2 = 0
+
+      tap_calls_on!(stan) { count_1 += 1 }
+      tap_calls_on!(stan) { count_2 -= 1 }
+
+      stan.name
+
+      expect(count_1).to eq(1)
+      expect(count_2).to eq(-1)
+
+      stop_tapping!(stan)
+
+      stan.name
+
+      expect(count_1).to eq(1)
+      expect(count_2).to eq(-1)
     end
   end
 end
