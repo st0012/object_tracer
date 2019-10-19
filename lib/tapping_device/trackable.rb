@@ -44,7 +44,7 @@ module TappingDevice
           tp: tp
         }
 
-        yield_parameters[:trace] = caller[CALLER_START_POINT..with_trace_to] if with_trace_to
+        yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
 
         if condition.call(yield_parameters) && !exclude_from_paths.any? { |pattern| pattern.match?(filepath) } &&
           block.call(yield_parameters)
