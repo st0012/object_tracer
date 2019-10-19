@@ -133,6 +133,22 @@ RSpec.describe TappingDevice::Trackable do
       expect(count_1).to eq(1)
       expect(count_2).to eq(-1)
     end
+    it "tracks alias" do
+      c = Class.new(Student)
+      c.class_eval do
+        alias :alias_name :name
+      end
+      stan = c.new("Stan", 18)
+
+      names = []
+      tap_calls_on!(stan) do |payload|
+        names << payload[:method_name]
+      end
+
+      stan.alias_name
+
+      expect(names).to match_array([:alias_name])
+    end
   end
 
   describe "#stop_tapping!" do

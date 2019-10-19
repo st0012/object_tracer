@@ -26,7 +26,7 @@ module TappingDevice
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
         yield_parameters = {
           receiver: tp.self,
-          method_name: tp.method_id,
+          method_name: tp.callee_id,
           arguments: arguments,
           return_value: (tp.return_value rescue nil),
           filepath: tp.path,
