@@ -45,9 +45,10 @@ RSpec.describe TappingDevice::Trackable do
         count += 1
       end
 
-      Student.new("Stan", 25)
+      Student.new("Stan", 18)
+      Student.new("Jane", 23)
 
-      expect(count).to eq(1)
+      expect(count).to eq(2)
     end
     it "doesn't track School's initialization" do
       count = 0
@@ -68,6 +69,23 @@ RSpec.describe TappingDevice::Trackable do
       Student.foo
 
       expect(count).to eq(0)
+    end
+  end
+
+  describe "#stop_tapping!" do
+    it "stopps tapping" do
+      count = 0
+      tap_initialization_of!(Student) do |options|
+        count += 1
+      end
+
+      Student.new("Stan", 18)
+
+      stop_tapping!(Student)
+
+      Student.new("Jane", 23)
+
+      expect(count).to eq(1)
     end
   end
 end
