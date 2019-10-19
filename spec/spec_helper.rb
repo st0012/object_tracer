@@ -1,5 +1,6 @@
 require "bundler/setup"
 require "tapping_device"
+require "tapping_device/trackable"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
