@@ -22,7 +22,7 @@ module TappingDevice
     end
 
     alias :tap_init! :tap_initialization_of!
-    alias :tap! :tap_calls_on!
+    alias :tap_on! :tap_calls_on!
     alias :untap! :stop_tapping!
 
     private
