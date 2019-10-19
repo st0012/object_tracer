@@ -119,6 +119,22 @@ RSpec.describe TappingDevice::Trackable do
         ]
       )
     end
+    it "returns correct filepath and line number" do
+      stan = Student.new("Stan", 18)
+
+      filepath = ""
+      line_number = 0
+
+      tap_calls_on!(stan, with_trace: true) do |payload|
+        filepath = payload[:filepath]
+        line_number = payload[:line_number]
+      end
+
+      stan.age
+
+      expect(filepath).to eq(__FILE__)
+      expect(line_number).to eq("133")
+    end
     it "supports multiple tappings" do
       stan = Student.new("Stan", 18)
 

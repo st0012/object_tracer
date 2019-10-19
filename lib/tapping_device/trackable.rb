@@ -2,6 +2,7 @@ require "pry"
 module TappingDevice
   module Trackable
     TAPPING_DEVICE = :@tapping_device
+    CALLER_START_POINT = 2
 
     def tap_initialization_of!(klass, with_trace: false, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
@@ -24,19 +25,21 @@ module TappingDevice
     def track(object, with_trace:, condition:, block:)
       trace_point = TracePoint.new(:return) do |tp|
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
+        filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
+
         yield_parameters = {
           receiver: tp.self,
           method_name: tp.callee_id,
           arguments: arguments,
           return_value: (tp.return_value rescue nil),
-          filepath: tp.path,
-          line_number: tp.lineno,
+          filepath: filepath,
+          line_number: line_number,
           defined_class: tp.defined_class,
           trace: [],
           tp: tp
         }
 
-        yield_parameters[:trace] = caller[0..50] if with_trace
+        yield_parameters[:trace] = caller[CALLER_START_POINT..50] if with_trace
 
         if !condition
           block.call(yield_parameters)
