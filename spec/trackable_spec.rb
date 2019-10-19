@@ -101,23 +101,15 @@ RSpec.describe TappingDevice::Trackable do
     it "detects correct arguments" do
       stan = Student.new("Stan", 18)
 
-      calls = []
+      arguments = []
+
       tap_calls_on!(stan) do |payload|
-        calls << [
-          payload[:receiver].object_id,
-          payload[:method_name],
-          payload[:return_value],
-          payload[:arguments]
-        ]
+        arguments = payload[:arguments]
       end
 
       stan.age = (25)
 
-      expect(calls).to match_array(
-        [
-          [stan.object_id, :age=, 25, [[:age, 25]]]
-        ]
-      )
+      expect(arguments).to eq([[:age, 25]])
     end
     it "returns correct filepath and line number" do
       stan = Student.new("Stan", 18)
@@ -125,7 +117,7 @@ RSpec.describe TappingDevice::Trackable do
       filepath = ""
       line_number = 0
 
-      tap_calls_on!(stan, with_trace: true) do |payload|
+      tap_calls_on!(stan) do |payload|
         filepath = payload[:filepath]
         line_number = payload[:line_number]
       end
@@ -133,7 +125,7 @@ RSpec.describe TappingDevice::Trackable do
       stan.age
 
       expect(filepath).to eq(__FILE__)
-      expect(line_number).to eq("133")
+      expect(line_number).to eq("125")
     end
     it "supports multiple tappings" do
       stan = Student.new("Stan", 18)

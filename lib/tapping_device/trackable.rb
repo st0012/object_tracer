@@ -4,26 +4,31 @@ module TappingDevice
     TAPPING_DEVICE = :@tapping_device
     CALLER_START_POINT = 2
 
-    def tap_initialization_of!(klass, with_trace: false, &block)
+    def tap_initialization_of!(klass, options = {}, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-
-      condition = -> (arguments) { arguments[:method_name] == :initialize && arguments[:defined_class] == klass }
-      track(klass, with_trace: with_trace, condition: condition, block: block)
+      options[:condition] = -> (arguments) { arguments[:method_name] == :initialize && arguments[:defined_class] == klass }
+      options[:block] = block
+      track(klass, **options)
     end
 
-    def tap_calls_on!(object, with_trace: false, &block)
-      condition = -> (arguments) { arguments[:receiver].object_id == object.object_id }
-      track(object, with_trace: with_trace, condition: condition, block: block)
+    def tap_calls_on!(object, options = {}, &block)
+      options[:condition] = -> (arguments) { arguments[:receiver].object_id == object.object_id }
+      options[:block] = block
+      track(object, **options)
     end
 
     def stop_tapping!(object)
       get_tapping_device(object)&.each { |tp| tp.disable }
     end
 
+    alias :tap_init! :tap_initialization_of!
+    alias :tap! :tap_calls_on!
+    alias :untap! :stop_tapping!
+
     private
 
-    def track(object, with_trace:, condition:, block:)
-      trace_point = TracePoint.new(:return) do |tp|
+    def track(object, condition:, block:, with_trace_to: nil, exclude: nil)
+      trace_point = TracePoint.trace(:return) do |tp|
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
@@ -39,20 +44,11 @@ module TappingDevice
           tp: tp
         }
 
-        yield_parameters[:trace] = caller[CALLER_START_POINT..50] if with_trace
+        yield_parameters[:trace] = caller[CALLER_START_POINT..with_trace_to] if with_trace_to
 
-        if !condition
-          block.call(yield_parameters)
-        elsif condition.call(yield_parameters)
-          block.call(yield_parameters)
-        end
+        block.call(yield_parameters) if condition.call(yield_parameters)
       end
 
-      unless get_tapping_device(object)
-        object.instance_variable_set(TAPPING_DEVICE, [])
-      end
-
-      trace_point.enable
       add_tapping_device(object, trace_point)
     end
 
@@ -61,6 +57,7 @@ module TappingDevice
     end
 
     def add_tapping_device(object, trace_point)
+      object.instance_variable_set(TAPPING_DEVICE, []) unless get_tapping_device(object)
       object.instance_variable_get(TAPPING_DEVICE) << trace_point
     end
   end
