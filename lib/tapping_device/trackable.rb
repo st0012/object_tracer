@@ -29,8 +29,12 @@ module TappingDevice
 
     def track(object, condition:, block:, with_trace_to: nil, exclude_from_paths: [])
       trace_point = TracePoint.trace(:return) do |tp|
-        arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
+
+        # this needs to be placed upfront so we can exclude noise before doing more work
+        next if exclude_from_paths.any? { |pattern| pattern.match?(filepath) }
+
+        arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
         yield_parameters = {
           receiver: tp.self,
@@ -46,9 +50,7 @@ module TappingDevice
 
         yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
 
-        if condition.call(yield_parameters) && !exclude_from_paths.any? { |pattern| pattern.match?(filepath) } &&
-          block.call(yield_parameters)
-        end
+        block.call(yield_parameters) if condition.call(yield_parameters)
       end
 
       add_tapping_device(object, trace_point)
