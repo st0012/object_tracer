@@ -1,4 +1,3 @@
-require "pry"
 module TappingDevice
   module Trackable
     TAPPING_DEVICE = :@tapping_device
