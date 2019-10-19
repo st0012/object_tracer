@@ -32,7 +32,8 @@ module TappingDevice
           filepath: tp.path,
           line_number: tp.lineno,
           defined_class: tp.defined_class,
-          trace: []
+          trace: [],
+          tp: tp
         }
 
         yield_parameters[:trace] = caller[0..50] if with_trace
