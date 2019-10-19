@@ -161,6 +161,18 @@ RSpec.describe TappingDevice::Trackable do
         expect(line_number).to eq((line_mark+1).to_s)
       end
     end
+
+    describe "options: exclude_from" do
+      it "skips calls that matches the pattern" do
+      stan = Student.new("Stan", 18)
+      count = 0
+      tap_calls_on!(stan, exclude_from_paths: [/spec/]) { count += 1 }
+
+      stan.name
+
+      expect(count).to eq(0)
+      end
+    end
   end
 
   describe "#stop_tapping!" do
