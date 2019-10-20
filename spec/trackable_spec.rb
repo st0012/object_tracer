@@ -21,6 +21,8 @@ class Student
   end
 end
 
+class HighSchoolStudent < Student;end
+
 class School
   def initialize(name)
     @name = name
@@ -53,6 +55,18 @@ RSpec.describe TappingDevice::Trackable do
       Student.new("Jane", 23)
 
       expect(count).to eq(2)
+    end
+    it "can track subclass's initialization as well" do
+      count = 0
+      tap_initialization_of!(HighSchoolStudent) do |options|
+        count += 1
+      end
+
+      HighSchoolStudent.new("Stan", 18)
+
+      expect(count).to eq(1)
+
+      stop_tapping!(HighSchoolStudent)
     end
     it "doesn't track School's initialization" do
       count = 0

@@ -56,7 +56,7 @@ module TappingDevice
     end
 
     def tap_init?(klass, parameters)
-      parameters[:method_name] == :initialize && parameters[:defined_class] == klass
+      parameters[:method_name] == :initialize && parameters[:receiver].is_a?(klass)
     end
 
     def tap_on?(object, parameters)
