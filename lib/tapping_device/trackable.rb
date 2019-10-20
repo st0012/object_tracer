@@ -5,13 +5,13 @@ module TappingDevice
 
     def tap_initialization_of!(klass, options = {}, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-      options[:condition] = -> (arguments) { arguments[:method_name] == :initialize && arguments[:defined_class] == klass }
+      options[:condition] = :tap_init?
       options[:block] = block
       track(klass, **options)
     end
 
     def tap_calls_on!(object, options = {}, &block)
-      options[:condition] = -> (arguments) { arguments[:receiver].object_id == object.object_id }
+      options[:condition] = :tap_on?
       options[:block] = block
       track(object, **options)
     end
@@ -49,10 +49,18 @@ module TappingDevice
 
         yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
 
-        block.call(yield_parameters) if condition.call(yield_parameters)
+        block.call(yield_parameters) if send(condition, object, yield_parameters)
       end
 
       add_tapping_device(object, trace_point)
+    end
+
+    def tap_init?(klass, parameters)
+      parameters[:method_name] == :initialize && parameters[:defined_class] == klass
+    end
+
+    def tap_on?(object, parameters)
+      parameters[:receiver].object_id == object.object_id
     end
 
     def get_tapping_device(object)
