@@ -2,17 +2,14 @@
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
 
-`tapping_device` is a gem based on Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. This could be useful for debugging. For example, you can use it to see who calls you `Post` records
+`tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier. For example, you can use it to see who calls you `Post` records
 
 ```ruby
 class PostsController < ApplicationController
   include TappingDevice::Trackable
 
-  before_action :set_post, only: [:show, :edit, :update, :destroy]
-
-  # GET /posts/1
-  # GET /posts/1.json
   def show
+    @post = Post.find(params[:id])
     tap_on!(@post) do |payload|
       puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
     end
@@ -23,12 +20,28 @@ end
 And you can see these in log:
 
 ```
-Method: name line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
-**Don't use this on production**
+Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
+
+```ruby
+tap_assoc!(order) do |payload|
+  puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+end
+```
+
+```
+Assoc: payments line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Assoc: line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Assoc: effective_line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
+Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
+```
+
+However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don't use this on production**
 
 
 ## Installation
@@ -55,24 +68,26 @@ $ gem install tapping_device
 In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code.
 
 ### Methods
-- `tap_initialization_of!(class)` - allows you to track a class’ instance initialization
-	- shortcut - `tap_init!`
-- `tap_calls_on!(object)` - allows you to track any calls received by the object
-	- shortcut - `tap_on!`
-- `stop_tapping!(object)` - this stops tapping on the given object
-	- shortcut - `untap!`
+- `tap_init!(class)` -  tracks a class’ instance initialization
+- `tap_on!(object)` - tracks any calls received by the object
+- `tap_assoc!(activerecord_object)` - tracks association calls on a record, like `post.comments`
+- `untap!(object)` - this stops tapping on the given object
 
 ### Info of the call
 All tapping methods (start with `tap_`) takes a block and yield a hash as block argument. 
 
 ```ruby
-tap_initialization_of!(Student) do |payload|
-  puts(payload.to_s)
-end
-
-Student.new("Stan", 18)
-
-#=> {:receiver=>#<Student:0x00007feec04d9e58 @name="Stan", @age=18>, :method_name=>:initialize, :arguments=>[[:name, "Stan"], [:age, 18]], :return_value=>18, :filepath=>"/path/spec/trackable_spec.rb", :line_number=>7, :defined_class=>Student}
+{
+  :receiver=>#<Student:0x00007fabed02aeb8 @name="Stan", @age=18, @tapping_device=[#<TracePoint:return `age'@/PROJECT_PATH/tapping_device/spec/trackable_spec.rb:17>]>, 
+  :method_name=>:age, 
+  :arguments=>[], 
+  :return_value=>18, 
+  :filepath=>"/PROJECT_PATH/tapping_device/spec/trackable_spec.rb", 
+  :line_number=>"171", 
+  :defined_class=>Student, 
+  :trace=>[], 
+  :tp=>#<TracePoint:return `age'@/PROJECT_PATH/tapping_device/spec/trackable_spec.rb:17>
+}
 ```
 
 The hash contains
@@ -85,33 +100,34 @@ The hash contains
 - `return_value` - return value of the method call
 - `filepath` - path to the file that performs the method call
 - `line_number` 
-- `defined_class` - in which class that defines the that’s being called
+- `defined_class` - in which class that defines the method being called
 - `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
 - `tp` - trace point object of this call
 
 
 ### Options
-- `with_trace_to` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
-- `filter_by_paths` - an array of call path patterns that we want to skip. This could be very helpful when working on Rails projects.
+- `with_trace_to: 10` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
+- `exclude_by_paths: [/path/]` - an array of call path patterns that we want to skip. This could be very helpful when working on large project like Rails applications.
+- `filter_by_paths: [/path/]` - only contain calls from the specified paths
 
 ```ruby
-tap_on!(@post, filter_by_paths: [/active_record/]) do |payload|
+tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
   puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
 end
 ```
 
 ```
-Method: _read_attribute line: /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: name line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:5
-Method: _read_attribute line: /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: user_id line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:10
+Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 .......
 
 # versus
 
-Method: name line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -150,11 +166,26 @@ end
 And you can see these in log:
 
 ```
-Method: name line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /Users/st0012/projects/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
+### `tap_assoc!`
+
+```ruby
+tap_assoc!(order) do |payload|
+  puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+end
+```
+
+```
+Assoc: payments line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Assoc: line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Assoc: effective_line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
+Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
+```
 
 
 ## Development
@@ -165,7 +196,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/tapping_device. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/st0012/tapping_device. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 

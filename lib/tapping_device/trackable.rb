@@ -7,22 +7,16 @@ module TappingDevice
 
     def tap_initialization_of!(klass, options = {}, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-      options[:condition] = :tap_init?
-      options[:block] = block
-      track(klass, **options)
+      track(klass, condition: :tap_init?, block: block, **options)
     end
 
     def tap_association_calls!(record, options = {}, &block)
       raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-      options[:condition] = :tap_associations?
-      options[:block] = block
-      track(record, **options)
+      track(record, condition: :tap_associations?, block: block, **options)
     end
 
     def tap_calls_on!(object, options = {}, &block)
-      options[:condition] = :tap_on?
-      options[:block] = block
-      track(object, **options)
+      track(object, condition: :tap_on?, block: block, **options)
     end
 
     def stop_tapping!(object)
@@ -36,12 +30,16 @@ module TappingDevice
 
     private
 
-    def track(object, condition:, block:, with_trace_to: nil, filter_by_paths: [])
+    def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
       trace_point = TracePoint.trace(:return) do |tp|
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
         # this needs to be placed upfront so we can exclude noise before doing more work
-        next if filter_by_paths.any? { |pattern| pattern.match?(filepath) }
+        next if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
+
+        if filter_by_paths
+          next unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
+        end
 
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
