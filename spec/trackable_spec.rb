@@ -166,7 +166,7 @@ RSpec.describe TappingDevice::Trackable do
       it "skips calls that matches the pattern" do
       stan = Student.new("Stan", 18)
       count = 0
-      tap_calls_on!(stan, exclude_from_paths: [/spec/]) { count += 1 }
+      tap_calls_on!(stan, filter_by_paths: [/spec/]) { count += 1 }
 
       stan.name
 

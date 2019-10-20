@@ -26,12 +26,12 @@ module TappingDevice
 
     private
 
-    def track(object, condition:, block:, with_trace_to: nil, exclude_from_paths: [])
+    def track(object, condition:, block:, with_trace_to: nil, filter_by_paths: [])
       trace_point = TracePoint.trace(:return) do |tp|
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
         # this needs to be placed upfront so we can exclude noise before doing more work
-        next if exclude_from_paths.any? { |pattern| pattern.match?(filepath) }
+        next if filter_by_paths.any? { |pattern| pattern.match?(filepath) }
 
         arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
