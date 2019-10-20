@@ -1,3 +1,5 @@
+require "active_record"
+
 module TappingDevice
   module Trackable
     TAPPING_DEVICE = :@tapping_device
@@ -8,6 +10,13 @@ module TappingDevice
       options[:condition] = :tap_init?
       options[:block] = block
       track(klass, **options)
+    end
+
+    def tap_association_calls!(record, options = {}, &block)
+      raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
+      options[:condition] = :tap_associations?
+      options[:block] = block
+      track(record, **options)
     end
 
     def tap_calls_on!(object, options = {}, &block)
@@ -21,6 +30,7 @@ module TappingDevice
     end
 
     alias :tap_init! :tap_initialization_of!
+    alias :tap_assoc! :tap_association_calls!
     alias :tap_on! :tap_calls_on!
     alias :untap! :stop_tapping!
 
@@ -56,11 +66,26 @@ module TappingDevice
     end
 
     def tap_init?(klass, parameters)
-      parameters[:method_name] == :initialize && parameters[:receiver].is_a?(klass)
+      receiver = parameters[:receiver]
+      method_name = parameters[:method_name]
+
+      if klass.ancestors.include?(ActiveRecord::Base)
+        method_name == :new && receiver.ancestors.include?(klass)
+      else
+        method_name == :initialize && receiver.is_a?(klass)
+      end
     end
 
     def tap_on?(object, parameters)
       parameters[:receiver].object_id == object.object_id
+    end
+
+    def tap_associations?(object, parameters)
+      return false unless tap_on?(object, parameters)
+
+      model_class = object.class
+      associations = model_class.reflections
+      associations.keys.include?(parameters[:method_name].to_s)
     end
 
     def get_tapping_device(object)
