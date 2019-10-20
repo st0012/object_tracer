@@ -1,3 +1,5 @@
+require "active_record"
+
 module TappingDevice
   module Trackable
     TAPPING_DEVICE = :@tapping_device
@@ -56,7 +58,14 @@ module TappingDevice
     end
 
     def tap_init?(klass, parameters)
-      parameters[:method_name] == :initialize && parameters[:receiver].is_a?(klass)
+      receiver = parameters[:receiver]
+      method_name = parameters[:method_name]
+
+      if klass.ancestors.include?(ActiveRecord::Base)
+        method_name == :new && receiver.ancestors.include?(klass)
+      else
+        method_name == :initialize && receiver.is_a?(klass)
+      end
     end
 
     def tap_on?(object, parameters)

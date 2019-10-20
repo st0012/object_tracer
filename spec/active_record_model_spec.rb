@@ -1,12 +1,10 @@
 require "spec_helper"
 require "model"
 
-RSpec.describe Post do
+RSpec.describe "ActiveRecord model spec" do
   include TappingDevice::Trackable
 
-  before do
-    Post.create!(title: "foo", content: "bar")
-  end
+  let!(:post) { Post.create!(title: "foo", content: "bar") }
 
   describe "triggering test" do
     let(:locations) { [] }
@@ -17,7 +15,7 @@ RSpec.describe Post do
       end
     end
 
-    it "triggers tapping when calling new" do
+    it "triggers tapping when calling .new" do
       Post.new; line = __LINE__
 
       expect(locations.first[:path]).to eq(__FILE__)
