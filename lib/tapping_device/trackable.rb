@@ -7,22 +7,16 @@ module TappingDevice
 
     def tap_initialization_of!(klass, options = {}, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-      options[:condition] = :tap_init?
-      options[:block] = block
-      track(klass, **options)
+      track(klass, condition: :tap_init?, block: block, **options)
     end
 
     def tap_association_calls!(record, options = {}, &block)
       raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-      options[:condition] = :tap_associations?
-      options[:block] = block
-      track(record, **options)
+      track(record, condition: :tap_associations?, block: block, **options)
     end
 
     def tap_calls_on!(object, options = {}, &block)
-      options[:condition] = :tap_on?
-      options[:block] = block
-      track(object, **options)
+      track(object, condition: :tap_on?, block: block, **options)
     end
 
     def stop_tapping!(object)
