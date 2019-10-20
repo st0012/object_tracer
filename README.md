@@ -92,10 +92,10 @@ The hash contains
 
 ### Options
 - `with_trace_to` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
-- `filter_by_paths` - an array of call path patterns that we want to skip. This could be very helpful when working on Rails projects.
+- `exclude_by_paths` - an array of call path patterns that we want to skip. This could be very helpful when working on Rails projects.
 
 ```ruby
-tap_on!(@post, filter_by_paths: [/active_record/]) do |payload|
+tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
   puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
 end
 ```
