@@ -1,8 +1,8 @@
-require "tapping_device/trackable"
+require "active_record"
 
 module TappingDevice
   class Device
-    include Trackable
+    CALLER_START_POINT = 2
 
     attr_reader :options, :calls
 
@@ -73,6 +73,31 @@ module TappingDevice
       end
 
       self
+    end
+
+    private
+
+    def tap_init?(klass, parameters)
+      receiver = parameters[:receiver]
+      method_name = parameters[:method_name]
+
+      if klass.ancestors.include?(ActiveRecord::Base)
+        method_name == :new && receiver.ancestors.include?(klass)
+      else
+        method_name == :initialize && receiver.is_a?(klass)
+      end
+    end
+
+    def tap_on?(object, parameters)
+      parameters[:receiver].object_id == object.object_id
+    end
+
+    def tap_associations?(object, parameters)
+      return false unless tap_on?(object, parameters)
+
+      model_class = object.class
+      associations = model_class.reflections
+      associations.keys.include?(parameters[:method_name].to_s)
     end
   end
 end
