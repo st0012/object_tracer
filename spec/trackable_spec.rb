@@ -4,14 +4,6 @@ RSpec.describe TappingDevice::Trackable do
   include described_class
 
   describe "#tap_init!" do
-    before do
-      untap!(Student)
-    end
-
-    after do
-      untap!(Student)
-    end
-
     it "tracks Student's initialization" do
       count = 0
       tap_init!(Student) do |options|
@@ -25,7 +17,7 @@ RSpec.describe TappingDevice::Trackable do
     end
     it "can track subclass's initialization as well" do
       count = 0
-      tap_init!(HighSchoolStudent) do |options|
+      device = tap_init!(HighSchoolStudent) do |options|
         count += 1
       end
 
@@ -33,7 +25,7 @@ RSpec.describe TappingDevice::Trackable do
 
       expect(count).to eq(1)
 
-      untap!(HighSchoolStudent)
+      device.stop!
     end
     it "doesn't track School's initialization" do
       count = 0
@@ -159,53 +151,16 @@ RSpec.describe TappingDevice::Trackable do
         stan = Student.new("Stan", 18)
         count = 0
 
-        tap_on!(stan, filter_by_paths: [/lib/]) { count += 1 }
+        device = tap_on!(stan, filter_by_paths: [/lib/]) { count += 1 }
         stan.name
         expect(count).to eq(0)
-        untap!(stan)
+
+        device.stop!
 
         tap_on!(stan, filter_by_paths: [/spec/]) { count += 1 }
         stan.name
         expect(count).to eq(1)
       end
-    end
-  end
-
-  describe "#untap!" do
-    it "stopps tapping" do
-      count = 0
-      tap_init!(Student) do |options|
-        count += 1
-      end
-
-      Student.new("Stan", 18)
-
-      untap!(Student)
-
-      Student.new("Jane", 23)
-
-      expect(count).to eq(1)
-    end
-    it "stops multiple tappings" do
-      stan = Student.new("Stan", 18)
-
-      count_1 = 0
-      count_2 = 0
-
-      tap_on!(stan) { count_1 += 1 }
-      tap_on!(stan) { count_2 -= 1 }
-
-      stan.name
-
-      expect(count_1).to eq(1)
-      expect(count_2).to eq(-1)
-
-      untap!(stan)
-
-      stan.name
-
-      expect(count_1).to eq(1)
-      expect(count_2).to eq(-1)
     end
   end
 end

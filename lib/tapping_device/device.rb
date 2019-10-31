@@ -71,6 +71,8 @@ module TappingDevice
           end
         end
       end
+
+      self
     end
   end
 end
