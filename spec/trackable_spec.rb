@@ -1,53 +1,12 @@
 require "spec_helper"
 
-class Student
-  def initialize(name, age)
-    @name = name
-    @age = age
-  end
-
-  def self.foo; end
-
-  def name
-    @name
-  end
-
-  def age
-    @age
-  end
-
-  def age=(age)
-    @age = age
-  end
-end
-
-class HighSchoolStudent < Student;end
-
-class School
-  def initialize(name)
-    @name = name
-  end
-
-  def name
-    @name
-  end
-end
-
 RSpec.describe TappingDevice::Trackable do
   include described_class
 
-  describe "#tap_initialization_of!" do
-    before do
-      stop_tapping!(Student)
-    end
-
-    after do
-      stop_tapping!(Student)
-    end
-
+  describe "#tap_init!" do
     it "tracks Student's initialization" do
       count = 0
-      tap_initialization_of!(Student) do |options|
+      tap_init!(Student) do |options|
         count += 1
       end
 
@@ -58,7 +17,7 @@ RSpec.describe TappingDevice::Trackable do
     end
     it "can track subclass's initialization as well" do
       count = 0
-      tap_initialization_of!(HighSchoolStudent) do |options|
+      device = tap_init!(HighSchoolStudent) do |options|
         count += 1
       end
 
@@ -66,11 +25,11 @@ RSpec.describe TappingDevice::Trackable do
 
       expect(count).to eq(1)
 
-      stop_tapping!(HighSchoolStudent)
+      device.stop!
     end
     it "doesn't track School's initialization" do
       count = 0
-      tap_initialization_of!(Student) do |options|
+      tap_init!(Student) do |options|
         count += 1
       end
 
@@ -80,7 +39,7 @@ RSpec.describe TappingDevice::Trackable do
     end
     it "doesn't track non-initialization method calls" do
       count = 0
-      tap_initialization_of!(Student) do |options|
+      tap_init!(Student) do |options|
         count += 1
       end
 
@@ -90,13 +49,13 @@ RSpec.describe TappingDevice::Trackable do
     end
   end
 
-  describe "#tap_calls_on!" do
+  describe "#tap_on!" do
     it "tracks method calls on the tapped object" do
       stan = Student.new("Stan", 18)
       jane = Student.new("Jane", 23)
 
       calls = []
-      tap_calls_on!(stan) do |payload|
+      tap_on!(stan) do |payload|
         calls << [payload[:receiver].object_id, payload[:method_name], payload[:return_value]]
       end
 
@@ -118,8 +77,8 @@ RSpec.describe TappingDevice::Trackable do
       count_1 = 0
       count_2 = 0
 
-      tap_calls_on!(stan) { count_1 += 1 }
-      tap_calls_on!(stan) { count_2 -= 1 }
+      tap_on!(stan) { count_1 += 1 }
+      tap_on!(stan) { count_2 -= 1 }
 
       stan.name
 
@@ -134,7 +93,7 @@ RSpec.describe TappingDevice::Trackable do
       stan = c.new("Stan", 18)
 
       names = []
-      tap_calls_on!(stan) do |payload|
+      tap_on!(stan) do |payload|
         names << payload[:method_name]
       end
 
@@ -149,7 +108,7 @@ RSpec.describe TappingDevice::Trackable do
 
         arguments = []
 
-        tap_calls_on!(stan) do |payload|
+        tap_on!(stan) do |payload|
           arguments = payload[:arguments]
         end
 
@@ -163,7 +122,7 @@ RSpec.describe TappingDevice::Trackable do
         filepath = ""
         line_number = 0
 
-        tap_calls_on!(stan) do |payload|
+        tap_on!(stan) do |payload|
           filepath = payload[:filepath]
           line_number = payload[:line_number]
         end
@@ -180,7 +139,7 @@ RSpec.describe TappingDevice::Trackable do
       it "skips calls that matches the pattern" do
         stan = Student.new("Stan", 18)
         count = 0
-        tap_calls_on!(stan, exclude_by_paths: [/spec/]) { count += 1 }
+        tap_on!(stan, exclude_by_paths: [/spec/]) { count += 1 }
 
         stan.name
 
@@ -192,53 +151,16 @@ RSpec.describe TappingDevice::Trackable do
         stan = Student.new("Stan", 18)
         count = 0
 
-        tap_calls_on!(stan, filter_by_paths: [/lib/]) { count += 1 }
+        device = tap_on!(stan, filter_by_paths: [/lib/]) { count += 1 }
         stan.name
         expect(count).to eq(0)
-        untap!(stan)
 
-        tap_calls_on!(stan, filter_by_paths: [/spec/]) { count += 1 }
+        device.stop!
+
+        tap_on!(stan, filter_by_paths: [/spec/]) { count += 1 }
         stan.name
         expect(count).to eq(1)
       end
-    end
-  end
-
-  describe "#stop_tapping!" do
-    it "stopps tapping" do
-      count = 0
-      tap_initialization_of!(Student) do |options|
-        count += 1
-      end
-
-      Student.new("Stan", 18)
-
-      stop_tapping!(Student)
-
-      Student.new("Jane", 23)
-
-      expect(count).to eq(1)
-    end
-    it "stops multiple tappings" do
-      stan = Student.new("Stan", 18)
-
-      count_1 = 0
-      count_2 = 0
-
-      tap_calls_on!(stan) { count_1 += 1 }
-      tap_calls_on!(stan) { count_2 -= 1 }
-
-      stan.name
-
-      expect(count_1).to eq(1)
-      expect(count_2).to eq(-1)
-
-      stop_tapping!(stan)
-
-      stan.name
-
-      expect(count_1).to eq(1)
-      expect(count_2).to eq(-1)
     end
   end
 end
