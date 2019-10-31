@@ -21,6 +21,11 @@ module TappingDevice
       track(object, condition: :tap_on?, block: @block, **@options)
     end
 
+    def tap_assoc!(record)
+      raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
+      track(record, condition: :tap_associations?, block: @block, **@options)
+    end
+
     def set_block(&block)
       @block = block
     end
