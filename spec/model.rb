@@ -34,3 +34,38 @@ class Comment < ActiveRecord::Base
   belongs_to :post
   belongs_to :user
 end
+
+class Student
+  def initialize(name, age)
+    @name = name
+    @age = age
+  end
+
+  def self.foo; end
+
+  def name
+    @name
+  end
+
+  def age
+    @age
+  end
+
+  def age=(age)
+    @age = age
+  end
+end
+
+class HighSchoolStudent < Student;end
+
+class School
+  def initialize(name)
+    @name = name
+  end
+
+  def name
+    @name
+  end
+end
+
+
