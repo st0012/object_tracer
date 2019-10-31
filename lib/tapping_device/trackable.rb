@@ -61,6 +61,7 @@ module TappingDevice
       end
 
       add_tapping_device(object, trace_point)
+      trace_point
     end
 
     def tap_init?(klass, parameters)
