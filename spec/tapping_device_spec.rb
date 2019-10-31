@@ -181,4 +181,23 @@ RSpec.describe TappingDevice::Device do
       end
     end
   end
+
+  describe "#stop!" do
+    it "stopps tapping" do
+      count = 0
+      device = described_class.new do |options|
+        count += 1
+      end
+      device.tap_init!(Student)
+
+
+      Student.new("Stan", 18)
+
+      device.stop!
+
+      Student.new("Jane", 23)
+
+      expect(count).to eq(1)
+    end
+  end
 end
