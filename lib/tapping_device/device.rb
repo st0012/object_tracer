@@ -14,17 +14,25 @@ module TappingDevice
 
     def tap_init!(klass)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-      @tp = track(klass, condition: :tap_init?, block: @block, **@options)
+      track(klass, condition: :tap_init?, block: @block, **@options)
+    end
+
+    def tap_on!(object)
+      track(object, condition: :tap_on?, block: @block, **@options)
+    end
+
+    def set_block(&block)
+      @block = block
     end
 
     def stop!
-      @tp.disable
+      @trace_point.disable if @trace_point
     end
 
     private
 
     def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
-      trace_point = TracePoint.trace(:return) do |tp|
+      @trace_point = TracePoint.trace(:return) do |tp|
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
         # this needs to be placed upfront so we can exclude noise before doing more work
@@ -58,8 +66,6 @@ module TappingDevice
           end
         end
       end
-
-      trace_point
     end
   end
 end
