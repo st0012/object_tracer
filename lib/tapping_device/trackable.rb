@@ -5,28 +5,23 @@ module TappingDevice
     TAPPING_DEVICE = :@tapping_device
     CALLER_START_POINT = 2
 
-    def tap_initialization_of!(klass, options = {}, &block)
+    def tap_init!(klass, options = {}, &block)
       raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
       track(klass, condition: :tap_init?, block: block, **options)
     end
 
-    def tap_association_calls!(record, options = {}, &block)
+    def tap_assoc!(record, options = {}, &block)
       raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
       track(record, condition: :tap_associations?, block: block, **options)
     end
 
-    def tap_calls_on!(object, options = {}, &block)
+    def tap_on!(object, options = {}, &block)
       track(object, condition: :tap_on?, block: block, **options)
     end
 
-    def stop_tapping!(object)
+    def untap!(object)
       get_tapping_device(object)&.each { |tp| tp.disable }
     end
-
-    alias :tap_init! :tap_initialization_of!
-    alias :tap_assoc! :tap_association_calls!
-    alias :tap_on! :tap_calls_on!
-    alias :untap! :stop_tapping!
 
     private
 

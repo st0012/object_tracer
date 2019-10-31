@@ -24,13 +24,13 @@ RSpec.describe "ActiveRecord model spec" do
     end
   end
 
-  describe "#tap_association_calls!" do
+  describe "#tap_assoc!" do
     let(:user) { User.create!(name: "Stan") }
     let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
     let!(:comment) { Comment.create!(post: post, user: user, content: "Nice post!") }
 
     it "tracks every association calls" do
-      tap_association_calls!(post) do |payload|
+      tap_assoc!(post) do |payload|
         locations << {path: payload[:filepath], line_number: payload[:line_number]}
       end
 
