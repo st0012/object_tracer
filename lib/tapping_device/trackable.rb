@@ -1,4 +1,4 @@
-module TappingDevice
+class TappingDevice
   module Trackable
     def tap_init!(klass, options = {}, &block)
       Device.new(options, &block).tap_init!(klass)

@@ -1,7 +1,7 @@
 require "active_record"
 require "tapping_device/exceptions"
 
-module TappingDevice
+class TappingDevice
   class Device
     CALLER_START_POINT = 2
     FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
