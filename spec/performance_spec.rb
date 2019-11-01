@@ -1,10 +1,10 @@
 require "spec_helper"
 require 'benchmark'
 
-RSpec.describe TappingDevice::Device do
+RSpec.describe TappingDevice do
   let(:devices) do
     devices = []
-    100.times { devices << TappingDevice::Device.new }
+    100.times { devices << described_class.new }
     devices
   end
 

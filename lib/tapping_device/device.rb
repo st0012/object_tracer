@@ -2,169 +2,167 @@ require "active_record"
 require "tapping_device/exceptions"
 
 class TappingDevice
-  class Device
-    CALLER_START_POINT = 2
-    FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
+  CALLER_START_POINT = 2
+  FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
 
-    attr_reader :options, :calls, :trace_point
+  attr_reader :options, :calls, :trace_point
 
-    @@devices = []
+  @@devices = []
+  @@suspend_new = false
+
+  # list all registered devices
+  def self.devices
+    @@devices
+  end
+
+  # disable given device and remove it from registered list
+  def self.delete_device(device)
+    device.trace_point&.disable
+    @@devices -= [device]
+  end
+
+  # stops all registered devices and remove them from registered list
+  def self.stop_all!
+    @@devices.each(&:stop!)
+  end
+
+  # suspend enabling new trace points
+  # user can still create new Device instances, but they won't be functional
+  def self.suspend_new!
+    @@suspend_new = true
+  end
+
+  # reset everything to clean state and disable all devices
+  def self.reset!
     @@suspend_new = false
+    stop_all!
+  end
 
-    # list all registered devices
-    def self.devices
-      @@devices
+  def initialize(options = {}, &block)
+    @block = block
+    @options = options
+    @calls = []
+    self.class.devices << self
+  end
+
+  def tap_init!(klass)
+    raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
+    track(klass, condition: :tap_init?, block: @block, **@options)
+  end
+
+  def tap_on!(object)
+    track(object, condition: :tap_on?, block: @block, **@options)
+  end
+
+  def tap_assoc!(record)
+    raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
+    track(record, condition: :tap_associations?, block: @block, **@options)
+  end
+
+  def tap_init(klass)
+    validate_tapping(__method__)
+    tap_init!(klass)
+  end
+
+  def tap_on(object)
+    validate_tapping(__method__)
+    tap_on!(object)
+  end
+
+  def tap_assoc(record)
+    validate_tapping(__method__)
+    tap_assoc!(record)
+  end
+
+  def set_block(&block)
+    @block = block
+  end
+
+  def stop!
+    self.class.delete_device(self)
+  end
+
+  def stop_when(&block)
+    @stop_when = block
+  end
+
+  private
+
+  def validate_tapping(method_name)
+    unless @stop_when
+      raise TappingDevice::Exception.new <<~ERROR
+        You must set stop_when condition before calling #{method_name}. Or you can use #{method_name}! to force tapping.
+        Tapping without stop condition can largely slow down or even halt your application, because it'll need to
+        screen literally every call happened.
+      ERROR
     end
+  end
 
-    # disable given device and remove it from registered list
-    def self.delete_device(device)
-      device.trace_point&.disable
-      @@devices -= [device]
-    end
+  def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
+    @trace_point = TracePoint.new(:return) do |tp|
+      filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
-    # stops all registered devices and remove them from registered list
-    def self.stop_all!
-      @@devices.each(&:stop!)
-    end
+      # this needs to be placed upfront so we can exclude noise before doing more work
+      next if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
 
-    # suspend enabling new trace points
-    # user can still create new Device instances, but they won't be functional
-    def self.suspend_new!
-      @@suspend_new = true
-    end
-
-    # reset everything to clean state and disable all devices
-    def self.reset!
-      @@suspend_new = false
-      stop_all!
-    end
-
-    def initialize(options = {}, &block)
-      @block = block
-      @options = options
-      @calls = []
-      self.class.devices << self
-    end
-
-    def tap_init!(klass)
-      raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-      track(klass, condition: :tap_init?, block: @block, **@options)
-    end
-
-    def tap_on!(object)
-      track(object, condition: :tap_on?, block: @block, **@options)
-    end
-
-    def tap_assoc!(record)
-      raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-      track(record, condition: :tap_associations?, block: @block, **@options)
-    end
-
-    def tap_init(klass)
-      validate_tapping(__method__)
-      tap_init!(klass)
-    end
-
-    def tap_on(object)
-      validate_tapping(__method__)
-      tap_on!(object)
-    end
-
-    def tap_assoc(record)
-      validate_tapping(__method__)
-      tap_assoc!(record)
-    end
-
-    def set_block(&block)
-      @block = block
-    end
-
-    def stop!
-      self.class.delete_device(self)
-    end
-
-    def stop_when(&block)
-      @stop_when = block
-    end
-
-    private
-
-    def validate_tapping(method_name)
-      unless @stop_when
-        raise TappingDevice::Exception.new <<~ERROR
-          You must set stop_when condition before calling #{method_name}. Or you can use #{method_name}! to force tapping.
-          Tapping without stop condition can largely slow down or even halt your application, because it'll need to
-          screen literally every call happened.
-        ERROR
+      if filter_by_paths
+        next unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
       end
-    end
 
-    def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
-      @trace_point = TracePoint.new(:return) do |tp|
-        filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
+      arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
-        # this needs to be placed upfront so we can exclude noise before doing more work
-        next if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
+      yield_parameters = {
+        receiver: tp.self,
+        method_name: tp.callee_id,
+        arguments: arguments,
+        return_value: (tp.return_value rescue nil),
+        filepath: filepath,
+        line_number: line_number,
+        defined_class: tp.defined_class,
+        trace: [],
+        tp: tp
+      }
 
-        if filter_by_paths
-          next unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
+      yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
+
+      if send(condition, object, yield_parameters)
+        if @block
+          @calls << block.call(yield_parameters)
+        else
+          @calls << yield_parameters
         end
-
-        arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
-
-        yield_parameters = {
-          receiver: tp.self,
-          method_name: tp.callee_id,
-          arguments: arguments,
-          return_value: (tp.return_value rescue nil),
-          filepath: filepath,
-          line_number: line_number,
-          defined_class: tp.defined_class,
-          trace: [],
-          tp: tp
-        }
-
-        yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
-
-        if send(condition, object, yield_parameters)
-          if @block
-            @calls << block.call(yield_parameters)
-          else
-            @calls << yield_parameters
-          end
-        end
-
-        stop! if @stop_when&.call(yield_parameters)
       end
 
-      @trace_point.enable unless @@suspend_new
-
-      self
+      stop! if @stop_when&.call(yield_parameters)
     end
 
-    private
+    @trace_point.enable unless @@suspend_new
 
-    def tap_init?(klass, parameters)
-      receiver = parameters[:receiver]
-      method_name = parameters[:method_name]
+    self
+  end
 
-      if klass.ancestors.include?(ActiveRecord::Base)
-        method_name == :new && receiver.ancestors.include?(klass)
-      else
-        method_name == :initialize && receiver.is_a?(klass)
-      end
+  private
+
+  def tap_init?(klass, parameters)
+    receiver = parameters[:receiver]
+    method_name = parameters[:method_name]
+
+    if klass.ancestors.include?(ActiveRecord::Base)
+      method_name == :new && receiver.ancestors.include?(klass)
+    else
+      method_name == :initialize && receiver.is_a?(klass)
     end
+  end
 
-    def tap_on?(object, parameters)
-      parameters[:receiver].object_id == object.object_id
-    end
+  def tap_on?(object, parameters)
+    parameters[:receiver].object_id == object.object_id
+  end
 
-    def tap_associations?(object, parameters)
-      return false unless tap_on?(object, parameters)
+  def tap_associations?(object, parameters)
+    return false unless tap_on?(object, parameters)
 
-      model_class = object.class
-      associations = model_class.reflections
-      associations.keys.include?(parameters[:method_name].to_s)
-    end
+    model_class = object.class
+    associations = model_class.reflections
+    associations.keys.include?(parameters[:method_name].to_s)
   end
 end

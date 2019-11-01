@@ -48,7 +48,7 @@ RSpec.describe "ActiveRecord model spec" do
 end
 
 
-RSpec.describe TappingDevice::Device do
+RSpec.describe TappingDevice do
   describe "#tap_assoc!" do
     let(:user) { User.create!(name: "Stan") }
     let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
