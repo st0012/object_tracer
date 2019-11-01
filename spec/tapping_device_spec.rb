@@ -1,8 +1,8 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::Device do
+RSpec.describe TappingDevice do
   describe "#tap_init!" do
-    let(:device) { TappingDevice::Device.new }
+    let(:device) { described_class.new }
 
     it "tracks Student's initialization" do
       device.tap_init!(Student)
@@ -37,7 +37,7 @@ RSpec.describe TappingDevice::Device do
 
   describe "#tap_on!" do
     let(:device) do
-      TappingDevice::Device.new do |payload|
+      described_class.new do |payload|
         [payload[:receiver].object_id, payload[:method_name], payload[:return_value]]
       end
     end
@@ -187,7 +187,7 @@ RSpec.describe TappingDevice::Device do
   end
 
   describe "#tap_init" do
-    let(:device) { TappingDevice::Device.new }
+    let(:device) { described_class.new }
     let(:stan) { Student.new("stan", 25) }
 
     it "raises error if device has no stop_when set" do
@@ -196,7 +196,7 @@ RSpec.describe TappingDevice::Device do
   end
 
   describe "#tap_on" do
-    let(:device) { TappingDevice::Device.new }
+    let(:device) { described_class.new }
     let(:stan) { Student.new("stan", 25) }
 
     it "raises error if device has no stop_when set" do
@@ -205,7 +205,7 @@ RSpec.describe TappingDevice::Device do
   end
 
   describe "#tap_assoc" do
-    let(:device) { TappingDevice::Device.new }
+    let(:device) { described_class.new }
     let(:post) { Post.new }
 
     it "raises error if device has no stop_when set" do
@@ -215,7 +215,7 @@ RSpec.describe TappingDevice::Device do
 
   describe "#stop_when" do
     it "stops tapping once fulfill stop_when condition" do
-      device = TappingDevice::Device.new
+      device = described_class.new
       device.stop_when do |payload|
         device.calls.count == 10
       end

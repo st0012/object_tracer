@@ -16,6 +16,6 @@ RSpec.configure do |config|
   end
 
   config.after do
-    TappingDevice::Device.reset!
+    TappingDevice.reset!
   end
 end
