@@ -8,10 +8,6 @@ RSpec.describe TappingDevice::Device do
     devices
   end
 
-  after do
-    devices.each(&:stop!)
-  end
-
   context "without stop_when" do
     it "takes long time when tapping multiple devices" do
       time = Benchmark.realtime do
