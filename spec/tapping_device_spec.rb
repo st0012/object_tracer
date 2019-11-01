@@ -4,10 +4,6 @@ RSpec.describe TappingDevice::Device do
   describe "#tap_init!" do
     let(:device) { TappingDevice::Device.new }
 
-    after do
-      device.stop!
-    end
-
     it "tracks Student's initialization" do
       device.tap_init!(Student)
 
@@ -46,10 +42,6 @@ RSpec.describe TappingDevice::Device do
       end
     end
 
-    after do
-      device.stop!
-    end
-
     it "tracks method calls on the tapped object" do
       stan = Student.new("Stan", 18)
       jane = Student.new("Jane", 23)
@@ -84,9 +76,6 @@ RSpec.describe TappingDevice::Device do
 
       expect(count_1).to eq(1)
       expect(count_2).to eq(-1)
-
-      device_1.stop!
-      device_2.stop!
     end
     it "tracks alias" do
       c = Class.new(Student)
@@ -156,7 +145,6 @@ RSpec.describe TappingDevice::Device do
         stan.name
 
         expect(count).to eq(0)
-        device.stop!
       end
     end
     describe "options - filter_by_paths: [/path/]" do
@@ -175,9 +163,6 @@ RSpec.describe TappingDevice::Device do
 
         stan.name
         expect(count).to eq(1)
-
-        device_1.stop!
-        device_2.stop!
       end
     end
   end
@@ -243,6 +228,35 @@ RSpec.describe TappingDevice::Device do
       end
 
       expect(device.calls.count).to eq(10)
+    end
+  end
+
+  describe ".devices" do
+    it "stores all initialized devices" do
+      device_1 = described_class.new
+      device_2 = described_class.new
+      device_3 = described_class.new
+
+      device_2.stop!
+
+      expect(described_class.devices).to match_array([device_1, device_3])
+
+      described_class.stop_all!
+
+      expect(described_class.devices).to match_array([])
+    end
+  end
+
+  describe ".suspend_new!" do
+    it "stops all devices and won't enable new ones" do
+      described_class.suspend_new!
+
+      device_1 = described_class.new
+      device_1.tap_init!(Student)
+
+      Student.new("stan", 0)
+
+      expect(device_1.calls.count).to eq(0)
     end
   end
 end

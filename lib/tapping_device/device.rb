@@ -6,12 +6,44 @@ module TappingDevice
     CALLER_START_POINT = 2
     FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
 
-    attr_reader :options, :calls
+    attr_reader :options, :calls, :trace_point
+
+    @@devices = []
+    @@suspend_new = false
+
+    # list all registered devices
+    def self.devices
+      @@devices
+    end
+
+    # disable given device and remove it from registered list
+    def self.delete_device(device)
+      device.trace_point&.disable
+      @@devices -= [device]
+    end
+
+    # stops all registered devices and remove them from registered list
+    def self.stop_all!
+      @@devices.each(&:stop!)
+    end
+
+    # suspend enabling new trace points
+    # user can still create new Device instances, but they won't be functional
+    def self.suspend_new!
+      @@suspend_new = true
+    end
+
+    # reset everything to clean state and disable all devices
+    def self.reset!
+      @@suspend_new = false
+      stop_all!
+    end
 
     def initialize(options = {}, &block)
       @block = block
       @options = options
       @calls = []
+      self.class.devices << self
     end
 
     def tap_init!(klass)
@@ -48,7 +80,7 @@ module TappingDevice
     end
 
     def stop!
-      @trace_point.disable if @trace_point
+      self.class.delete_device(self)
     end
 
     def stop_when(&block)
@@ -68,8 +100,7 @@ module TappingDevice
     end
 
     def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
-
-      @trace_point = TracePoint.trace(:return) do |tp|
+      @trace_point = TracePoint.new(:return) do |tp|
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
         # this needs to be placed upfront so we can exclude noise before doing more work
@@ -105,6 +136,8 @@ module TappingDevice
 
         stop! if @stop_when&.call(yield_parameters)
       end
+
+      @trace_point.enable unless @@suspend_new
 
       self
     end
