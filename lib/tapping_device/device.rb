@@ -1,8 +1,10 @@
 require "active_record"
+require "tapping_device/exceptions"
 
 module TappingDevice
   class Device
     CALLER_START_POINT = 2
+    FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
 
     attr_reader :options, :calls
 
@@ -26,6 +28,21 @@ module TappingDevice
       track(record, condition: :tap_associations?, block: @block, **@options)
     end
 
+    def tap_init(klass)
+      validate_tapping(__method__)
+      tap_init!(klass)
+    end
+
+    def tap_on(object)
+      validate_tapping(__method__)
+      tap_on!(object)
+    end
+
+    def tap_assoc(record)
+      validate_tapping(__method__)
+      tap_assoc!(record)
+    end
+
     def set_block(&block)
       @block = block
     end
@@ -34,9 +51,24 @@ module TappingDevice
       @trace_point.disable if @trace_point
     end
 
+    def stop_when(&block)
+      @stop_when = block
+    end
+
     private
 
+    def validate_tapping(method_name)
+      unless @stop_when
+        raise TappingDevice::Exception.new <<~ERROR
+          You must set stop_when condition before calling #{method_name}. Or you can use #{method_name}! to force tapping.
+          Tapping without stop condition can largely slow down or even halt your application, because it'll need to
+          screen literally every call happened.
+        ERROR
+      end
+    end
+
     def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
+
       @trace_point = TracePoint.trace(:return) do |tp|
         filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
@@ -70,6 +102,8 @@ module TappingDevice
             @calls << yield_parameters
           end
         end
+
+        stop! if @stop_when&.call(yield_parameters)
       end
 
       self
