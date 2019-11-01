@@ -200,4 +200,49 @@ RSpec.describe TappingDevice::Device do
       expect(count).to eq(1)
     end
   end
+
+  describe "#tap_init" do
+    let(:device) { TappingDevice::Device.new }
+    let(:stan) { Student.new("stan", 25) }
+
+    it "raises error if device has no stop_when set" do
+      expect { device.tap_init(Student) }.to raise_error(TappingDevice::Exception)
+    end
+  end
+
+  describe "#tap_on" do
+    let(:device) { TappingDevice::Device.new }
+    let(:stan) { Student.new("stan", 25) }
+
+    it "raises error if device has no stop_when set" do
+      expect { device.tap_on(stan) }.to raise_error(TappingDevice::Exception)
+    end
+  end
+
+  describe "#tap_assoc" do
+    let(:device) { TappingDevice::Device.new }
+    let(:post) { Post.new }
+
+    it "raises error if device has no stop_when set" do
+      expect { device.tap_assoc(post) }.to raise_error(TappingDevice::Exception)
+    end
+  end
+
+  describe "#stop_when" do
+    it "stops tapping once fulfill stop_when condition" do
+      device = TappingDevice::Device.new
+      device.stop_when do |payload|
+        device.calls.count == 10
+      end
+
+      s = Student.new("foo#", 10)
+      device.tap_on!(s)
+
+      100.times do
+        s.name
+      end
+
+      expect(device.calls.count).to eq(10)
+    end
+  end
 end
