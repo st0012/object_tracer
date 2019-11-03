@@ -5,7 +5,6 @@ require "tapping_device/exceptions"
 
 class TappingDevice
   CALLER_START_POINT = 2
-  FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
 
   attr_reader :options, :calls, :trace_point
 
@@ -61,21 +60,6 @@ class TappingDevice
     track(record, condition: :tap_associations?, block: @block, **@options)
   end
 
-  def tap_init(klass)
-    validate_tapping(__method__)
-    tap_init!(klass)
-  end
-
-  def tap_on(object)
-    validate_tapping(__method__)
-    tap_on!(object)
-  end
-
-  def tap_assoc(record)
-    validate_tapping(__method__)
-    tap_assoc!(record)
-  end
-
   def set_block(&block)
     @block = block
   end
@@ -90,18 +74,15 @@ class TappingDevice
 
   private
 
-  def validate_tapping(method_name)
-    unless @stop_when
-      raise TappingDevice::Exception.new <<~ERROR
-        You must set stop_when condition before calling #{method_name}. Or you can use #{method_name}! to force tapping.
-        Tapping without stop condition can largely slow down or even halt your application, because it'll need to
-        screen literally every call happened.
-      ERROR
-    end
-  end
-
   def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
     @trace_point = TracePoint.new(:return) do |tp|
+      validation_params = {
+        receiver: tp.self,
+        method_name: tp.callee_id
+      }
+
+      if send(condition, object, validation_params)
+
       filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
       # this needs to be placed upfront so we can exclude noise before doing more work
@@ -126,8 +107,6 @@ class TappingDevice
       }
 
       yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
-
-      if send(condition, object, yield_parameters)
         if @block
           @calls << block.call(yield_parameters)
         else

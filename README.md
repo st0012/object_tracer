@@ -2,17 +2,17 @@
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
 
-`tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier. For example, you can use it to see who calls you `Post` records
+`tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier. For example, you can use it to see who calls your `Post` records
 
 ```ruby
 class PostsController < ApplicationController
+  include TappingDevice::Trackable
+
   def show
     @post = Post.find(params[:id])
-
-    device = TappingDevice.new do |payload|
+    tap_on!(@post) do |payload|
       puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
     end
-    device.tap_on!(@post)
   end
 end
 ```
@@ -28,10 +28,9 @@ Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_di
 Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
 
 ```ruby
-device = TappingDevice.new do |payload|
+tap_assoc!(order) do |payload|
   puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
 end
-device.tap_assoc!(order)
 ```
 
 ```
@@ -42,12 +41,12 @@ Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
 Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
 ```
 
-However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don't use this on production**
+However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don’t use this on production**
 
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add this line to your application’s Gemfile:
 
 ```ruby
 gem 'tapping_device', group: :development
@@ -66,44 +65,14 @@ $ gem install tapping_device
 ```
 
 ## Usage
+In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code.
 
-### Create a device object
-In order to tap on something, you need to first initialize a tapping device with a block that process the call info.
+### Methods
+- `tap_init!(class)` -  tracks a class’ instance initialization
+- `tap_on!(object)` - tracks any calls received by the object
+- `tap_assoc!(activerecord_object)` - tracks association calls on a record, like `post.comments`
 
-```ruby
-device = TappingDevice.new do |payload|
-  if payload[:method_name].to_s.match?(/foo/)
-    puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
-  end
-end
-```
-
-### Performance issue and setup stop condition
-
-Because `tapping_device` is built upon `TracePoint`, which literally scans **every method call** on **every object**. Even if we filter out the calls we’re not interested in, just filtering out through those method calls takes time if your application isn’t a small one. So it’s very important to stop the tapping device at a certain point. You can do this in 2 ways:
-
-#### Use `device.stop_when(&block)` to set a stop condition
-To define a stop condition, you can use `stop_when` method.
-
-```ruby
-device.stop_when do |payload|
-  device.calls.count >= 10 # stop after gathering 10 calls' data
-end
-```
-
-**If you don’t set a stop condition, you need to use tapping methods that has exclamation mark**, like `device.tap_on!(post)`.
-
-#### `device.stop!`
-If you don’t define a stop condition, you can also use `device.stop!` to stop it manually.
-
-### Start tapping
-
-#### Methods
-- `TappingDevice#tap_init(class)` -  tracks a class’ instance initialization
-- `TappingDevice#tap_on(object)` - tracks any calls received by the object
-- `TappingDevice#tap_assoc(activerecord_object)` - tracks association calls on a record, like `post.comments`
-
-#### Info of the call
+### Info of the call
 All tapping methods (start with `tap_`) takes a block and yield a hash as block argument. 
 
 ```ruby
@@ -140,14 +109,34 @@ The hash contains
 - `exclude_by_paths: [/path/]` - an array of call path patterns that we want to skip. This could be very helpful when working on large project like Rails applications.
 - `filter_by_paths: [/path/]` - only contain calls from the specified paths
 
-### `#tap_init`
+```ruby
+tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
+  puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+end
+```
+
+```
+Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+.......
+
+# versus
+
+Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+```
+
+
+### `#tap_init!`
 
 ```ruby
 calls = []
-device = TappingDevice.new do |payload|
+tap_init!(Student) do |payload|
   calls << [payload[:method_name], payload[:arguments]]
 end
-device.tap_init!(Student) 
 
 Student.new("Stan", 18)
 Student.new("Jane", 23)
@@ -159,16 +148,14 @@ puts(calls.to_s) #=> [[:initialize, [[:name, "Stan"], [:age, 18]]], [:initialize
 
 ```ruby
 class PostsController < ApplicationController
+  include TappingDevice::Trackable
+
   before_action :set_post, only: [:show, :edit, :update, :destroy]
 
-  # GET /posts/1
-  # GET /posts/1.json
   def show
-    device = TappingDevice.new do |payload|
+    tap_on!(@post) do |payload|
       puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
     end
-
-    device.tap_on!(@post)
   end
 end
 ```
@@ -184,10 +171,9 @@ Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_di
 ### `tap_assoc!`
 
 ```ruby
-device = TappingDevice.new do |payload|
+tap_assoc!(order) do |payload|
   puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
 end
-device.tap_assoc!(order) 
 ```
 
 ```
@@ -198,12 +184,35 @@ Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
 Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
 ```
 
-### Device states & Managing Devices
+### Advance Usages
 
-Every `TappingDevice` instance can have 3 states:
+Tapping methods introduced above like `tap_on!` are designed for simple use cases. They’re actually short for
 
-- `Initial` - means the instance is initialized but hasn’t been used to tap on anything.
-- `Enabled` - means the instance has started to tap on something (has called `tap_*` methods).
+```ruby
+device = TappingDevice.new { # tapping action }
+device.tap_on!(object)
+```
+
+And if you want to do some more configurations like stopping them manually or setting stop condition, you must have a `TappingDevie` instance. You can either get them like the above code, or save the return value of `tap_*!` method calls.
+
+#### Stop tapping
+
+Once you have a `TappingDevice` instance in hand, you will be able to stop the tapping by
+1. Manually calling `device.stop!`
+2. Setting stop condition with `device.stop_when`, like
+
+```ruby
+device.stop_when do |payload|
+  device.calls.count >= 10 # stop after gathering 10 calls’ data
+end
+```
+
+#### Device states & Managing Devices
+
+Each `TappingDevice` instance can have 3 states:
+
+- `Initial` - means the instance is initialized but hasn’t tapped on anything.
+- `Enabled` - means the instance are tapping on something (has called `tap_*` methods).
 - `Disabled` - means the instance has been disabled. It will no longer receive any call info.
 
 When debugging, we may create many device instances and tap objects in several places. Then it’ll be quite annoying to manage their states. So `TappingDevice` has several class methods that allows you to manage all `TappingDevice` instances:
