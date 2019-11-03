@@ -2,6 +2,8 @@
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
 
+**Please use 0.3.0+ versions, older versions have serious performance issues**
+
 `tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier. For example, you can use it to see who calls your `Post` records
 
 ```ruby
