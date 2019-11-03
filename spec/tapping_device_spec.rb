@@ -186,33 +186,6 @@ RSpec.describe TappingDevice do
     end
   end
 
-  describe "#tap_init" do
-    let(:device) { described_class.new }
-    let(:stan) { Student.new("stan", 25) }
-
-    it "raises error if device has no stop_when set" do
-      expect { device.tap_init(Student) }.to raise_error(TappingDevice::Exception)
-    end
-  end
-
-  describe "#tap_on" do
-    let(:device) { described_class.new }
-    let(:stan) { Student.new("stan", 25) }
-
-    it "raises error if device has no stop_when set" do
-      expect { device.tap_on(stan) }.to raise_error(TappingDevice::Exception)
-    end
-  end
-
-  describe "#tap_assoc" do
-    let(:device) { described_class.new }
-    let(:post) { Post.new }
-
-    it "raises error if device has no stop_when set" do
-      expect { device.tap_assoc(post) }.to raise_error(TappingDevice::Exception)
-    end
-  end
-
   describe "#stop_when" do
     it "stops tapping once fulfill stop_when condition" do
       device = described_class.new

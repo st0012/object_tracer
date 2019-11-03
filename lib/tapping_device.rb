@@ -5,7 +5,6 @@ require "tapping_device/exceptions"
 
 class TappingDevice
   CALLER_START_POINT = 2
-  FORCE_STOP_WHEN_MESSAGE = "You must set stop_when condition before start tapping"
 
   attr_reader :options, :calls, :trace_point
 
@@ -61,21 +60,6 @@ class TappingDevice
     track(record, condition: :tap_associations?, block: @block, **@options)
   end
 
-  def tap_init(klass)
-    validate_tapping(__method__)
-    tap_init!(klass)
-  end
-
-  def tap_on(object)
-    validate_tapping(__method__)
-    tap_on!(object)
-  end
-
-  def tap_assoc(record)
-    validate_tapping(__method__)
-    tap_assoc!(record)
-  end
-
   def set_block(&block)
     @block = block
   end
@@ -89,16 +73,6 @@ class TappingDevice
   end
 
   private
-
-  def validate_tapping(method_name)
-    unless @stop_when
-      raise TappingDevice::Exception.new <<~ERROR
-        You must set stop_when condition before calling #{method_name}. Or you can use #{method_name}! to force tapping.
-        Tapping without stop condition can largely slow down or even halt your application, because it'll need to
-        screen literally every call happened.
-      ERROR
-    end
-  end
 
   def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
     @trace_point = TracePoint.new(:return) do |tp|
