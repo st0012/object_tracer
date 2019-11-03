@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.2.0)
+    tapping_device (0.3.0)
       activerecord (~> 5.2)
 
 GEM
