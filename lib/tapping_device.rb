@@ -102,6 +102,13 @@ class TappingDevice
 
   def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
     @trace_point = TracePoint.new(:return) do |tp|
+      validation_params = {
+        receiver: tp.self,
+        method_name: tp.callee_id
+      }
+
+      if send(condition, object, validation_params)
+
       filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
 
       # this needs to be placed upfront so we can exclude noise before doing more work
@@ -126,8 +133,6 @@ class TappingDevice
       }
 
       yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
-
-      if send(condition, object, yield_parameters)
         if @block
           @calls << block.call(yield_parameters)
         else
