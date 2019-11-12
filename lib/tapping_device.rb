@@ -122,8 +122,6 @@ class TappingDevice
     self
   end
 
-  private
-
   def tap_init?(klass, parameters)
     receiver = parameters[:receiver]
     method_name = parameters[:method_name]
