@@ -49,11 +49,11 @@ end
 
 
 RSpec.describe TappingDevice do
-  describe "#tap_assoc!" do
-    let(:user) { User.create!(name: "Stan") }
-    let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
-    let!(:comment) { Comment.create!(post: post, user: user, content: "Nice post!") }
+  let(:user) { User.create!(name: "Stan") }
+  let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
+  let!(:comment) { Comment.create!(post: post, user: user, content: "Nice post!") }
 
+  describe "#tap_assoc!" do
     it "tracks every association calls" do
       locations = []
 
@@ -71,6 +71,37 @@ RSpec.describe TappingDevice do
       expect(locations[0][:line_number]).to eq(line_1.to_s)
       expect(locations[1][:path]).to eq(__FILE__)
       expect(locations[1][:line_number]).to eq(line_2.to_s)
+    end
+  end
+
+  describe "#tap_sql!" do
+    it "locates the method that triggers the sql query" do
+      sqls = []
+
+      device = described_class.new do |payload|
+        sqls << payload[:sql]
+      end
+
+      device.tap_sql!(Post)
+
+      Post.first
+      User.first
+      Post.last
+      User.last
+
+      expect(sqls.count).to eq(4)
+      expect(sqls).to eq(
+        [
+          # first
+          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
+          # find_by_sql
+          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
+          # last
+          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" DESC LIMIT ?",
+          # find_by_sql
+          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" DESC LIMIT ?"
+        ]
+      )
     end
   end
 end

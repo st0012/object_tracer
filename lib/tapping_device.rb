@@ -2,6 +2,7 @@ require "active_record"
 require "tapping_device/version"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
+require "tapping_device/sql_listener"
 
 class TappingDevice
   CALLER_START_POINT = 2
@@ -55,6 +56,36 @@ class TappingDevice
     track(object, condition: :tap_on?, block: @block, **@options)
   end
 
+  ActiveSupport::Notifications.subscribe('sql.active_record') do |_1, _2, _3, _4, payload|
+    if !["SCHEMA", "TRANSACTION"].include? payload[:name]
+      @@sql_listeners.each do |listener|
+        puts(listener.method)
+        listener.block.call(payload)
+      end
+    end
+  end
+
+  @@sql_listeners = []
+
+  def tap_sql!(object)
+    TracePoint.trace(:call) do |call_start_tp|
+      method = call_start_tp.callee_id
+
+      if is_from_target?(object, call_start_tp)
+        sql_listener = SqlListenser.new(method, @block)
+
+        @@sql_listeners << sql_listener
+
+        TracePoint.trace(:return) do |call_return_tp|
+          if is_from_target?(object, call_return_tp) && call_return_tp.callee_id == method
+            @@sql_listeners.delete(sql_listener)
+            call_return_tp.disable
+          end
+        end
+      end
+    end
+  end
+
   def tap_assoc!(record)
     raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
     track(record, condition: :tap_associations?, block: @block, **@options)
@@ -106,7 +137,7 @@ class TappingDevice
         }
 
         yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
-        if @block
+        if block
           @calls << block.call(yield_parameters)
         else
           @calls << yield_parameters
@@ -142,5 +173,13 @@ class TappingDevice
     model_class = object.class
     associations = model_class.reflections
     associations.keys.include?(parameters[:method_name].to_s)
+  end
+
+  def is_from_target?(object, tp)
+    validation_params = {
+      receiver: tp.self,
+      method_name: tp.callee_id
+    }
+    tap_on?(object, validation_params)
   end
 end
