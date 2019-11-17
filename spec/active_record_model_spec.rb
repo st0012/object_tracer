@@ -76,6 +76,26 @@ RSpec.describe TappingDevice do
 
   describe "#tap_sql!" do
     it "locates the method that triggers the sql query" do
+      filepaths = []
+      line_numbers = []
+
+      device = described_class.new do |payload|
+        filepaths << payload[:filepath]
+        line_numbers << payload[:line_number]
+      end
+
+      device.tap_sql!(Post)
+
+      line_mark = __LINE__
+      Post.first
+
+      # first
+      expect(filepaths.first).to eq(__FILE__)
+      expect(line_numbers.first).to eq((line_mark+1).to_s)
+      # find_by_sql
+      expect(filepaths.second).to match("lib/active_record/relation.rb")
+    end
+    it "won't be affected by other object's calls" do
       sqls = []
 
       device = described_class.new do |payload|

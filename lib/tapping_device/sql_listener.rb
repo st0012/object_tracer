@@ -1,9 +1,9 @@
 class TappingDevice
   class SqlListenser
-    attr_reader :arr, :method, :block
-    def initialize(method, block)
+    attr_reader :method, :payload, :block
+    def initialize(method, payload, block)
       @method = method
-      @arr = []
+      @payload = payload
       @block = block
     end
   end

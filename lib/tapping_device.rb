@@ -59,8 +59,9 @@ class TappingDevice
   ActiveSupport::Notifications.subscribe('sql.active_record') do |_1, _2, _3, _4, payload|
     if !["SCHEMA", "TRANSACTION"].include? payload[:name]
       @@sql_listeners.each do |listener|
-        puts(listener.method)
-        listener.block.call(payload)
+        listener.payload[:sql] = payload[:sql]
+        listener.payload[:binds] = payload[:binds]
+        listener.block.call(listener.payload)
       end
     end
   end
@@ -72,7 +73,18 @@ class TappingDevice
       method = call_start_tp.callee_id
 
       if is_from_target?(object, call_start_tp)
-        sql_listener = SqlListenser.new(method, @block)
+        call_location = caller(CALLER_START_POINT).first
+
+        yield_parameters = build_yield_parameters(
+          tp: call_start_tp,
+          call_location: call_location,
+          exclude_by_paths: @options[:exclude_by_paths] || [],
+          filter_by_paths: @options[:filter_by_paths]
+        )
+
+        next unless yield_parameters
+
+        sql_listener = SqlListenser.new(method, yield_parameters, @block)
 
         @@sql_listeners << sql_listener
 
@@ -113,28 +125,16 @@ class TappingDevice
       }
 
       if send(condition, object, validation_params)
-        filepath, line_number = caller(CALLER_START_POINT).first.split(":")[0..1]
+        call_location = caller(CALLER_START_POINT).first
 
-        # this needs to be placed upfront so we can exclude noise before doing more work
-        next if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
+        yield_parameters = build_yield_parameters(
+          tp: tp,
+          call_location: call_location,
+          exclude_by_paths: exclude_by_paths,
+          filter_by_paths: filter_by_paths
+        )
 
-        if filter_by_paths
-          next unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
-        end
-
-        arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
-
-        yield_parameters = {
-          receiver: tp.self,
-          method_name: tp.callee_id,
-          arguments: arguments,
-          return_value: (tp.return_value rescue nil),
-          filepath: filepath,
-          line_number: line_number,
-          defined_class: tp.defined_class,
-          trace: [],
-          tp: tp
-        }
+        next unless yield_parameters
 
         yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
         if block
@@ -150,6 +150,31 @@ class TappingDevice
     @trace_point.enable unless @@suspend_new
 
     self
+  end
+
+  def build_yield_parameters(tp:, call_location:, exclude_by_paths:, filter_by_paths:)
+    filepath, line_number = call_location.split(":")[0..1]
+
+    # this needs to be placed upfront so we can exclude noise before doing more work
+    return nil if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
+
+    if filter_by_paths
+      return nil unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
+    end
+
+    arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
+
+    {
+      receiver: tp.self,
+      method_name: tp.callee_id,
+      arguments: arguments,
+      return_value: (tp.return_value rescue nil),
+      filepath: filepath,
+      line_number: line_number,
+      defined_class: tp.defined_class,
+      trace: [],
+      tp: tp
+    }
   end
 
   def tap_init?(klass, parameters)
