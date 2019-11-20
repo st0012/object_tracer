@@ -92,14 +92,12 @@ RSpec.describe TappingDevice do
       # first
       expect(filepaths.first).to eq(__FILE__)
       expect(line_numbers.first).to eq((line_mark+1).to_s)
-      # find_by_sql
-      expect(filepaths.second).to match("lib/active_record/relation.rb")
     end
     it "won't be affected by other object's calls" do
       sqls = []
 
       device = described_class.new do |payload|
-        sqls << payload[:sql]
+        sqls << payload[:sql].squeeze(" ")
       end
 
       device.tap_sql!(Post)
@@ -108,18 +106,17 @@ RSpec.describe TappingDevice do
       User.first
       Post.last
       User.last
+      Post.find_by_sql("SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\"")
 
-      expect(sqls.count).to eq(4)
+      expect(sqls.count).to eq(3)
       expect(sqls).to eq(
         [
           # first
           "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
-          # find_by_sql
-          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
           # last
           "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" DESC LIMIT ?",
           # find_by_sql
-          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" DESC LIMIT ?"
+          "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\""
         ]
       )
     end

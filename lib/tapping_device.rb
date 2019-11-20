@@ -84,6 +84,15 @@ class TappingDevice
 
         next unless yield_parameters
 
+        # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
+        # then to TappingDevice, both `first` and `find_by_sql` generates the sql
+        # but the results are duplicated, we should only consider the `first` call
+        # so @in_call is used to determine if we're already in a middle of a call
+        # it's not an optimal solution and should be updated
+        next if @in_call
+
+        @in_call = true
+
         sql_listener = SqlListenser.new(method, yield_parameters, @block)
 
         @@sql_listeners << sql_listener
@@ -92,6 +101,7 @@ class TappingDevice
           if is_from_target?(object, call_return_tp) && call_return_tp.callee_id == method
             @@sql_listeners.delete(sql_listener)
             call_return_tp.disable
+            @in_call = false
           end
         end
       end
