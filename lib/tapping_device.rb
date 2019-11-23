@@ -86,17 +86,17 @@ class TappingDevice
 
       if send(condition, object, validation_params)
         call_location = caller(CALLER_START_POINT).first
+        filepath, line_number = split_call_location(call_location)
+
+        next if should_be_skip_by_paths?(filepath, exclude_by_paths, filter_by_paths)
 
         yield_parameters = build_yield_parameters(
           tp: tp,
-          call_location: call_location,
-          exclude_by_paths: exclude_by_paths,
-          filter_by_paths: filter_by_paths
+          filepath: filepath,
+          line_number: line_number
         )
-
-        next unless yield_parameters
-
         yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
+
         if block
           @calls << block.call(yield_parameters)
         else
@@ -112,16 +112,20 @@ class TappingDevice
     self
   end
 
-  def build_yield_parameters(tp:, call_location:, exclude_by_paths:, filter_by_paths:)
-    filepath, line_number = call_location.split(":")[0..1]
+  def split_call_location(call_location)
+    call_location.split(":")[0..1]
+  end
 
-    # this needs to be placed upfront so we can exclude noise before doing more work
-    return nil if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
+  # this needs to be placed upfront so we can exclude noise before doing more work
+  def should_be_skip_by_paths?(filepath, exclude_by_paths, filter_by_paths)
+    return true if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
 
     if filter_by_paths
-      return nil unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
+      return true unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
     end
+  end
 
+  def build_yield_parameters(tp:, filepath:, line_number:)
     arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
     {
