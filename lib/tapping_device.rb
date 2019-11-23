@@ -51,16 +51,16 @@ class TappingDevice
 
   def tap_init!(klass)
     raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-    track(klass, condition: :tap_init?, block: @block, **@options)
+    track(klass, condition: :tap_init?, **@options)
   end
 
   def tap_on!(object)
-    track(object, condition: :tap_on?, block: @block, **@options)
+    track(object, condition: :tap_on?, **@options)
   end
 
   def tap_assoc!(record)
     raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-    track(record, condition: :tap_associations?, block: @block, **@options)
+    track(record, condition: :tap_associations?, **@options)
   end
 
   def set_block(&block)
@@ -77,7 +77,7 @@ class TappingDevice
 
   private
 
-  def track(object, condition:, block:, with_trace_to: nil, exclude_by_paths: [], filter_by_paths: nil)
+  def track(object, condition:, with_trace_to: 50, exclude_by_paths: [], filter_by_paths: [])
     @trace_point = TracePoint.new(:return) do |tp|
       validation_params = {
         receiver: tp.self,
@@ -93,15 +93,11 @@ class TappingDevice
         yield_parameters = build_yield_parameters(
           tp: tp,
           filepath: filepath,
-          line_number: line_number
+          line_number: line_number,
+          trace: caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)]
         )
-        yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + with_trace_to)] if with_trace_to
 
-        if block
-          @calls << block.call(yield_parameters)
-        else
-          @calls << yield_parameters
-        end
+        record_call!(yield_parameters)
       end
 
       stop! if @stop_when&.call(yield_parameters)
@@ -116,16 +112,24 @@ class TappingDevice
     call_location.split(":")[0..1]
   end
 
+  def record_call!(yield_parameters)
+    if @block
+      @calls << @block.call(yield_parameters)
+    else
+      @calls << yield_parameters
+    end
+  end
+
   # this needs to be placed upfront so we can exclude noise before doing more work
   def should_be_skip_by_paths?(filepath, exclude_by_paths, filter_by_paths)
     return true if exclude_by_paths.any? { |pattern| pattern.match?(filepath) }
 
-    if filter_by_paths
+    if filter_by_paths.present?
       return true unless filter_by_paths.any? { |pattern| pattern.match?(filepath) }
     end
   end
 
-  def build_yield_parameters(tp:, filepath:, line_number:)
+  def build_yield_parameters(tp:, filepath:, line_number:, trace:)
     arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
     {
@@ -136,7 +140,7 @@ class TappingDevice
       filepath: filepath,
       line_number: line_number,
       defined_class: tp.defined_class,
-      trace: [],
+      trace: trace,
       tp: tp
     }
   end
