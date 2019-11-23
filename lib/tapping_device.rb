@@ -222,10 +222,6 @@ class TappingDevice
   end
 
   def is_from_target?(object, tp)
-    validation_params = {
-      receiver: tp.self,
-      method_name: tp.callee_id
-    }
-    tap_on?(object, validation_params)
+    object.object_id == tp.self.object_id
   end
 end
