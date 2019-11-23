@@ -210,7 +210,7 @@ class TappingDevice
   end
 
   def tap_on?(object, parameters)
-    parameters[:receiver].object_id == object.object_id
+    parameters[:receiver].__id__ == object.__id__
   end
 
   def tap_associations?(object, parameters)
@@ -222,6 +222,6 @@ class TappingDevice
   end
 
   def is_from_target?(object, tp)
-    object.object_id == tp.self.object_id
+    object.__id__ == tp.self.__id__
   end
 end
