@@ -1,8 +1,10 @@
 require "spec_helper"
+require "stoppable_examples"
 
 RSpec.describe TappingDevice do
   describe "#tap_init!" do
     let(:device) { described_class.new }
+    subject { :tap_init! }
 
     it "tracks Student's initialization" do
       device.tap_init!(Student)
@@ -33,12 +35,28 @@ RSpec.describe TappingDevice do
 
       expect(device.calls.count).to eq(0)
     end
+
+    it_behaves_like "stoppable" do
+      let(:target) { Student }
+      let(:trigger_action) do
+        -> (target) { target.new("Stan", 18) }
+      end
+    end
   end
 
   describe "#tap_on!" do
+    subject { :tap_on! }
+
     let(:device) do
       described_class.new do |payload|
         [payload[:receiver].object_id, payload[:method_name], payload[:return_value]]
+      end
+    end
+
+    it_behaves_like "stoppable" do
+      let(:target) { Student.new("Stan", 18) }
+      let(:trigger_action) do
+        -> (target) { target.name }
       end
     end
 
@@ -71,6 +89,7 @@ RSpec.describe TappingDevice do
 
       device_1.tap_on!(stan)
       device_2.tap_on!(stan)
+      stop! if @stop_when&.call(yield_parameters)
 
       stan.name
 
@@ -164,43 +183,6 @@ RSpec.describe TappingDevice do
         stan.name
         expect(count).to eq(1)
       end
-    end
-  end
-
-  describe "#stop!" do
-    it "stopps tapping" do
-      count = 0
-      device = described_class.new do |options|
-        count += 1
-      end
-      device.tap_init!(Student)
-
-
-      Student.new("Stan", 18)
-
-      device.stop!
-
-      Student.new("Jane", 23)
-
-      expect(count).to eq(1)
-    end
-  end
-
-  describe "#stop_when" do
-    it "stops tapping once fulfill stop_when condition" do
-      device = described_class.new
-      device.stop_when do |payload|
-        device.calls.count == 10
-      end
-
-      s = Student.new("foo#", 10)
-      device.tap_on!(s)
-
-      100.times do
-        s.name
-      end
-
-      expect(device.calls.count).to eq(10)
     end
   end
 

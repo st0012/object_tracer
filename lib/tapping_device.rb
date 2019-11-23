@@ -5,7 +5,6 @@ require "tapping_device/exceptions"
 require "tapping_device/sql_tapping_methods"
 
 class TappingDevice
-  include SqlTappingMethods
 
   CALLER_START_POINT = 3
 
@@ -13,6 +12,12 @@ class TappingDevice
 
   @@devices = []
   @@suspend_new = false
+
+  include SqlTappingMethods
+
+  def self.suspend_new
+    @@suspend_new
+  end
 
   # list all registered devices
   def self.devices
@@ -82,6 +87,16 @@ class TappingDevice
     @stop_when = block
   end
 
+  def record_call!(yield_parameters)
+    if @block
+      @calls << @block.call(yield_parameters)
+    else
+      @calls << yield_parameters
+    end
+
+    stop! if @stop_when&.call(yield_parameters)
+  end
+
   private
 
   def track(object, condition:)
@@ -100,8 +115,6 @@ class TappingDevice
 
         record_call!(yield_parameters)
       end
-
-      stop! if @stop_when&.call(yield_parameters)
     end
 
     @trace_point.enable unless @@suspend_new
@@ -111,14 +124,6 @@ class TappingDevice
 
   def get_call_location
     caller(CALLER_START_POINT).first.split(":")[0..1]
-  end
-
-  def record_call!(yield_parameters)
-    if @block
-      @calls << @block.call(yield_parameters)
-    else
-      @calls << yield_parameters
-    end
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work

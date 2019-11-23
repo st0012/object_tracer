@@ -9,13 +9,13 @@ class TappingDevice
         @@sql_listeners.each do |listener|
           listener.payload[:sql] = payload[:sql]
           listener.payload[:binds] = payload[:binds]
-          listener.block.call(listener.payload)
+          listener.device.record_call!(listener.payload)
         end
       end
     end
 
     def tap_sql!(object)
-      TracePoint.trace(:call) do |start_tp|
+      @trace_point = TracePoint.new(:call) do |start_tp|
         method = start_tp.callee_id
 
         if is_from_target?(object, start_tp)
@@ -34,7 +34,7 @@ class TappingDevice
 
           @in_call = true
 
-          sql_listener = SqlListenser.new(method, yield_parameters, @block)
+          sql_listener = SqlListenser.new(method, yield_parameters, self)
 
           @@sql_listeners << sql_listener
 
@@ -56,6 +56,10 @@ class TappingDevice
           end
         end
       end
+
+      @trace_point.enable unless self.class.suspend_new
+
+      self
     end
   end
 end

@@ -1,10 +1,10 @@
 class TappingDevice
   class SqlListenser
-    attr_reader :method, :payload, :block
-    def initialize(method, payload, block)
+    attr_reader :method, :payload, :device
+    def initialize(method, payload, device)
       @method = method
       @payload = payload
-      @block = block
+      @device = device
     end
   end
 end
