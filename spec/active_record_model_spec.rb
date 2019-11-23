@@ -158,6 +158,21 @@ RSpec.describe TappingDevice do
         expect(second_call[:line_number]).to eq(line_2.to_s)
       end
 
+      it "tracks enumerable methods" do
+        posts = user.posts
+        line = 0
+
+        device.tap_sql!(posts)
+
+        assert_query_count(1) do
+          posts.collect {}; line = __LINE__
+        end
+
+        call = device.calls[0]
+        expect(call[:method_name]).to eq(:collect)
+        expect(call[:line_number]).to eq(line.to_s)
+      end
+
       it "also tracks sqls created by AR relation objects created by targets" do
         posts = Post.where(user: user)
         line = 0
