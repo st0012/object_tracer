@@ -129,8 +129,27 @@ RSpec.describe TappingDevice do
       it_behaves_like "stoppable" do
         let(:target) { Post.where(user: user) }
         let(:trigger_action) do
-          -> (target) { target.first }
+          -> (target) { target.where(id: 1).first }
         end
+      end
+
+      it "tracks repeated calls correctly" do
+        posts = Post.where(user: user)
+
+        device.tap_sql!(posts)
+
+        posts.where(id: 0).first; line_1 = __LINE__
+        posts.where(id: 0).first; line_2 = __LINE__
+
+        expect(device.calls.count).to eq(2)
+
+        first_call = device.calls[0]
+        expect(first_call[:method_name]).to eq(:first)
+        expect(first_call[:line_number]).to eq(line_1.to_s)
+
+        second_call = device.calls[1]
+        expect(second_call[:method_name]).to eq(:first)
+        expect(second_call[:line_number]).to eq(line_2.to_s)
       end
 
       it "also tracks sqls created by AR relation objects created by targets" do

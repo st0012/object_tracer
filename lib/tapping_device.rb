@@ -51,6 +51,7 @@ class TappingDevice
     @block = block
     @options = process_options(options)
     @calls = []
+    @disabled = false
     self.class.devices << self
   end
 
@@ -80,6 +81,7 @@ class TappingDevice
   end
 
   def stop!
+    @disabled = true
     self.class.delete_device(self)
   end
 
@@ -88,13 +90,13 @@ class TappingDevice
   end
 
   def record_call!(yield_parameters)
+    return if @disabled
+
     if @block
       @calls << @block.call(yield_parameters)
     else
       @calls << yield_parameters
     end
-
-    stop! if @stop_when&.call(yield_parameters)
   end
 
   private
@@ -114,6 +116,8 @@ class TappingDevice
         yield_parameters = build_yield_parameters(tp: tp, filepath: filepath, line_number: line_number)
 
         record_call!(yield_parameters)
+
+        stop! if @stop_when&.call(yield_parameters)
       end
     end
 

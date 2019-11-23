@@ -41,17 +41,20 @@ class TappingDevice
           # return of the method call
           TracePoint.trace(:return) do |return_tp|
             if is_from_target?(object, return_tp)
-              # if the method creates another Relation object
-              if return_tp.defined_class == ActiveRecord::QueryMethods
-                tap_sql!(return_tp.return_value)
-              end
-
               # if it's a query method, end the sql tapping
               if return_tp.callee_id == method
+                # if the method creates another Relation object
+                if return_tp.defined_class == ActiveRecord::QueryMethods
+                  tap_sql!(return_tp.return_value)
+                end
+
                 @@sql_listeners.delete(sql_listener)
                 return_tp.disable
                 @in_call = false
+
+                stop! if @stop_when&.call(yield_parameters)
               end
+
             end
           end
         end
