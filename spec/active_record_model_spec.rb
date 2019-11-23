@@ -120,5 +120,38 @@ RSpec.describe TappingDevice do
         ]
       )
     end
+
+    context "call on AR relation objects" do
+      it "also tracks sqls created by AR relation objects created by targets" do
+        calls = []
+
+        device = described_class.new do |payload|
+          calls << payload
+        end
+
+        posts = Post.where(user: user)
+
+        device.tap_sql!(posts)
+
+        posts.first
+        posts.where(id: 1).first; line = __LINE__
+        posts.last
+
+        expect(calls.count).to eq(3)
+
+        first_call = calls[0]
+        expect(first_call[:method_name]).to eq(:first)
+        expect(first_call[:receiver]).to eq(posts)
+
+        second_call = calls[1]
+        expect(second_call[:method_name]).to eq(:first)
+        expect(second_call[:receiver]).to be_a(ActiveRecord::Relation)
+        expect(second_call[:line_number]).to eq(line.to_s)
+
+        last_call = calls[2]
+        expect(last_call[:method_name]).to eq(:last)
+        expect(last_call[:receiver]).to eq(posts)
+      end
+    end
   end
 end

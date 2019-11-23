@@ -69,20 +69,22 @@ class TappingDevice
   @@sql_listeners = []
 
   def tap_sql!(object)
-    TracePoint.trace(:call) do |call_start_tp|
-      method = call_start_tp.callee_id
+    TracePoint.trace(:call) do |start_tp|
+      method = start_tp.callee_id
 
-      if is_from_target?(object, call_start_tp)
+      if is_from_target?(object, start_tp)
         call_location = caller(CALLER_START_POINT).first
 
         yield_parameters = build_yield_parameters(
-          tp: call_start_tp,
+          tp: start_tp,
           call_location: call_location,
           exclude_by_paths: @options[:exclude_by_paths] || [],
           filter_by_paths: @options[:filter_by_paths]
         )
 
         next unless yield_parameters
+
+        yield_parameters[:trace] = caller[CALLER_START_POINT..(CALLER_START_POINT + @options[:with_trace_to])] if @options[:with_trace_to]
 
         # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
         # then to TappingDevice, both `first` and `find_by_sql` generates the sql
@@ -97,11 +99,20 @@ class TappingDevice
 
         @@sql_listeners << sql_listener
 
-        TracePoint.trace(:return) do |call_return_tp|
-          if is_from_target?(object, call_return_tp) && call_return_tp.callee_id == method
-            @@sql_listeners.delete(sql_listener)
-            call_return_tp.disable
-            @in_call = false
+        # return of the method call
+        TracePoint.trace(:return) do |return_tp|
+          if is_from_target?(object, return_tp)
+            # if the method creates another Relation object
+            if return_tp.defined_class == ActiveRecord::QueryMethods
+              tap_sql!(return_tp.return_value)
+            end
+
+            # if it's a query method, end the sql tapping
+            if return_tp.callee_id == method
+              @@sql_listeners.delete(sql_listener)
+              return_tp.disable
+              @in_call = false
+            end
           end
         end
       end
