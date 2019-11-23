@@ -101,11 +101,13 @@ RSpec.describe TappingDevice do
       it "won't be affected by other object's calls" do
         device.tap_sql!(Post)
 
-        Post.first
-        User.first
-        Post.last
-        User.last
-        Post.find_by_sql("SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\"")
+        assert_query_count(5) do
+          Post.first
+          User.first
+          Post.last
+          User.last
+          Post.find_by_sql("SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\"")
+        end
 
         sqls = device.calls.map do |call|
           call[:sql].squeeze(" ")
@@ -135,11 +137,15 @@ RSpec.describe TappingDevice do
 
       it "tracks repeated calls correctly" do
         posts = Post.where(user: user)
+        line_1 = 0
+        line_2 = 0
 
         device.tap_sql!(posts)
 
-        posts.where(id: 0).first; line_1 = __LINE__
-        posts.where(id: 0).first; line_2 = __LINE__
+        assert_query_count(2) do
+          posts.where(id: 0).first; line_1 = __LINE__
+          posts.where(id: 0).first; line_2 = __LINE__
+        end
 
         expect(device.calls.count).to eq(2)
 
@@ -154,12 +160,15 @@ RSpec.describe TappingDevice do
 
       it "also tracks sqls created by AR relation objects created by targets" do
         posts = Post.where(user: user)
+        line = 0
 
         device.tap_sql!(posts)
 
-        posts.first
-        posts.where(id: 1).first; line = __LINE__
-        posts.last
+        assert_query_count(3) do
+          posts.first
+          posts.where(id: 1).first; line = __LINE__
+          posts.last
+        end
 
         expect(device.calls.count).to eq(3)
 
