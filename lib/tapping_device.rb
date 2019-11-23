@@ -7,7 +7,7 @@ require "tapping_device/sql_tapping_methods"
 class TappingDevice
   include SqlTappingMethods
 
-  CALLER_START_POINT = 2
+  CALLER_START_POINT = 3
 
   attr_reader :options, :calls, :trace_point
 
@@ -92,17 +92,11 @@ class TappingDevice
       }
 
       if send(condition, object, validation_params)
-        call_location = caller(CALLER_START_POINT).first
-        filepath, line_number = split_call_location(call_location)
+        filepath, line_number = get_call_location
 
         next if should_be_skip_by_paths?(filepath)
 
-        yield_parameters = build_yield_parameters(
-          tp: tp,
-          filepath: filepath,
-          line_number: line_number,
-          trace: caller[CALLER_START_POINT..(CALLER_START_POINT + options[:with_trace_to])]
-        )
+        yield_parameters = build_yield_parameters(tp: tp, filepath: filepath, line_number: line_number)
 
         record_call!(yield_parameters)
       end
@@ -115,8 +109,8 @@ class TappingDevice
     self
   end
 
-  def split_call_location(call_location)
-    call_location.split(":")[0..1]
+  def get_call_location
+    caller(CALLER_START_POINT).first.split(":")[0..1]
   end
 
   def record_call!(yield_parameters)
@@ -133,7 +127,7 @@ class TappingDevice
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
   end
 
-  def build_yield_parameters(tp:, filepath:, line_number:, trace:)
+  def build_yield_parameters(tp:, filepath:, line_number:)
     arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
     {
@@ -144,7 +138,7 @@ class TappingDevice
       filepath: filepath,
       line_number: line_number,
       defined_class: tp.defined_class,
-      trace: trace,
+      trace: caller[CALLER_START_POINT..(CALLER_START_POINT + options[:with_trace_to])],
       tp: tp
     }
   end

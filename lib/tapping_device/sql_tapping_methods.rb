@@ -19,17 +19,11 @@ class TappingDevice
         method = start_tp.callee_id
 
         if is_from_target?(object, start_tp)
-          call_location = caller(CALLER_START_POINT).first
-          filepath, line_number = split_call_location(call_location)
+          filepath, line_number = get_call_location
 
           next if should_be_skip_by_paths?(filepath)
 
-          yield_parameters = build_yield_parameters(
-            tp: start_tp,
-            filepath: filepath,
-            line_number: line_number,
-            trace: caller[CALLER_START_POINT..(CALLER_START_POINT + options[:with_trace_to])]
-          )
+          yield_parameters = build_yield_parameters(tp: start_tp, filepath: filepath, line_number: line_number)
 
           # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
           # then to TappingDevice, both `first` and `find_by_sql` generates the sql
