@@ -3,6 +3,7 @@ require "tapping_device/trackable"
 require "bundler/setup"
 require "pry"
 require "model"
+require "database_cleaner"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -13,6 +14,19 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  DatabaseCleaner.strategy = :truncation
+
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
   end
 
   config.after do
