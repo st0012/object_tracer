@@ -45,14 +45,20 @@ class TappingDevice
               if return_tp.callee_id == method
                 # if the method creates another Relation object
                 if return_tp.defined_class == ActiveRecord::QueryMethods
-                  tap_sql!(return_tp.return_value)
+                  new_device = TappingDevice.new(@options.merge(root_device: root_device), &@block)
+                  new_device.stop_when(&@stop_when)
+                  root_device.descendants << new_device
+                  new_device.tap_sql!(return_tp.return_value)
                 end
 
                 @@sql_listeners.delete(sql_listener)
                 return_tp.disable
                 @in_call = false
 
-                stop! if @stop_when&.call(yield_parameters)
+                if @stop_when&.call(yield_parameters)
+                  stop!
+                  root_device.stop!
+                end
               end
 
             end

@@ -60,6 +60,8 @@ class TappingDevice
     options[:filter_by_paths] ||= []
     options[:exclude_by_paths] ||= []
     options[:with_trace_to] ||= 50
+    options[:root_device] ||= self
+    options[:descendants] ||= []
     options
   end
 
@@ -90,13 +92,21 @@ class TappingDevice
     @stop_when = block
   end
 
+  def root_device
+    options[:root_device]
+  end
+
+  def descendants
+    options[:descendants]
+  end
+
   def record_call!(yield_parameters)
     return if @disabled
 
     if @block
-      @calls << @block.call(yield_parameters)
+      root_device.calls << @block.call(yield_parameters)
     else
-      @calls << yield_parameters
+      root_device.calls << yield_parameters
     end
   end
 

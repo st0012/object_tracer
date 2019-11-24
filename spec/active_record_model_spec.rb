@@ -135,6 +135,17 @@ RSpec.describe TappingDevice do
         end
       end
 
+      it "creates child devices when doing nested tapping" do
+        posts = Post.all
+        device.tap_sql!(posts)
+
+        new_scope = posts.where(id: 0) # should create 1 device
+        posts.order(:id) # should create 1 device
+        new_scope.preload(:comments) # should create 1 device
+
+        expect(device.descendants.count).to eq(3)
+      end
+
       it "tracks repeated calls correctly" do
         posts = Post.where(user: user)
         line_1 = 0
