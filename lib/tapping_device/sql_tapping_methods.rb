@@ -15,11 +15,11 @@ class TappingDevice
     end
 
     def tap_sql!(object)
-      @trace_point = TracePoint.new(:call) do |start_tp|
+      @trace_point = TracePoint.new(:call, :b_call, :c_call) do |start_tp|
         method = start_tp.callee_id
 
         if is_from_target?(object, start_tp)
-          filepath, line_number = get_call_location
+          filepath, line_number = get_call_location(start_tp)
 
           next if should_be_skip_by_paths?(filepath)
 

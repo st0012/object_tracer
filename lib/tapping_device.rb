@@ -7,6 +7,7 @@ require "tapping_device/sql_tapping_methods"
 class TappingDevice
 
   CALLER_START_POINT = 3
+  C_CALLER_START_POINT = 2
 
   attr_reader :options, :calls, :trace_point
 
@@ -109,7 +110,7 @@ class TappingDevice
       }
 
       if send(condition, object, validation_params)
-        filepath, line_number = get_call_location
+        filepath, line_number = get_call_location(tp)
 
         next if should_be_skip_by_paths?(filepath)
 
@@ -126,8 +127,12 @@ class TappingDevice
     self
   end
 
-  def get_call_location
-    caller(CALLER_START_POINT).first.split(":")[0..1]
+  def get_call_location(tp)
+    if tp.event == :c_call
+      caller(C_CALLER_START_POINT)
+    else
+      caller(CALLER_START_POINT)
+    end.first.split(":")[0..1]
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work
