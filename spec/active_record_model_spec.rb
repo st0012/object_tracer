@@ -1,53 +1,5 @@
 require "spec_helper"
-require "model"
 require "stoppable_examples"
-
-RSpec.describe "ActiveRecord model spec" do
-  include TappingDevice::Trackable
-
-  let!(:post) { Post.create!(title: "foo", content: "bar") }
-  let(:locations) { [] }
-
-  describe "#tap_init!" do
-    let(:locations) { [] }
-
-    before do
-      tap_init!(Post) do |payload|
-        locations << {path: payload[:filepath], line_number: payload[:line_number]}
-      end
-    end
-
-    it "triggers tapping when calling .new" do
-      Post.new; line = __LINE__
-
-      expect(locations.first[:path]).to eq(__FILE__)
-      expect(locations.first[:line_number]).to eq(line.to_s)
-    end
-  end
-
-  describe "#tap_assoc!" do
-    let(:user) { User.create!(name: "Stan") }
-    let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
-    let!(:comment) { Comment.create!(post: post, user: user, content: "Nice post!") }
-
-    it "tracks every association calls" do
-      tap_assoc!(post) do |payload|
-        locations << {path: payload[:filepath], line_number: payload[:line_number]}
-      end
-
-      post.user; line_1 = __LINE__
-      post.title
-      post.comments; line_2 = __LINE__
-
-      expect(locations.count).to eq(2)
-      expect(locations[0][:path]).to eq(__FILE__)
-      expect(locations[0][:line_number]).to eq(line_1.to_s)
-      expect(locations[1][:path]).to eq(__FILE__)
-      expect(locations[1][:line_number]).to eq(line_2.to_s)
-    end
-  end
-end
-
 
 RSpec.describe TappingDevice do
   let(:user) { User.create!(name: "Stan") }
@@ -128,15 +80,16 @@ RSpec.describe TappingDevice do
     end
 
     context "call on AR relation objects" do
+      let(:posts) { Post.all }
+
       it_behaves_like "stoppable" do
-        let(:target) { Post.where(user: user) }
+        let(:target) { posts }
         let(:trigger_action) do
           -> (target) { target.where(id: 1).first }
         end
       end
 
       it "creates child devices when doing nested tapping" do
-        posts = Post.all
         device.tap_sql!(posts)
 
         new_scope = posts.where(id: 0) # should create 1 device
@@ -147,7 +100,6 @@ RSpec.describe TappingDevice do
       end
 
       it "tracks repeated calls correctly" do
-        posts = Post.where(user: user)
         line_1 = 0
         line_2 = 0
 
@@ -170,7 +122,6 @@ RSpec.describe TappingDevice do
       end
 
       it "tracks enumerable methods" do
-        posts = user.posts
         line = 0
 
         device.tap_sql!(posts)
@@ -185,7 +136,6 @@ RSpec.describe TappingDevice do
       end
 
       it "also tracks sqls created by AR relation objects created by targets" do
-        posts = Post.where(user: user)
         line = 0
 
         device.tap_sql!(posts)
