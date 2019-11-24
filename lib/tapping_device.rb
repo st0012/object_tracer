@@ -56,15 +56,6 @@ class TappingDevice
     self.class.devices << self
   end
 
-  def process_options(options)
-    options[:filter_by_paths] ||= []
-    options[:exclude_by_paths] ||= []
-    options[:with_trace_to] ||= 50
-    options[:root_device] ||= self
-    options[:descendants] ||= []
-    options
-  end
-
   def tap_init!(klass)
     raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
     track(klass, condition: :tap_init?)
@@ -90,6 +81,13 @@ class TappingDevice
 
   def stop_when(&block)
     @stop_when = block
+  end
+
+  def create_child_device
+    new_device = self.class.new(@options.merge(root_device: root_device), &@block)
+    new_device.stop_when(&@stop_when)
+    self.descendants << new_device
+    new_device
   end
 
   def root_device
@@ -128,7 +126,7 @@ class TappingDevice
 
         record_call!(yield_parameters)
 
-        stop! if @stop_when&.call(yield_parameters)
+        stop_if_condition_fulfilled(yield_parameters)
       end
     end
 
@@ -190,6 +188,21 @@ class TappingDevice
     associations.keys.include?(parameters[:method_name].to_s)
   end
 
+  def process_options(options)
+    options[:filter_by_paths] ||= []
+    options[:exclude_by_paths] ||= []
+    options[:with_trace_to] ||= 50
+    options[:root_device] ||= self
+    options[:descendants] ||= []
+    options
+  end
+
+  def stop_if_condition_fulfilled(yield_parameters)
+    if @stop_when&.call(yield_parameters)
+      stop!
+      root_device.stop!
+    end
+  end
 
   def is_from_target?(object, tp)
     object.__id__ == tp.self.__id__
