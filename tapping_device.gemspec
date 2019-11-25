@@ -26,14 +26,13 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  if ENV["RAILS_VERSION"].to_i >= 6
+  if ENV["RAILS_VERSION"]
     spec.add_dependency "activerecord", "~> #{ENV["RAILS_VERSION"]}"
-    spec.add_development_dependency "sqlite3", "~> 1.4.1"
   else
-    spec.add_dependency "activerecord", "~> 5.2"
-    spec.add_development_dependency "sqlite3", "~> 1.3.6"
+    spec.add_dependency "activerecord", ">= 5.2"
   end
 
+  spec.add_development_dependency "sqlite3", ">= 1.3.6"
   spec.add_development_dependency "database_cleaner"
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "pry"
