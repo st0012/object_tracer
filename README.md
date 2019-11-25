@@ -70,10 +70,11 @@ end
 
 ```erb
 <h1>Posts (<%= @posts.count %>)</h1>
-
-<% @posts.each do |post| %>
-<% end %>
-
+......
+  <% @posts.each do |post| %>
+    ......
+  <% end %>
+......
 <p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
 ```
 
@@ -248,10 +249,11 @@ end
 
 ```erb
 <h1>Posts (<%= @posts.count %>)</h1>
-
-<% @posts.each do |post| %>
-<% end %>
-
+......
+  <% @posts.each do |post| %>
+    ......
+  <% end %>
+......
 <p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
 ```
 
