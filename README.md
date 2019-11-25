@@ -4,7 +4,9 @@
 
 **Please use 0.3.0+ versions, older versions have serious performance issues**
 
-`tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier. For example, you can use it to see who calls your `Post` records
+`tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier.  Here are some sample usages:
+
+### Track method calls
 
 ```ruby
 class PostsController < ApplicationController
@@ -27,6 +29,9 @@ Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
+
+### Track ActiveRecord records’ association calls
+
 Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
 
 ```ruby
@@ -43,8 +48,45 @@ Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
 Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
 ```
 
-However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don’t use this on production**
 
+### Track calls that generates sql queries! (Beta)
+
+`tap_sql!` method helps you track which method calls generate sql queries. This is particularly helpful when tracking calls created from a reused `ActiveRecord::Relation` object.
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    # simulate current_user
+    @current_user = User.last
+    # reusable ActiveRecord::Relation
+    @posts = Post.all
+
+    tap_sql!(@posts) do |payload|
+      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
+    end
+  end
+end
+```
+
+```erb
+<h1>Posts (<%= @posts.count %>)</h1>
+
+<% @posts.each do |post| %>
+<% end %>
+
+<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
+```
+
+And the output would be
+
+```
+Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
+Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
+Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
+```
+
+
+However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don’t use this on production**
 
 ## Installation
 
@@ -73,6 +115,7 @@ In order to use `tapping_device`, you need to include `TappingDevice::Trackable`
 - `tap_init!(class)` -  tracks a class’ instance initialization
 - `tap_on!(object)` - tracks any calls received by the object
 - `tap_assoc!(activerecord_object)` - tracks association calls on a record, like `post.comments`
+- `tap_sql!(activerecord_relation_or_model)` - tracks sql queries generated from the target
 
 ### Info of the call
 All tapping methods (start with `tap_`) takes a block and yield a hash as block argument. 
@@ -185,6 +228,40 @@ Assoc: effective_line_items line: /MY_PROJECT/app/models/line_item_container_hel
 Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
 Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
 ```
+
+### `tap_sql!` (beta)
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    # simulate current_user
+    @current_user = User.last
+    # reusable ActiveRecord::Relation
+    @posts = Post.all
+
+    tap_sql!(@posts) do |payload|
+      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
+    end
+  end
+end
+```
+
+```erb
+<h1>Posts (<%= @posts.count %>)</h1>
+
+<% @posts.each do |post| %>
+<% end %>
+
+<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
+```
+
+```
+Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
+Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
+Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
+```
+
+
 
 ### Advance Usages
 
