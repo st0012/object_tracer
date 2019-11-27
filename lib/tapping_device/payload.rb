@@ -15,5 +15,9 @@ class TappingDevice
       end
       h
     end
+
+    def what_and_where
+      "Method: :#{method_name}, line: #{filepath}:#{line_number}"
+    end
   end
 end
