@@ -28,6 +28,7 @@ RSpec.describe TappingDevice::Payload do
 
   describe "#method_name_and_location" do
     it "returns method's name and where it's called" do
+      puts(subject.method_name_and_location)
       expect(subject.method_name_and_location).to match(/Method: :initialize, line: .+\/tapping_device\/spec\/payload_spec.rb:\d/)
     end
   end

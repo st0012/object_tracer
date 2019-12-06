@@ -19,6 +19,7 @@ jobs:
         ruby-version: ${{ matrix.ruby_version }}
     - name: Install sqlite
       run: |
+        sudo apt-get update
         sudo apt-get install libsqlite3-dev
 
     - name: Build and test with Rails ${{ matrix.rails_version }}
