@@ -15,7 +15,8 @@ class PostsController < ApplicationController
   def show
     @post = Post.find(params[:id])
     tap_on!(@post) do |payload|
-      puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+      # this equals to `"Method: :#{payload[:method_name]}, line: #{payload[:filepath]}:#{payload[:line_number]}"`
+      puts(payload.method_name_and_location)
     end
   end
 end
@@ -24,9 +25,9 @@ end
 And you can see these in log:
 
 ```
-Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -36,16 +37,16 @@ Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 quer
 
 ```ruby
 tap_assoc!(order) do |payload|
-  puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+  puts(payload.method_name_and_location)
 end
 ```
 
 ```
-Assoc: payments line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Assoc: line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Assoc: effective_line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
-Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
+Method: :payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Method: :line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Method: :effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Method: :amending_orders, line: /MY_PROJECT/app/models/order.rb:385
+Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 
@@ -118,8 +119,8 @@ In order to use `tapping_device`, you need to include `TappingDevice::Trackable`
 - `tap_assoc!(activerecord_object)` - tracks association calls on a record, like `post.comments`
 - `tap_sql!(activerecord_relation_or_model)` - tracks sql queries generated from the target
 
-### Info of the call
-All tapping methods (start with `tap_`) takes a block and yield a hash as block argument. 
+### Payload of the call
+All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as block argument. The `Payload` class inherits `Hash` so we can either use it as a hash, or you can call its keys as methods.
 
 ```ruby
 {
@@ -149,6 +150,10 @@ The hash contains
 - `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
 - `tp` - trace point object of this call
 
+#### Some useful helpers
+- `method_name_and_location` - `"Method: :initialize, line: /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7"`
+- `method_name_and_arguments` - `"Method: :initialize, argments: [[:name, \"Stan\"], [:age, 25]]"`
+
 
 ### Options
 - `with_trace_to: 10` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
@@ -157,22 +162,23 @@ The hash contains
 
 ```ruby
 tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
-  puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+  # this equals to `"Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"`
+  puts(payload.method_name_and_location)
 end
 ```
 
 ```
-Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: _read_attribute line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: :_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: :_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 .......
 
 # versus
 
-Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -200,7 +206,8 @@ class PostsController < ApplicationController
 
   def show
     tap_on!(@post) do |payload|
-      puts "Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+      # this equals to `"Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"`
+      puts(payload.method_name_and_location)
     end
   end
 end
@@ -209,25 +216,25 @@ end
 And you can see these in log:
 
 ```
-Method: name line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: user_id line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: to_param line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 ### `tap_assoc!`
 
 ```ruby
 tap_assoc!(order) do |payload|
-  puts "Assoc: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"
+  puts(payload.method_name_and_location)
 end
 ```
 
 ```
-Assoc: payments line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Assoc: line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Assoc: effective_line_items line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Assoc: amending_orders line: /MY_PROJECT/app/models/order.rb:385
-Assoc: amends_order line: /MY_PROJECT/app/models/order.rb:432
+Method: :payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Method: :line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Method: :effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Method: :amending_orders, line: /MY_PROJECT/app/models/order.rb:385
+Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 ### `tap_sql!` (beta)

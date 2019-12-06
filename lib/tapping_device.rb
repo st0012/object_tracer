@@ -1,5 +1,6 @@
 require "active_record"
 require "tapping_device/version"
+require "tapping_device/payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/sql_tapping_methods"
@@ -152,7 +153,7 @@ class TappingDevice
   def build_yield_parameters(tp:, filepath:, line_number:)
     arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
 
-    {
+    Payload.init({
       receiver: tp.self,
       method_name: tp.callee_id,
       arguments: arguments,
@@ -162,7 +163,7 @@ class TappingDevice
       defined_class: tp.defined_class,
       trace: caller[CALLER_START_POINT..(CALLER_START_POINT + options[:with_trace_to])],
       tp: tp
-    }
+    })
   end
 
   def tap_init?(klass, parameters)
