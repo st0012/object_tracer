@@ -19,5 +19,9 @@ class TappingDevice
     def method_name_and_location
       "Method: :#{method_name}, line: #{filepath}:#{line_number}"
     end
+
+    def method_name_and_arguments
+      "Method: :#{method_name}, argments: #{arguments.to_s}"
+    end
   end
 end

@@ -31,4 +31,10 @@ RSpec.describe TappingDevice::Payload do
       expect(subject.method_name_and_location).to match(/Method: :initialize, line: .+\/tapping_device\/spec\/payload_spec.rb:\d/)
     end
   end
+  describe "#method_name_and_arguments" do
+    it "returns method's name and its arguments" do
+      expect(subject.method_name_and_arguments).to match("Method: :initialize, argments: [[:name, \"Stan\"], [:age, 25]]")
+    end
+  end
+
 end
