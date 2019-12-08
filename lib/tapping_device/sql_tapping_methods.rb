@@ -1,21 +1,19 @@
-require "tapping_device/sql_listener"
-
 class TappingDevice
   module SqlTappingMethods
-    @@sql_listeners = []
+    CALL_STACK_SKIPPABLE_METHODS = [:transaction, :tap]
 
-    ActiveSupport::Notifications.subscribe('sql.active_record') do |_1, _2, _3, _4, payload|
-      if !["SCHEMA", "TRANSACTION"].include? payload[:name]
-        @@sql_listeners.each do |listener|
-          listener.payload[:sql] = payload[:sql]
-          listener.payload[:binds] = payload[:binds]
-          listener.device.record_call!(listener.payload)
-        end
+    class SQLListener
+      def call(name, start, finish, message_id, values)
       end
     end
 
+    @@sql_listener = SQLListener.new
+
+    ActiveSupport::Notifications.subscribe("sql.active_record", @@sql_listener)
+
     def tap_sql!(object)
-      @trace_point = TracePoint.new(:call, :b_call, :c_call) do |start_tp|
+      @call_stack = []
+      @trace_point = TracePoint.new(:call, :c_call) do |start_tp|
         method = start_tp.callee_id
 
         if is_from_target?(object, start_tp)
@@ -28,15 +26,21 @@ class TappingDevice
           # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
           # then to TappingDevice, both `first` and `find_by_sql` generates the sql
           # but the results are duplicated, we should only consider the `first` call
-          # so @in_call is used to determine if we're already in a middle of a call
-          # it's not an optimal solution and should be updated
-          next if @in_call
+          next unless @call_stack.empty?
 
-          @in_call = true
+          device = nil
+          unless CALL_STACK_SKIPPABLE_METHODS.include?(method)
+            @call_stack.push(method)
 
-          sql_listener = SqlListenser.new(method, yield_parameters, self)
-
-          @@sql_listeners << sql_listener
+            device = TappingDevice.new do |payload|
+              arguments = payload.arguments
+              values = arguments[:values]
+              next if ["SCHEMA", "TRANSACTION", nil].include? values[:name]
+              yield_parameters[:sql] = values[:sql]
+              record_call!(yield_parameters)
+            end
+            device.tap_on!(@@sql_listener)
+          end
 
           # return of the method call
           TracePoint.trace(:return) do |return_tp|
@@ -48,9 +52,10 @@ class TappingDevice
                   create_child_device.tap_sql!(return_tp.return_value)
                 end
 
-                @@sql_listeners.delete(sql_listener)
+                device&.stop!
+
                 return_tp.disable
-                @in_call = false
+                @call_stack.pop
 
                 stop_if_condition_fulfilled(yield_parameters)
               end

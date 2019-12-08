@@ -126,7 +126,7 @@ All tapping methods (start with `tap_`) takes a block and yield a `Payload` obje
 {
   :receiver=>#<Student:0x00007fabed02aeb8 @name="Stan", @age=18, @tapping_device=[#<TracePoint:return `age'@/PROJECT_PATH/tapping_device/spec/trackable_spec.rb:17>]>, 
   :method_name=>:age, 
-  :arguments=>[], 
+  :arguments=>{}, 
   :return_value=>18, 
   :filepath=>"/PROJECT_PATH/tapping_device/spec/trackable_spec.rb", 
   :line_number=>"171", 
@@ -142,7 +142,7 @@ The hash contains
 - `method_name` - method’s name (symbol) 
 	- e.g. `:name`
 - `arguments` - arguments of the method call
-	- e.g. `[[:name, “Stan”], [:age, 25]]`
+	- e.g. `{name: “Stan”, age: 25}`
 - `return_value` - return value of the method call
 - `filepath` - path to the file that performs the method call
 - `line_number` 
@@ -152,7 +152,7 @@ The hash contains
 
 #### Some useful helpers
 - `method_name_and_location` - `"Method: :initialize, line: /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7"`
-- `method_name_and_arguments` - `"Method: :initialize, argments: [[:name, \"Stan\"], [:age, 25]]"`
+- `method_name_and_arguments` - `"Method: :initialize, argments: {:name=>\"Stan\", :age=>25}"`
 
 
 ### Options
@@ -193,7 +193,7 @@ end
 Student.new("Stan", 18)
 Student.new("Jane", 23)
 
-puts(calls.to_s) #=> [[:initialize, [[:name, "Stan"], [:age, 18]]], [:initialize, [[:name, "Jane"], [:age, 23]]]]
+puts(calls.to_s) #=> [[:initialize, {:name=>"Stan", :age=>18}], [:initialize, {:name=>"Jane", :age=>23}]]
 ```
 
 ### `tap_on!`

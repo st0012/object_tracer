@@ -151,7 +151,8 @@ class TappingDevice
   end
 
   def build_yield_parameters(tp:, filepath:, line_number:)
-    arguments = tp.binding.local_variables.map { |n| [n, tp.binding.local_variable_get(n)] }
+    arguments = {}
+    tp.binding.local_variables.each { |name| arguments[name] = tp.binding.local_variable_get(name) }
 
     Payload.init({
       receiver: tp.self,

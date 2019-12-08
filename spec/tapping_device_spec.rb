@@ -128,9 +128,9 @@ RSpec.describe TappingDevice do
 
         device.tap_on!(stan)
 
-        stan.age = (25)
+        stan.age = 25
 
-        expect(arguments).to eq([[:age, 25]])
+        expect(arguments).to eq({ age: 25 })
       end
       it "returns correct filepath and line number" do
         stan = Student.new("Stan", 18)

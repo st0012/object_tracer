@@ -77,6 +77,37 @@ RSpec.describe TappingDevice do
           ]
         )
       end
+      it "locates calls even if them are created inside a block" do
+        line_1 = line_2 = 0
+
+        device.tap_sql!(Post)
+
+        Post.transaction do
+          Post.first; line_1 = __LINE__
+          Post.last; line_2 = __LINE__
+        end
+
+        sqls = device.calls.map do |call|
+          call[:sql].squeeze(" ")
+        end
+
+        # expect(sqls.count).to eq(2)
+        expect(sqls).to eq(
+          [
+            "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
+            # last
+            "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" DESC LIMIT ?",
+          ]
+        )
+
+        first_call = device.calls[0]
+        expect(first_call[:method_name]).to eq(:first)
+        expect(first_call[:line_number]).to eq(line_1.to_s)
+
+        second_call = device.calls[1]
+        expect(second_call[:method_name]).to eq(:last)
+        expect(second_call[:line_number]).to eq(line_2.to_s)
+      end
     end
 
     context "call on AR relation objects" do
