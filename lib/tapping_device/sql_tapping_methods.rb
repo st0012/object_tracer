@@ -34,7 +34,7 @@ class TappingDevice
 
             device = TappingDevice.new do |payload|
               arguments = payload.arguments
-              values = arguments[4][1]
+              values = arguments[:values]
               next if ["SCHEMA", "TRANSACTION", nil].include? values[:name]
               yield_parameters[:sql] = values[:sql]
               record_call!(yield_parameters)

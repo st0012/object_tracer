@@ -10,7 +10,7 @@ RSpec.describe TappingDevice::Payload do
 
   it "supports payload attributes as methods" do
     expect(subject.receiver).to be_is_a(Student)
-    expect(subject.arguments).to eq([[:name, "Stan"], [:age, 25]])
+    expect(subject.arguments).to eq({ name: "Stan", age: 25 })
     expect(subject.keys).to eq(
       [
         :receiver,
@@ -34,7 +34,7 @@ RSpec.describe TappingDevice::Payload do
   end
   describe "#method_name_and_arguments" do
     it "returns method's name and its arguments" do
-      expect(subject.method_name_and_arguments).to match("Method: :initialize, argments: [[:name, \"Stan\"], [:age, 25]]")
+      expect(subject.method_name_and_arguments).to match("Method: :initialize, argments: {:name=>\"Stan\", :age=>25}")
     end
   end
 
