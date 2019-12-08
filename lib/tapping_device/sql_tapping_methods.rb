@@ -15,6 +15,7 @@ class TappingDevice
     end
 
     def tap_sql!(object)
+      @call_stack = []
       @trace_point = TracePoint.new(:call, :b_call, :c_call) do |start_tp|
         method = start_tp.callee_id
 
@@ -30,9 +31,9 @@ class TappingDevice
           # but the results are duplicated, we should only consider the `first` call
           # so @in_call is used to determine if we're already in a middle of a call
           # it's not an optimal solution and should be updated
-          next if @in_call
+          next unless @call_stack.empty?
 
-          @in_call = true
+          @call_stack.push(method)
 
           sql_listener = SqlListenser.new(method, yield_parameters, self)
 
@@ -50,7 +51,7 @@ class TappingDevice
 
                 @@sql_listeners.delete(sql_listener)
                 return_tp.disable
-                @in_call = false
+                @call_stack.pop
 
                 stop_if_condition_fulfilled(yield_parameters)
               end
