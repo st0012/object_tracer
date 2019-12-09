@@ -99,13 +99,13 @@ class TappingDevice
     options[:descendants]
   end
 
-  def record_call!(yield_parameters)
+  def record_call!(payload)
     return if @disabled
 
     if @block
-      root_device.calls << @block.call(yield_parameters)
+      root_device.calls << @block.call(payload)
     else
-      root_device.calls << yield_parameters
+      root_device.calls << payload
     end
   end
 
@@ -123,11 +123,11 @@ class TappingDevice
 
         next if should_be_skipped_by_paths?(filepath)
 
-        yield_parameters = build_yield_parameters(tp: tp, filepath: filepath, line_number: line_number)
+        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
-        record_call!(yield_parameters)
+        record_call!(payload)
 
-        stop_if_condition_fulfilled(yield_parameters)
+        stop_if_condition_fulfilled(payload)
       end
     end
 
@@ -150,7 +150,7 @@ class TappingDevice
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
   end
 
-  def build_yield_parameters(tp:, filepath:, line_number:)
+  def build_payload(tp:, filepath:, line_number:)
     arguments = {}
     tp.binding.local_variables.each { |name| arguments[name] = tp.binding.local_variable_get(name) }
 
@@ -199,8 +199,8 @@ class TappingDevice
     options
   end
 
-  def stop_if_condition_fulfilled(yield_parameters)
-    if @stop_when&.call(yield_parameters)
+  def stop_if_condition_fulfilled(payload)
+    if @stop_when&.call(payload)
       stop!
       root_device.stop!
     end

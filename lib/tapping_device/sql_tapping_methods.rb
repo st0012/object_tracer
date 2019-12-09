@@ -20,18 +20,17 @@ class TappingDevice
 
         next if should_be_skipped_by_paths?(filepath) || already_recording?
 
-        yield_parameters = build_yield_parameters(tp: start_tp, filepath: filepath, line_number: line_number)
+        payload = build_payload(tp: start_tp, filepath: filepath, line_number: line_number)
 
         device = nil
         unless CALL_STACK_SKIPPABLE_METHODS.include?(method)
           @call_stack.push(method)
 
-          device = TappingDevice.new do |payload|
-            arguments = payload.arguments
-            values = arguments[:values]
+          device = TappingDevice.new do |sql_listener_payload|
+            values = sql_listener_payload.arguments[:values]
             next if ["SCHEMA", "TRANSACTION", nil].include? values[:name]
-            yield_parameters[:sql] = values[:sql]
-            record_call!(yield_parameters)
+            payload[:sql] = values[:sql]
+            record_call!(payload)
           end
           device.tap_on!(@@sql_listener)
         end
@@ -49,7 +48,7 @@ class TappingDevice
             return_tp.disable
             @call_stack.pop
 
-            stop_if_condition_fulfilled(yield_parameters)
+            stop_if_condition_fulfilled(payload)
           end
         end.enable
       end

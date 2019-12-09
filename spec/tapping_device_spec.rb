@@ -89,7 +89,6 @@ RSpec.describe TappingDevice do
 
       device_1.tap_on!(stan)
       device_2.tap_on!(stan)
-      stop! if @stop_when&.call(yield_parameters)
 
       stan.name
 
