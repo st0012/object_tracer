@@ -136,11 +136,11 @@ class TappingDevice
     self
   end
 
-  def get_call_location(tp)
+  def get_call_location(tp, padding: 0)
     if tp.event == :c_call
-      caller(C_CALLER_START_POINT)
+      caller(C_CALLER_START_POINT + padding)
     else
-      caller(CALLER_START_POINT)
+      caller(CALLER_START_POINT + padding)
     end.first.split(":")[0..1]
   end
 
