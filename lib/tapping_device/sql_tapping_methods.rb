@@ -18,14 +18,9 @@ class TappingDevice
         # we need extra padding because of `with_trace_point_on_target`
         filepath, line_number = get_call_location(start_tp, padding: 1)
 
-        next if should_be_skip_by_paths?(filepath)
+        next if should_be_skip_by_paths?(filepath) || already_recording?
 
         yield_parameters = build_yield_parameters(tp: start_tp, filepath: filepath, line_number: line_number)
-
-        # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
-        # then to TappingDevice, both `first` and `find_by_sql` generates the sql
-        # but the results are duplicated, we should only consider the `first` call
-        next unless @call_stack.empty?
 
         device = nil
         unless CALL_STACK_SKIPPABLE_METHODS.include?(method)
@@ -63,6 +58,15 @@ class TappingDevice
 
       self
     end
+  end
+
+  private
+
+  # usually, AR's query methods (like `first`) will end up calling `find_by_sql`
+  # then to TappingDevice, both `first` and `find_by_sql` generates the sql
+  # but the results are duplicated, we should only consider the `first` call
+  def already_recording?
+    !@call_stack.empty?
   end
 
   def with_trace_point_on_target(object, event:)
