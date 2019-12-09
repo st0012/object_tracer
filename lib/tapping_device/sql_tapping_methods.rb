@@ -18,7 +18,7 @@ class TappingDevice
         # we need extra padding because of `with_trace_point_on_target`
         filepath, line_number = get_call_location(start_tp, padding: 1)
 
-        next if should_be_skip_by_paths?(filepath) || already_recording?
+        next if should_be_skipped_by_paths?(filepath) || already_recording?
 
         yield_parameters = build_yield_parameters(tp: start_tp, filepath: filepath, line_number: line_number)
 

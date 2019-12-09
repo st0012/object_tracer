@@ -121,7 +121,7 @@ class TappingDevice
       if send(condition, object, validation_params)
         filepath, line_number = get_call_location(tp)
 
-        next if should_be_skip_by_paths?(filepath)
+        next if should_be_skipped_by_paths?(filepath)
 
         yield_parameters = build_yield_parameters(tp: tp, filepath: filepath, line_number: line_number)
 
@@ -145,7 +145,7 @@ class TappingDevice
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work
-  def should_be_skip_by_paths?(filepath)
+  def should_be_skipped_by_paths?(filepath)
     options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
   end
