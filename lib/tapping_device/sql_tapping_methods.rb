@@ -60,7 +60,10 @@ class TappingDevice
   def tap_on_sql_instrumentation!(payload)
     device = TappingDevice.new do |sql_listener_payload|
       values = sql_listener_payload.arguments[:values]
-      next if ["SCHEMA", "TRANSACTION", nil].include? values[:name]
+
+      next if ["SCHEMA", "TRANSACTION"].include? values[:name]
+      next if values[:sql].match?(/SAVEPOINT/)
+
       payload[:sql] = values[:sql]
       record_call!(payload)
     end

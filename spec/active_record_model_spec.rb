@@ -91,7 +91,7 @@ RSpec.describe TappingDevice do
           call[:sql].squeeze(" ")
         end
 
-        # expect(sqls.count).to eq(2)
+        expect(sqls.count).to eq(2)
         expect(sqls).to eq(
           [
             "SELECT \"posts\".* FROM \"posts\" ORDER BY \"posts\".\"id\" ASC LIMIT ?",
