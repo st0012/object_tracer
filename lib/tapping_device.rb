@@ -1,5 +1,6 @@
 require "active_record"
 require "tapping_device/version"
+require "tapping_device/manageable"
 require "tapping_device/payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
@@ -12,42 +13,11 @@ class TappingDevice
 
   attr_reader :options, :calls, :trace_point
 
-  @@devices = []
-  @@suspend_new = false
+  @devices = []
+  @suspend_new = false
 
   include SqlTappingMethods
-
-  def self.suspend_new
-    @@suspend_new
-  end
-
-  # list all registered devices
-  def self.devices
-    @@devices
-  end
-
-  # disable given device and remove it from registered list
-  def self.delete_device(device)
-    device.trace_point&.disable
-    @@devices -= [device]
-  end
-
-  # stops all registered devices and remove them from registered list
-  def self.stop_all!
-    @@devices.each(&:stop!)
-  end
-
-  # suspend enabling new trace points
-  # user can still create new Device instances, but they won't be functional
-  def self.suspend_new!
-    @@suspend_new = true
-  end
-
-  # reset everything to clean state and disable all devices
-  def self.reset!
-    @@suspend_new = false
-    stop_all!
-  end
+  extend Manageable
 
   def initialize(options = {}, &block)
     @block = block
@@ -126,7 +96,7 @@ class TappingDevice
       end
     end
 
-    @trace_point.enable unless @@suspend_new
+    @trace_point.enable unless self.class.suspend_new
 
     self
   end
