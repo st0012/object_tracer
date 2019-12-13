@@ -2,6 +2,37 @@ require "spec_helper"
 require "stoppable_examples"
 
 RSpec.describe TappingDevice do
+  describe "tap_passed!"do
+    let(:device) { described_class.new }
+    subject { :tap_passed! }
+
+    def foo(obj)
+      obj
+    end
+
+    def bar(obj)
+      obj
+    end
+
+    it "records all usages of the object" do
+      s = Student.new("Stan", 18)
+      device.tap_passed!(s)
+
+      foo(s); line_1 = __LINE__
+      s.name
+      bar(s); line_2 = __LINE__
+
+      expect(device.calls.count).to eq(2)
+
+      call = device.calls.first
+      expect(call.method_name).to eq(:foo)
+      expect(call.line_number).to eq(line_1.to_s)
+
+      call = device.calls.second
+      expect(call.method_name).to eq(:bar)
+      expect(call.line_number).to eq(line_2.to_s)
+    end
+  end
   describe "#tap_init!" do
     let(:device) { described_class.new }
     subject { :tap_init! }

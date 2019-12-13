@@ -36,6 +36,10 @@ class TappingDevice
     track(object, condition: :tap_on?)
   end
 
+  def tap_passed!(object)
+    track(object, condition: :tap_passed?)
+  end
+
   def tap_assoc!(record)
     raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
     track(record, condition: :tap_associations?)
@@ -153,6 +157,16 @@ class TappingDevice
     model_class = object.class
     associations = model_class.reflections
     associations.keys.include?(tp.callee_id.to_s)
+  end
+
+  def tap_passed?(object, tp)
+    return false if tp.self == self
+    # if a no-arugment method is called, tp.binding.local_variables will be those local variables in the same scope
+    # so we need to make sure the method takes arguments, then we can be sure that the locals are arguments
+    return false unless tp.self.method(tp.callee_id).arity > 0
+
+    argument_values = tp.binding.local_variables.map { |name| tp.binding.local_variable_get(name) }
+    argument_values.include?(object)
   end
 
   def process_options(options)
