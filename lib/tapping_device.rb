@@ -73,16 +73,6 @@ class TappingDevice
     options[:descendants]
   end
 
-  def record_call!(payload)
-    return if @disabled
-
-    if @block
-      root_device.calls << @block.call(payload)
-    else
-      root_device.calls << payload
-    end
-  end
-
   private
 
   def track(object, condition:)
@@ -148,7 +138,7 @@ class TappingDevice
   end
 
   def tap_on?(object, tp)
-    tp.self.__id__ == object.__id__
+    is_from_target?(object, tp)
   end
 
   def tap_associations?(object, tp)
@@ -187,5 +177,15 @@ class TappingDevice
 
   def is_from_target?(object, tp)
     object.__id__ == tp.self.__id__
+  end
+
+  def record_call!(payload)
+    return if @disabled
+
+    if @block
+      root_device.calls << @block.call(payload)
+    else
+      root_device.calls << payload
+    end
   end
 end
