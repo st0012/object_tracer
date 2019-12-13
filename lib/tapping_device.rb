@@ -113,12 +113,7 @@ class TappingDevice
 
   def track(object, condition:)
     @trace_point = TracePoint.new(:return) do |tp|
-      validation_params = {
-        receiver: tp.self,
-        method_name: tp.callee_id
-      }
-
-      if send(condition, object, validation_params)
+      if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
 
         next if should_be_skipped_by_paths?(filepath)
@@ -167,9 +162,9 @@ class TappingDevice
     })
   end
 
-  def tap_init?(klass, parameters)
-    receiver = parameters[:receiver]
-    method_name = parameters[:method_name]
+  def tap_init?(klass, tp)
+    receiver = tp.self
+    method_name = tp.callee_id
 
     if klass.ancestors.include?(ActiveRecord::Base)
       method_name == :new && receiver.ancestors.include?(klass)
@@ -178,16 +173,16 @@ class TappingDevice
     end
   end
 
-  def tap_on?(object, parameters)
-    parameters[:receiver].__id__ == object.__id__
+  def tap_on?(object, tp)
+    tp.self.__id__ == object.__id__
   end
 
-  def tap_associations?(object, parameters)
-    return false unless tap_on?(object, parameters)
+  def tap_associations?(object, tp)
+    return false unless tap_on?(object, tp)
 
     model_class = object.class
     associations = model_class.reflections
-    associations.keys.include?(parameters[:method_name].to_s)
+    associations.keys.include?(tp.callee_id.to_s)
   end
 
   def process_options(options)
