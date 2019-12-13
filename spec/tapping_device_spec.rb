@@ -14,13 +14,19 @@ RSpec.describe TappingDevice do
       obj
     end
 
-    it "records all usages of the object" do
+    private
+
+    def private_foo(obj)
+      obj
+    end
+    it "records all arguments usages of the object" do
       s = Student.new("Stan", 18)
       device.tap_passed!(s)
 
       foo(s); line_1 = __LINE__
       s.name
       bar(s); line_2 = __LINE__
+      foo("123")
 
       expect(device.calls.count).to eq(2)
 
@@ -31,6 +37,64 @@ RSpec.describe TappingDevice do
       call = device.calls.second
       expect(call.method_name).to eq(:bar)
       expect(call.line_number).to eq(line_2.to_s)
+    end
+    it "records private calls as well" do
+      s = Student.new("Stan", 18)
+      device.tap_passed!(s)
+
+      send(:private_foo, s); line_1 = __LINE__
+
+      expect(device.calls.count).to eq(1)
+
+      call = device.calls.first
+      expect(call.method_name).to eq(:private_foo)
+      expect(call.line_number).to eq(line_1.to_s)
+    end
+    it "works even if the object's `method` method has been overriden" do
+      class Baz
+        def method
+
+        end
+
+        def foo(obj)
+          obj
+        end
+      end
+
+      s = Student.new("Stan", 18)
+      device.tap_passed!(s)
+
+      Baz.new.foo(s); line_1 = __LINE__
+
+      expect(device.calls.count).to eq(1)
+
+      call = device.calls.first
+      expect(call.method_name).to eq(:foo)
+      expect(call.line_number).to eq(line_1.to_s)
+    end
+    it "works even if the object's `method` method has been overriden (2)" do
+      class Baz
+        def method
+
+        end
+
+        private
+
+        def foo(obj)
+          obj
+        end
+      end
+
+      s = Student.new("Stan", 18)
+      device.tap_passed!(s)
+
+      Baz.new.send(:foo, s); line_1 = __LINE__
+
+      expect(device.calls.count).to eq(1)
+
+      call = device.calls.first
+      expect(call.method_name).to eq(:foo)
+      expect(call.line_number).to eq(line_1.to_s)
     end
   end
   describe "#tap_init!" do

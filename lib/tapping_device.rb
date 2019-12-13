@@ -150,13 +150,36 @@ class TappingDevice
   end
 
   def tap_passed?(object, tp)
-    return false if tp.self == self
+    # we don't care about calls from the device instance
+    return false if is_from_target?(self, tp)
+
+    method_object = get_method_object_from(tp.self, tp.callee_id)
     # if a no-arugment method is called, tp.binding.local_variables will be those local variables in the same scope
     # so we need to make sure the method takes arguments, then we can be sure that the locals are arguments
-    return false unless tp.self.method(tp.callee_id).arity > 0
+    return false unless method_object && method_object.arity.to_i > 0
 
     argument_values = tp.binding.local_variables.map { |name| tp.binding.local_variable_get(name) }
-    argument_values.include?(object)
+
+    argument_values.any? do |value|
+      # during comparison, Ruby might perform data type conversion like calling `to_sym` on the value
+      # but not every value supports every conversion methods
+      begin
+        object == value
+      rescue NoMethodError
+        false
+      end
+    end
+  end
+
+  def get_method_object_from(target, method_name)
+    target.method(method_name)
+  rescue ArgumentError
+    method_method = Object.method(:method).unbind
+    method_method.bind(target).call(method_name)
+  rescue NameError
+    # if any part of the program uses Refinement to extend its methods
+    # we might still get NoMethodError when trying to get that method outside the scope
+    nil
   end
 
   def process_options(options)
