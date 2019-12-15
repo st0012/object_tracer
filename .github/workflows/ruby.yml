@@ -19,6 +19,8 @@ jobs:
         ruby-version: ${{ matrix.ruby_version }}
     - name: Install sqlite
       run: |
+        # See https://github.community/t5/GitHub-Actions/ubuntu-latest-Apt-repository-list-issues/td-p/41122/page/2
+        sudo rm -f /etc/apt/sources.list.d/dotnetdev.list /etc/apt/sources.list.d/microsoft-prod.list
         sudo apt-get update
         sudo apt-get install libsqlite3-dev
 

@@ -8,9 +8,7 @@ RSpec.describe TappingDevice do
 
   describe "#tap_assoc!" do
     let(:device) do
-      described_class.new do |payload|
-        {path: payload[:filepath], line_number: payload[:line_number]}
-      end
+      described_class.new
     end
     it "tracks every association calls" do
       device.tap_assoc!(post)
@@ -20,10 +18,10 @@ RSpec.describe TappingDevice do
       post.comments; line_2 = __LINE__
 
       expect(device.calls.count).to eq(2)
-      expect(device.calls[0][:path]).to eq(__FILE__)
-      expect(device.calls[0][:line_number]).to eq(line_1.to_s)
-      expect(device.calls[1][:path]).to eq(__FILE__)
-      expect(device.calls[1][:line_number]).to eq(line_2.to_s)
+      expect(device.calls[0].filepath).to eq(__FILE__)
+      expect(device.calls[0].line_number).to eq(line_1.to_s)
+      expect(device.calls[1].filepath).to eq(__FILE__)
+      expect(device.calls[1].line_number).to eq(line_2.to_s)
     end
   end
 
@@ -47,8 +45,9 @@ RSpec.describe TappingDevice do
         Post.first
 
         # first
-        expect(device.calls[0][:filepath]).to eq(__FILE__)
-        expect(device.calls[0][:line_number]).to eq((line_mark+1).to_s)
+        expect(device.calls[0].filepath).to eq(__FILE__)
+        expect(device.calls[0].target).to eq(Post)
+        expect(device.calls[0].line_number).to eq((line_mark+1).to_s)
       end
       it "won't be affected by other object's calls" do
         device.tap_sql!(Post)
@@ -62,7 +61,7 @@ RSpec.describe TappingDevice do
         end
 
         sqls = device.calls.map do |call|
-          call[:sql].squeeze(" ")
+          call.sql.squeeze(" ")
         end
 
         expect(sqls.count).to eq(3)
@@ -88,7 +87,7 @@ RSpec.describe TappingDevice do
         end
 
         sqls = device.calls.map do |call|
-          call[:sql].squeeze(" ")
+          call.sql.squeeze(" ")
         end
 
         expect(sqls.count).to eq(2)
@@ -101,12 +100,12 @@ RSpec.describe TappingDevice do
         )
 
         first_call = device.calls[0]
-        expect(first_call[:method_name]).to eq(:first)
-        expect(first_call[:line_number]).to eq(line_1.to_s)
+        expect(first_call.method_name).to eq(:first)
+        expect(first_call.line_number).to eq(line_1.to_s)
 
         second_call = device.calls[1]
-        expect(second_call[:method_name]).to eq(:last)
-        expect(second_call[:line_number]).to eq(line_2.to_s)
+        expect(second_call.method_name).to eq(:last)
+        expect(second_call.line_number).to eq(line_2.to_s)
       end
     end
 
@@ -144,12 +143,14 @@ RSpec.describe TappingDevice do
         expect(device.calls.count).to eq(2)
 
         first_call = device.calls[0]
-        expect(first_call[:method_name]).to eq(:first)
-        expect(first_call[:line_number]).to eq(line_1.to_s)
+        expect(first_call.target).to eq(posts)
+        expect(first_call.method_name).to eq(:first)
+        expect(first_call.line_number).to eq(line_1.to_s)
 
         second_call = device.calls[1]
-        expect(second_call[:method_name]).to eq(:first)
-        expect(second_call[:line_number]).to eq(line_2.to_s)
+        expect(second_call.target).to eq(posts)
+        expect(second_call.method_name).to eq(:first)
+        expect(second_call.line_number).to eq(line_2.to_s)
       end
 
       it "tracks enumerable methods" do
@@ -162,8 +163,8 @@ RSpec.describe TappingDevice do
         end
 
         call = device.calls[0]
-        expect(call[:method_name]).to eq(:collect)
-        expect(call[:line_number]).to eq(line.to_s)
+        expect(call.method_name).to eq(:collect)
+        expect(call.line_number).to eq(line.to_s)
       end
 
       it "also tracks sqls created by AR relation objects created by targets" do
@@ -180,17 +181,17 @@ RSpec.describe TappingDevice do
         expect(device.calls.count).to eq(3)
 
         first_call = device.calls[0]
-        expect(first_call[:method_name]).to eq(:first)
-        expect(first_call[:receiver]).to eq(posts)
+        expect(first_call.method_name).to eq(:first)
+        expect(first_call.receiver).to eq(posts)
 
         second_call = device.calls[1]
-        expect(second_call[:method_name]).to eq(:first)
-        expect(second_call[:receiver]).to be_a(ActiveRecord::Relation)
-        expect(second_call[:line_number]).to eq(line.to_s)
+        expect(second_call.method_name).to eq(:first)
+        expect(second_call.receiver).to be_a(ActiveRecord::Relation)
+        expect(second_call.line_number).to eq(line.to_s)
 
         last_call = device.calls[2]
-        expect(last_call[:method_name]).to eq(:last)
-        expect(last_call[:receiver]).to eq(posts)
+        expect(last_call.method_name).to eq(:last)
+        expect(last_call.receiver).to eq(posts)
       end
     end
   end

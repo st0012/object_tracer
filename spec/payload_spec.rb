@@ -1,8 +1,8 @@
 require "spec_helper"
 
 RSpec.describe TappingDevice::Payload do
+  let(:device) { TappingDevice.new }
   subject do
-    device = TappingDevice.new
     device.tap_init!(Student)
     Student.new("Stan", 25)
     device.calls.first
@@ -13,8 +13,10 @@ RSpec.describe TappingDevice::Payload do
     expect(subject.arguments).to eq({ name: "Stan", age: 25 })
     expect(subject.keys).to eq(
       [
+        :target,
         :receiver,
         :method_name,
+        :method_object,
         :arguments,
         :return_value,
         :filepath,
@@ -37,5 +39,45 @@ RSpec.describe TappingDevice::Payload do
       expect(subject.method_name_and_arguments).to match("Method: :initialize, argments: {:name=>\"Stan\", :age=>25}")
     end
   end
+  describe "#passed_at" do
+    subject { "Stan" }
+    before do
+      device.tap_passed!(subject)
+    end
 
+    it "returns nil if the payload is not from `tap_passed!`" do
+      new_device = TappingDevice.new
+      new_device.tap_init!(Student)
+      Student.new("Stan", 25)
+
+      expect(new_device.calls.first.passed_at).to eq(nil)
+    end
+
+    it "returns the argument name, method name and location" do
+      Student.new(subject, 25); line = __LINE__
+
+      payload = device.calls.first
+      expect(payload.passed_at).to eq(
+        <<~MSG.chomp
+        Passed as 'name' in method ':initialize'
+          at #{__FILE__}:#{line}
+        MSG
+      )
+    end
+
+    context "with_method_head: true" do
+      it "returns method definition's head as well" do
+        Student.new(subject, 25); line = __LINE__
+
+        payload = device.calls.first
+        expect(payload.passed_at(with_method_head: true)).to eq(
+          <<~MSG.chomp
+          Passed as 'name' in method ':initialize'
+            > def initialize(name, age)
+            at #{__FILE__}:#{line}
+          MSG
+        )
+      end
+    end
+  end
 end

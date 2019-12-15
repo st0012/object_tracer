@@ -1,5 +1,6 @@
 require "active_record"
 require "tapping_device/version"
+require "tapping_device/manageable"
 require "tapping_device/payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
@@ -10,44 +11,13 @@ class TappingDevice
   CALLER_START_POINT = 3
   C_CALLER_START_POINT = 2
 
-  attr_reader :options, :calls, :trace_point
+  attr_reader :options, :calls, :trace_point, :target
 
-  @@devices = []
-  @@suspend_new = false
+  @devices = []
+  @suspend_new = false
 
   include SqlTappingMethods
-
-  def self.suspend_new
-    @@suspend_new
-  end
-
-  # list all registered devices
-  def self.devices
-    @@devices
-  end
-
-  # disable given device and remove it from registered list
-  def self.delete_device(device)
-    device.trace_point&.disable
-    @@devices -= [device]
-  end
-
-  # stops all registered devices and remove them from registered list
-  def self.stop_all!
-    @@devices.each(&:stop!)
-  end
-
-  # suspend enabling new trace points
-  # user can still create new Device instances, but they won't be functional
-  def self.suspend_new!
-    @@suspend_new = true
-  end
-
-  # reset everything to clean state and disable all devices
-  def self.reset!
-    @@suspend_new = false
-    stop_all!
-  end
+  extend Manageable
 
   def initialize(options = {}, &block)
     @block = block
@@ -64,6 +34,10 @@ class TappingDevice
 
   def tap_on!(object)
     track(object, condition: :tap_on?)
+  end
+
+  def tap_passed!(object)
+    track(object, condition: :tap_passed?)
   end
 
   def tap_assoc!(record)
@@ -87,6 +61,7 @@ class TappingDevice
   def create_child_device
     new_device = self.class.new(@options.merge(root_device: root_device), &@block)
     new_device.stop_when(&@stop_when)
+    new_device.instance_variable_set(:@target, @target)
     self.descendants << new_device
     new_device
   end
@@ -99,26 +74,12 @@ class TappingDevice
     options[:descendants]
   end
 
-  def record_call!(payload)
-    return if @disabled
-
-    if @block
-      root_device.calls << @block.call(payload)
-    else
-      root_device.calls << payload
-    end
-  end
-
   private
 
   def track(object, condition:)
+    @target = object
     @trace_point = TracePoint.new(:return) do |tp|
-      validation_params = {
-        receiver: tp.self,
-        method_name: tp.callee_id
-      }
-
-      if send(condition, object, validation_params)
+      if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
 
         next if should_be_skipped_by_paths?(filepath)
@@ -131,7 +92,7 @@ class TappingDevice
       end
     end
 
-    @trace_point.enable unless @@suspend_new
+    @trace_point.enable unless self.class.suspend_new
 
     self
   end
@@ -155,8 +116,10 @@ class TappingDevice
     tp.binding.local_variables.each { |name| arguments[name] = tp.binding.local_variable_get(name) }
 
     Payload.init({
+      target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
+      method_object: get_method_object_from(tp.self, tp.callee_id),
       arguments: arguments,
       return_value: (tp.return_value rescue nil),
       filepath: filepath,
@@ -167,9 +130,9 @@ class TappingDevice
     })
   end
 
-  def tap_init?(klass, parameters)
-    receiver = parameters[:receiver]
-    method_name = parameters[:method_name]
+  def tap_init?(klass, tp)
+    receiver = tp.self
+    method_name = tp.callee_id
 
     if klass.ancestors.include?(ActiveRecord::Base)
       method_name == :new && receiver.ancestors.include?(klass)
@@ -178,16 +141,49 @@ class TappingDevice
     end
   end
 
-  def tap_on?(object, parameters)
-    parameters[:receiver].__id__ == object.__id__
+  def tap_on?(object, tp)
+    is_from_target?(object, tp)
   end
 
-  def tap_associations?(object, parameters)
-    return false unless tap_on?(object, parameters)
+  def tap_associations?(object, tp)
+    return false unless tap_on?(object, tp)
 
     model_class = object.class
     associations = model_class.reflections
-    associations.keys.include?(parameters[:method_name].to_s)
+    associations.keys.include?(tp.callee_id.to_s)
+  end
+
+  def tap_passed?(object, tp)
+    # we don't care about calls from the device instance
+    return false if is_from_target?(self, tp)
+
+    method_object = get_method_object_from(tp.self, tp.callee_id)
+    # if a no-arugment method is called, tp.binding.local_variables will be those local variables in the same scope
+    # so we need to make sure the method takes arguments, then we can be sure that the locals are arguments
+    return false unless method_object && method_object.arity.to_i > 0
+
+    argument_values = tp.binding.local_variables.map { |name| tp.binding.local_variable_get(name) }
+
+    argument_values.any? do |value|
+      # during comparison, Ruby might perform data type conversion like calling `to_sym` on the value
+      # but not every value supports every conversion methods
+      begin
+        object == value
+      rescue NoMethodError
+        false
+      end
+    end
+  end
+
+  def get_method_object_from(target, method_name)
+    target.method(method_name)
+  rescue ArgumentError
+    method_method = Object.method(:method).unbind
+    method_method.bind(target).call(method_name)
+  rescue NameError
+    # if any part of the program uses Refinement to extend its methods
+    # we might still get NoMethodError when trying to get that method outside the scope
+    nil
   end
 
   def process_options(options)
@@ -208,5 +204,15 @@ class TappingDevice
 
   def is_from_target?(object, tp)
     object.__id__ == tp.self.__id__
+  end
+
+  def record_call!(payload)
+    return if @disabled
+
+    if @block
+      root_device.calls << @block.call(payload)
+    else
+      root_device.calls << payload
+    end
   end
 end

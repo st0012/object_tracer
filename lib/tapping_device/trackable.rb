@@ -1,19 +1,9 @@
 class TappingDevice
   module Trackable
-    def tap_init!(klass, options = {}, &block)
-      new_device(options, &block).tap_init!(klass)
-    end
-
-    def tap_assoc!(record, options = {}, &block)
-      new_device(options, &block).tap_assoc!(record)
-    end
-
-    def tap_on!(object, options = {}, &block)
-      new_device(options, &block).tap_on!(object)
-    end
-
-    def tap_sql!(object, options = {}, &block)
-      new_device(options, &block).tap_sql!(object)
+    [:tap_on!, :tap_init!, :tap_assoc!, :tap_sql!, :tap_passed!].each do |method|
+      define_method method do |object, options = {}, &block|
+        new_device(options, &block).send(method, object)
+      end
     end
 
     def new_device(options, &block)

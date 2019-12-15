@@ -3,6 +3,29 @@ require "spec_helper"
 RSpec.describe TappingDevice::Trackable do
   include described_class
 
+  describe "#tap_passed!" do
+    def foo(obj)
+      obj
+    end
+
+    def bar(obj)
+      obj
+    end
+
+    it "records all usages of the object" do
+      count = 0
+      s = Student.new("Stan", 18)
+
+      tap_passed!(s) { count += 1 }
+
+      foo(s)
+      s.name
+      bar(s)
+
+      expect(count).to eq(2)
+    end
+  end
+
   describe "#tap_init!" do
     it "tracks Student's initialization" do
       count = 0

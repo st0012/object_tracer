@@ -13,6 +13,7 @@ class TappingDevice
 
     def tap_sql!(object)
       @call_stack = []
+      @target ||= object
       @trace_point = with_trace_point_on_target(object, event: [:call, :c_call]) do |start_tp|
         ########## Check if the call is worth recording ##########
         filepath, line_number = get_call_location(start_tp, padding: 1) # we need extra padding because of `with_trace_point_on_target`
