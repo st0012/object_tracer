@@ -1,6 +1,9 @@
 class TappingDevice
   class Payload < Hash
-    ATTRS = [:receiver, :method_name, :arguments, :return_value, :filepath, :line_number, :defined_class, :trace, :tp, :sql]
+    ATTRS = [
+      :target, :receiver, :method_name, :arguments, :return_value, :filepath, :line_number,
+      :defined_class, :trace, :tp, :sql
+    ]
 
     ATTRS.each do |attr|
       define_method attr do
@@ -16,8 +19,12 @@ class TappingDevice
       h
     end
 
+    def location
+      "#{filepath}:#{line_number}"
+    end
+
     def method_name_and_location
-      "Method: :#{method_name}, line: #{filepath}:#{line_number}"
+      "Method: :#{method_name}, line: #{location}"
     end
 
     def method_name_and_arguments

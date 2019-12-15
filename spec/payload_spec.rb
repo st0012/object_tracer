@@ -13,6 +13,7 @@ RSpec.describe TappingDevice::Payload do
     expect(subject.arguments).to eq({ name: "Stan", age: 25 })
     expect(subject.keys).to eq(
       [
+        :target,
         :receiver,
         :method_name,
         :arguments,

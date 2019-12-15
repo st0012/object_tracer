@@ -31,10 +31,12 @@ RSpec.describe TappingDevice do
       expect(device.calls.count).to eq(2)
 
       call = device.calls.first
+      expect(call.target).to eq(s)
       expect(call.method_name).to eq(:foo)
       expect(call.line_number).to eq(line_1.to_s)
 
       call = device.calls.second
+      expect(call.target).to eq(s)
       expect(call.method_name).to eq(:bar)
       expect(call.line_number).to eq(line_2.to_s)
     end
@@ -115,6 +117,7 @@ RSpec.describe TappingDevice do
       HighSchoolStudent.new("Stan", 18)
 
       expect(device.calls.count).to eq(1)
+      expect(device.calls.first.target).to eq(HighSchoolStudent)
     end
     it "doesn't track School's initialization" do
       device.tap_init!(Student)

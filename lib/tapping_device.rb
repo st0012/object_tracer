@@ -11,7 +11,7 @@ class TappingDevice
   CALLER_START_POINT = 3
   C_CALLER_START_POINT = 2
 
-  attr_reader :options, :calls, :trace_point
+  attr_reader :options, :calls, :trace_point, :target
 
   @devices = []
   @suspend_new = false
@@ -61,6 +61,7 @@ class TappingDevice
   def create_child_device
     new_device = self.class.new(@options.merge(root_device: root_device), &@block)
     new_device.stop_when(&@stop_when)
+    new_device.instance_variable_set(:@target, @target)
     self.descendants << new_device
     new_device
   end
@@ -76,6 +77,7 @@ class TappingDevice
   private
 
   def track(object, condition:)
+    @target = object
     @trace_point = TracePoint.new(:return) do |tp|
       if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
@@ -114,6 +116,7 @@ class TappingDevice
     tp.binding.local_variables.each { |name| arguments[name] = tp.binding.local_variable_get(name) }
 
     Payload.init({
+      target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
       arguments: arguments,
