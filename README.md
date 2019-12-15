@@ -2,7 +2,6 @@
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
 
-**Please use 0.3.0+ versions, older versions have serious performance issues**
 
 `tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier.  Here are some sample usages:
 
@@ -50,7 +49,7 @@ Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 
-### Track calls that generates sql queries! (Beta)
+### Track calls that generates sql queries!
 
 `tap_sql!` method helps you track which method calls generate sql queries. This is particularly helpful when tracking calls created from a reused `ActiveRecord::Relation` object.
 
@@ -120,27 +119,13 @@ In order to use `tapping_device`, you need to include `TappingDevice::Trackable`
 - `tap_sql!(activerecord_relation_or_model)` - tracks sql queries generated from the target
 
 ### Payload of the call
-All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as block argument. The `Payload` class inherits `Hash` so we can either use it as a hash, or you can call its keys as methods.
+All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as block argument. It responds to
 
-```ruby
-{
-  :receiver=>#<Student:0x00007fabed02aeb8 @name="Stan", @age=18, @tapping_device=[#<TracePoint:return `age'@/PROJECT_PATH/tapping_device/spec/trackable_spec.rb:17>]>, 
-  :method_name=>:age, 
-  :arguments=>{}, 
-  :return_value=>18, 
-  :filepath=>"/PROJECT_PATH/tapping_device/spec/trackable_spec.rb", 
-  :line_number=>"171", 
-  :defined_class=>Student, 
-  :trace=>[], 
-  :tp=>#<TracePoint:return `age'@/PROJECT_PATH/tapping_device/spec/trackable_spec.rb:17>
-}
-```
-
-The hash contains
-
+- `target` - the target for `tap_x` call
 - `receiver` - the receiver object
 - `method_name` - method’s name (symbol) 
 	- e.g. `:name`
+- `method_object` - the method object that’s being called. It might be `nil` in some edge cases.
 - `arguments` - arguments of the method call
 	- e.g. `{name: “Stan”, age: 25}`
 - `return_value` - return value of the method call
@@ -153,6 +138,19 @@ The hash contains
 #### Some useful helpers
 - `method_name_and_location` - `"Method: :initialize, line: /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7"`
 - `method_name_and_arguments` - `"Method: :initialize, argments: {:name=>\"Stan\", :age=>25}"`
+- `passed_at` - 
+```
+Passed as 'object' in method ':initialize'
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
+```
+
+You can also set `passed_at(with_method_head: true)` to see the method’s head
+
+```
+Passed as 'object' in method ':initialize'
+  > def initialize(template_object, object_name, method_name, object, tag_value)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
+```
 
 
 ### Options
@@ -221,6 +219,39 @@ Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
+### `tap_passed!`
+
+This is particularly useful when debugging libraries. It saves your time from jumping between files and check which path the object will go.
+
+```ruby
+class PostsController < ApplicationController
+  include TappingDevice::Trackable
+  # GET /posts/new
+  def new
+    @post = Post.new
+
+    tap_passed!(@post) do |payload|
+      puts(payload.passed_at(with_method_head: true))
+    end
+  end
+end
+```
+
+```
+Passed as 'record' in method ':polymorphic_mapping'
+  > def polymorphic_mapping(record)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:131
+Passed as 'klass' in method ':get_method_for_class'
+  > def get_method_for_class(klass)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:269
+Passed as 'record' in method ':handle_model'
+  > def handle_model(record)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:227
+Passed as 'record_or_hash_or_array' in method ':polymorphic_method'
+  > def self.polymorphic_method(recipient, record_or_hash_or_array, action, type, options)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:139
+```
+
 ### `tap_assoc!`
 
 ```ruby
@@ -237,7 +268,7 @@ Method: :amending_orders, line: /MY_PROJECT/app/models/order.rb:385
 Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
-### `tap_sql!` (beta)
+### `tap_sql!`
 
 ```ruby
 class PostsController < ApplicationController
