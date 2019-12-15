@@ -158,6 +158,7 @@ class TappingDevice
     return false if is_from_target?(self, tp)
 
     method_object = get_method_object_from(tp.self, tp.callee_id)
+    return false unless method_object.is_a?(Method)
     # if a no-arugment method is called, tp.binding.local_variables will be those local variables in the same scope
     # so we need to make sure the method takes arguments, then we can be sure that the locals are arguments
     return false unless method_object && method_object.arity.to_i > 0
@@ -167,12 +168,10 @@ class TappingDevice
     argument_values.any? do |value|
       # during comparison, Ruby might perform data type conversion like calling `to_sym` on the value
       # but not every value supports every conversion methods
-      begin
-        object == value
-      rescue NoMethodError
-        false
-      end
+      object == value rescue false
     end
+  rescue
+    false
   end
 
   def get_method_object_from(target, method_name)
