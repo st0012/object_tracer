@@ -119,6 +119,7 @@ class TappingDevice
       target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
+      method_object: get_method_object_from(tp.self, tp.callee_id),
       arguments: arguments,
       return_value: (tp.return_value rescue nil),
       filepath: filepath,
