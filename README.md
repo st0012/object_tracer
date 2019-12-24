@@ -2,10 +2,27 @@
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
 
+## Related Posts
+- [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
+- [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
+
+## Table of Content
+- [Introduction](#introduction)
+	- [Track Method Calls](#track-method-calls)
+	- [Track Association Calls](#track-association-calls)
+	- [Track Calls that Generates SQL Queries](#track-calls-that-generates-sql-queries)
+- [Installation](#installation)
+- [Usages](#usage)
+	- [Methods](#methods)
+	- [Payload](#payload-of-the-call)
+	- [Options](#options)
+	- [Advance Usages](#advance-usages)
+
+## Introduction
 
 `tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier.  Here are some sample usages:
 
-### Track method calls
+### Track Method Calls
 
 ```ruby
 class PostsController < ApplicationController
@@ -30,7 +47,7 @@ Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_
 ```
 
 
-### Track ActiveRecord records’ association calls
+### Track Association Calls
 
 Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
 
@@ -49,7 +66,7 @@ Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 
-### Track calls that generates sql queries!
+### Track Calls that Generates SQL Queries
 
 `tap_sql!` method helps you track which method calls generate sql queries. This is particularly helpful when tracking calls created from a reused `ActiveRecord::Relation` object.
 
