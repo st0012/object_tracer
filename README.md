@@ -41,9 +41,9 @@ end
 And you can see these in log:
 
 ```
-Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -58,11 +58,11 @@ end
 ```
 
 ```
-Method: :payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Method: :line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Method: :effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Method: :amending_orders, line: /MY_PROJECT/app/models/order.rb:385
-Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
+Method: Order#payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Method: Order#line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Method: Order#effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Method: Order#amending_orders, line: /MY_PROJECT/app/models/order.rb:385
+Method: Order#amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 
@@ -169,6 +169,15 @@ Passed as 'object' in method ':initialize'
   at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
 ```
 
+- `detail_call_info` 
+
+```
+Method: Student#initialize
+  Arguments: {:name=>"Stan", :age=>25}
+  => 25
+  From: /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
+```
+
 
 ### Options
 - `with_trace_to: 10` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
@@ -183,17 +192,17 @@ end
 ```
 
 ```
-Method: :_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: :_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: Post#_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: Post#_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 .......
 
 # versus
 
-Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -231,9 +240,9 @@ end
 And you can see these in log:
 
 ```
-Method: :name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: :user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: :to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 ### `tap_passed!`
@@ -278,11 +287,11 @@ end
 ```
 
 ```
-Method: :payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Method: :line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Method: :effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Method: :amending_orders, line: /MY_PROJECT/app/models/order.rb:385
-Method: :amends_order, line: /MY_PROJECT/app/models/order.rb:432
+Method: Order#payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+Method: Order#line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+Method: Order#effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+Method: Order#amending_orders, line: /MY_PROJECT/app/models/order.rb:385
+Method: Order#amends_order, line: /MY_PROJECT/app/models/order.rb:432
 ```
 
 ### `tap_sql!`
