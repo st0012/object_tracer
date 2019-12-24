@@ -38,11 +38,24 @@ class TappingDevice
     end
 
     def method_name_and_location
-      "Method: :#{method_name}, line: #{location}"
+      "Method: #{method_name_with_define_class}, line: #{location}"
+    end
+
+    def method_name_with_define_class
+      "#{defined_class}##{method_name}"
+    end
+
+    def detail_call_info
+      <<~MSG
+      Method: #{method_name_with_define_class}
+        Arguments: #{arguments}
+        => #{return_value || "nil"}
+        From: #{location}
+      MSG
     end
 
     def method_name_and_arguments
-      "Method: :#{method_name}, argments: #{arguments.to_s}"
+      "Method: #{method_name_with_define_class}, argments: #{arguments.to_s}"
     end
   end
 end
