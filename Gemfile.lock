@@ -1,18 +1,18 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.4.5)
+    tapping_device (0.4.6)
       activerecord (>= 5.2)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (6.0.2)
-      activesupport (= 6.0.2)
-    activerecord (6.0.2)
-      activemodel (= 6.0.2)
-      activesupport (= 6.0.2)
-    activesupport (6.0.2)
+    activemodel (6.0.2.1)
+      activesupport (= 6.0.2.1)
+    activerecord (6.0.2.1)
+      activemodel (= 6.0.2.1)
+      activesupport (= 6.0.2.1)
+    activesupport (6.0.2.1)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 0.7, < 2)
       minitest (~> 5.1)
@@ -45,7 +45,7 @@ GEM
     rspec-support (3.8.2)
     sqlite3 (1.4.1)
     thread_safe (0.3.6)
-    tzinfo (1.2.5)
+    tzinfo (1.2.6)
       thread_safe (~> 0.1)
     zeitwerk (2.2.2)
 
