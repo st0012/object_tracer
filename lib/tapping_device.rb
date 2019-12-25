@@ -21,6 +21,7 @@ class TappingDevice
 
   def initialize(options = {}, &block)
     @block = block
+    @output_block = nil
     @options = process_options(options)
     @calls = []
     @disabled = false
@@ -43,6 +44,10 @@ class TappingDevice
   def tap_assoc!(record)
     raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
     track(record, condition: :tap_associations?)
+  end
+
+  def and_print(payload_method)
+    @output_block = -> (payload) { puts(payload.send(payload_method)) }
   end
 
   def set_block(&block)
@@ -207,6 +212,8 @@ class TappingDevice
 
   def record_call!(payload)
     return if @disabled
+
+    @output_block.call(payload) if @output_block
 
     if @block
       root_device.calls << @block.call(payload)

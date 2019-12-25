@@ -30,9 +30,7 @@ class PostsController < ApplicationController
 
   def show
     @post = Post.find(params[:id])
-    tap_on!(@post) do |payload|
-      puts(payload.method_name_and_location)
-    end
+    tap_on!(@post).and_print(:method_name_and_location)
   end
 end
 ```
@@ -51,9 +49,7 @@ to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/ro
 Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
 
 ```ruby
-tap_assoc!(order) do |payload|
-  puts(payload.method_name_and_location)
-end
+tap_assoc!(order).and_print(:method_name_and_location)
 ```
 
 ```
@@ -193,9 +189,7 @@ initialize @ Student
 - `filter_by_paths: [/path/]` - only contain calls from the specified paths
 
 ```ruby
-tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
-  puts(payload.method_name_and_location)
-end
+tap_on!(@post, exclude_by_paths: [/active_record/]).and_print(:method_name_and_location)
 ```
 
 ```
@@ -236,9 +230,7 @@ class PostsController < ApplicationController
   before_action :set_post, only: [:show, :edit, :update, :destroy]
 
   def show
-    tap_on!(@post) do |payload|
-      puts(payload.method_name_and_location)
-    end
+    tap_on!(@post).and_print(:method_name_and_location)
   end
 end
 ```
@@ -287,9 +279,7 @@ Passed as 'record_or_hash_or_array' in method ':polymorphic_method'
 ### `tap_assoc!`
 
 ```ruby
-tap_assoc!(order) do |payload|
-  puts(payload.method_name_and_location)
-end
+tap_assoc!(order).and_print(:method_name_and_location)
 ```
 
 ```
