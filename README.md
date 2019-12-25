@@ -31,7 +31,6 @@ class PostsController < ApplicationController
   def show
     @post = Post.find(params[:id])
     tap_on!(@post) do |payload|
-      # this equals to `"Method: :#{payload[:method_name]}, line: #{payload[:filepath]}:#{payload[:line_number]}"`
       puts(payload.method_name_and_location)
     end
   end
@@ -41,9 +40,9 @@ end
 And you can see these in log:
 
 ```
-Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -58,11 +57,11 @@ end
 ```
 
 ```
-Method: Order#payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Method: Order#line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Method: Order#effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Method: Order#amending_orders, line: /MY_PROJECT/app/models/order.rb:385
-Method: Order#amends_order, line: /MY_PROJECT/app/models/order.rb:432
+payments FROM /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+amending_orders FROM /MY_PROJECT/app/models/order.rb:385
+amends_order FROM /MY_PROJECT/app/models/order.rb:432
 ```
 
 
@@ -152,9 +151,18 @@ All tapping methods (start with `tap_`) takes a block and yield a `Payload` obje
 - `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
 - `tp` - trace point object of this call
 
-#### Some useful helpers
-- `method_name_and_location` - `"Method: :initialize, line: /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7"`
-- `method_name_and_arguments` - `"Method: :initialize, argments: {:name=>\"Stan\", :age=>25}"`
+
+#### Symbols for helpers
+- `FROM` for method call’s location
+- `<=` for arguments
+- `=>` for return value
+- `@` for defined class
+
+#### Helpers
+- `method_name_and_location` - `initialize FROM /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7`
+- `method_name_and_arguments` - `initialize <= {:name=>\"Stan\", :age=>25}`
+- `method_name_and_return_value` - `ten => 10`
+- `method_name_and_defined_class` - `initialize @ Student`
 - `passed_at` - 
 ```
 Passed as 'object' in method ':initialize'
@@ -172,10 +180,10 @@ Passed as 'object' in method ':initialize'
 - `detail_call_info` 
 
 ```
-Method: Student#initialize
-  Arguments: {:name=>"Stan", :age=>25}
+initialize @ Student
+  <= {:name=>"Stan", :age=>25}
   => 25
-  From: /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
+  FROM /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
 ```
 
 
@@ -186,23 +194,22 @@ Method: Student#initialize
 
 ```ruby
 tap_on!(@post, exclude_by_paths: [/active_record/]) do |payload|
-  # this equals to `"Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"`
   puts(payload.method_name_and_location)
 end
 ```
 
 ```
-Method: Post#_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: Post#_read_attribute, line: /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+_read_attribute FROM  /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+name FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+_read_attribute FROM  /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
+user_id FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 .......
 
 # versus
 
-Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+name FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+user_id FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+to_param FROM  /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 
@@ -230,7 +237,6 @@ class PostsController < ApplicationController
 
   def show
     tap_on!(@post) do |payload|
-      # this equals to `"Method: #{payload[:method_name]} line: #{payload[:filepath]}:#{payload[:line_number]}"`
       puts(payload.method_name_and_location)
     end
   end
@@ -240,9 +246,9 @@ end
 And you can see these in log:
 
 ```
-Method: Post#name, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-Method: Post#user_id, line: /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-Method: Post#to_param, line: /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
 ### `tap_passed!`
@@ -287,11 +293,11 @@ end
 ```
 
 ```
-Method: Order#payments, line: /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-Method: Order#line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-Method: Order#effective_line_items, line: /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-Method: Order#amending_orders, line: /MY_PROJECT/app/models/order.rb:385
-Method: Order#amends_order, line: /MY_PROJECT/app/models/order.rb:432
+payments FROM /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+amending_orders FROM /MY_PROJECT/app/models/order.rb:385
+amends_order FROM /MY_PROJECT/app/models/order.rb:432
 ```
 
 ### `tap_sql!`
