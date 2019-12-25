@@ -32,10 +32,10 @@ RSpec.describe TappingDevice::Payload do
     it "returns method_name, arugments, return_value, and filepath" do
       expect(subject.detail_call_info).to match(
        <<~MSG
-       Method: Student#initialize
-         Arguments: {:name=>"Stan", :age=>25}
+       initialize @ Student
+         <= {:name=>"Stan", :age=>25}
          => 25
-         From: #{__FILE__}:7
+         FROM #{__FILE__}:7
        MSG
       )
     end
@@ -43,12 +43,12 @@ RSpec.describe TappingDevice::Payload do
 
   describe "#method_name_and_location" do
     it "returns method's name and where it's called" do
-      expect(subject.method_name_and_location).to match(/Method: Student#initialize, line: .+\/tapping_device\/spec\/payload_spec.rb:\d/)
+      expect(subject.method_name_and_location).to match(/initialize FROM .+\/tapping_device\/spec\/payload_spec.rb:\d/)
     end
   end
   describe "#method_name_and_arguments" do
     it "returns method's name and its arguments" do
-      expect(subject.method_name_and_arguments).to match("Method: Student#initialize, argments: {:name=>\"Stan\", :age=>25}")
+      expect(subject.method_name_and_arguments).to match("initialize <= {:name=>\"Stan\", :age=>25}")
     end
   end
   describe "#passed_at" do

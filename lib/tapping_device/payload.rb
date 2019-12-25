@@ -37,25 +37,26 @@ class TappingDevice
       "#{filepath}:#{line_number}"
     end
 
-    def method_name_and_location
-      "Method: #{method_name_with_define_class}, line: #{location}"
-    end
+    SYMBOLS = {
+      location: "FROM",
+      return_value: "=>",
+      arguments: "<=",
+      defined_class: "@"
+    }
 
-    def method_name_with_define_class
-      "#{defined_class}##{method_name}"
+    SYMBOLS.each do |name, symbol|
+      define_method "method_name_and_#{name}" do
+        "#{method_name} #{symbol} #{send(name)}"
+      end
     end
 
     def detail_call_info
       <<~MSG
-      Method: #{method_name_with_define_class}
-        Arguments: #{arguments}
+      #{method_name_and_defined_class}
+        <= #{arguments}
         => #{return_value || "nil"}
-        From: #{location}
+        FROM #{location}
       MSG
-    end
-
-    def method_name_and_arguments
-      "Method: #{method_name_with_define_class}, argments: #{arguments.to_s}"
     end
   end
 end
