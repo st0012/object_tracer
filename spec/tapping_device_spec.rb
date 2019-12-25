@@ -283,6 +283,19 @@ RSpec.describe TappingDevice do
     end
   end
 
+  describe "#and_print" do
+    let(:device) { described_class.new }
+
+    it "outputs payload with given payload method" do
+      stan = Student.new("Stan", 18)
+      device.tap_on!(stan).and_print(:method_name_and_arguments)
+
+      expect do
+        stan.name
+      end.to output("name <= {}\n").to_stdout
+    end
+  end
+
   describe ".devices" do
     it "stores all initialized devices" do
       device_1 = described_class.new
