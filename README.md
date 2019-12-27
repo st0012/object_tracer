@@ -1,6 +1,7 @@
 # TappingDevice
 
 ![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
+[![Open Source Helpers](https://www.codetriage.com/st0012/tapping_device/badges/users.svg)](https://www.codetriage.com/st0012/tapping_device)
 
 ## Related Posts
 - [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
