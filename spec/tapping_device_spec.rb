@@ -277,6 +277,18 @@ RSpec.describe TappingDevice do
       end
     end
 
+    describe "options - with_trace_to: 5" do
+      it "stores trace until given index" do
+        stan = Student.new("Stan", 18)
+
+        device = described_class.new(with_trace_to: 5)
+        device.tap_on!(stan)
+
+        stan.name
+
+        expect(device.calls.first.trace.length).to eq(6)
+      end
+    end
     describe "options - exclude_by_paths: [/path/]" do
       it "skips calls that matches the pattern" do
         stan = Student.new("Stan", 18)

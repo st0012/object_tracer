@@ -103,11 +103,24 @@ class TappingDevice
   end
 
   def get_call_location(tp, padding: 0)
+    caller(get_trace_index(tp) + padding).first.split(":")[0..1]
+  end
+
+  def get_trace_index(tp)
     if tp.event == :c_call
-      caller(C_CALLER_START_POINT + padding)
+      C_CALLER_START_POINT
     else
-      caller(CALLER_START_POINT + padding)
-    end.first.split(":")[0..1]
+      CALLER_START_POINT
+    end
+  end
+
+  def get_traces(tp)
+    if with_trace_to = options[:with_trace_to]
+      trace_index = get_trace_index(tp)
+      caller[trace_index..(trace_index + with_trace_to)]
+    else
+      []
+    end
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work
@@ -130,7 +143,7 @@ class TappingDevice
       filepath: filepath,
       line_number: line_number,
       defined_class: tp.defined_class,
-      trace: caller[CALLER_START_POINT..(CALLER_START_POINT + options[:with_trace_to])],
+      trace: get_traces(tp),
       tp: tp
     })
   end
