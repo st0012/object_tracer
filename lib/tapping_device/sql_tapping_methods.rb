@@ -18,7 +18,7 @@ class TappingDevice
         ########## Check if the call is worth recording ##########
         filepath, line_number = get_call_location(start_tp, padding: 1) # we need extra padding because of `with_trace_point_on_target`
         method = start_tp.callee_id
-        next if should_be_skipped_by_paths?(filepath) || already_recording?(method)
+        next if already_recording?(method)
 
         ########## Start the recording ##########
         # 1. Mark recording state by pushing method into @call_stack
@@ -62,8 +62,9 @@ class TappingDevice
     device = TappingDevice.new do |sql_listener_payload|
       values = sql_listener_payload.arguments[:values]
 
-      next if ["SCHEMA", "TRANSACTION"].include? values[:name]
-      next if values[:sql].match?(/SAVEPOINT/)
+      next if should_be_skipped_by_paths?(payload.filepath) ||
+        ["SCHEMA", "TRANSACTION"].include?(values[:name]) ||
+        values[:sql].match?(/SAVEPOINT/)
 
       payload[:sql] = values[:sql]
       record_call!(payload)
