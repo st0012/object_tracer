@@ -6,25 +6,6 @@ RSpec.describe TappingDevice do
   let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
   let!(:comment) { Comment.create!(post: post, user: user, content: "Nice post!") }
 
-  describe "#tap_assoc!" do
-    let(:device) do
-      described_class.new
-    end
-    it "tracks every association calls" do
-      device.tap_assoc!(post)
-
-      post.user; line_1 = __LINE__
-      post.title
-      post.comments; line_2 = __LINE__
-
-      expect(device.calls.count).to eq(2)
-      expect(device.calls[0].filepath).to eq(__FILE__)
-      expect(device.calls[0].line_number).to eq(line_1.to_s)
-      expect(device.calls[1].filepath).to eq(__FILE__)
-      expect(device.calls[1].line_number).to eq(line_2.to_s)
-    end
-  end
-
   describe "#tap_sql!" do
     let(:device) { described_class.new }
     subject { :tap_sql! }
