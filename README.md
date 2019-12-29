@@ -15,14 +15,18 @@
 	- [Track Association Calls](#track-association-calls)
 	- [Track Calls that Generates SQL Queries](#track-calls-that-generates-sql-queries)
 - [Installation](#installation)
-- [Usages](#usage)
-	- [Methods](#methods)
+- [Usages](#usages)
+	- Methods
+		- [tap_init!](#tap_init!)
+		- [tap_on!](#tap_on!)
+		- [tap_passed!](#tap_passed!)
+		- [tap_assoc!](#tap_assoc!)
+		- [tap_sql!](#tap_sql!)
 	- [Payload](#payload-of-the-call)
 	- [Options](#options)
 	- [Advance Usages](#advance-usages)
 
 ## Introduction
-
 `tapping_device` is a gem built on top of Ruby’s `TracePoint` class that allows you to tap method calls of specified objects. The purpose for this gem is to make debugging Rails applications easier.  Here are some sample usages:
 
 ### Track Method Calls
@@ -46,7 +50,6 @@ user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
-
 ### Track Association Calls
 
 Or you can use `tap_assoc!`. This is very useful for tracking potential n+1 query calls, here’s a sample from my work
@@ -62,7 +65,6 @@ effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:
 amending_orders FROM /MY_PROJECT/app/models/order.rb:385
 amends_order FROM /MY_PROJECT/app/models/order.rb:432
 ```
-
 
 ### Track Calls that Generates SQL Queries
 
@@ -101,11 +103,9 @@ Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rai
 Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
 ```
 
-
 However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don’t use this on production**
 
 ## Installation
-
 Add this line to your application’s Gemfile:
 
 ```ruby
@@ -124,65 +124,133 @@ Or install it yourself as:
 $ gem install tapping_device
 ```
 
-## Usage
-In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code.
+## Usages
+In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code and call the following helpers.
 
-### Methods
-- `tap_init!(class)` -  tracks a class’ instance initialization
-- `tap_on!(object)` - tracks any calls received by the object
-- `tap_assoc!(activerecord_object)` - tracks association calls on a record, like `post.comments`
-- `tap_sql!(activerecord_relation_or_model)` - tracks sql queries generated from the target
+### tap_init!
 
-### Payload of the call
-All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as block argument. It responds to
+`tap_init!(class)` -  tracks a class’ instance initialization
 
-- `target` - the target for `tap_x` call
-- `receiver` - the receiver object
-- `method_name` - method’s name (symbol) 
-	- e.g. `:name`
-- `method_object` - the method object that’s being called. It might be `nil` in some edge cases.
-- `arguments` - arguments of the method call
-	- e.g. `{name: “Stan”, age: 25}`
-- `return_value` - return value of the method call
-- `filepath` - path to the file that performs the method call
-- `line_number` 
-- `defined_class` - in which class that defines the method being called
-- `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
-- `tp` - trace point object of this call
+```ruby
+calls = []
+tap_init!(Student) do |payload|
+  calls << [payload[:method_name], payload[:arguments]]
+end
 
+Student.new("Stan", 18)
+Student.new("Jane", 23)
 
-#### Symbols for helpers
-- `FROM` for method call’s location
-- `<=` for arguments
-- `=>` for return value
-- `@` for defined class
-
-#### Helpers
-- `method_name_and_location` - `initialize FROM /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7`
-- `method_name_and_arguments` - `initialize <= {:name=>\"Stan\", :age=>25}`
-- `method_name_and_return_value` - `ten => 10`
-- `method_name_and_defined_class` - `initialize @ Student`
-- `passed_at` - 
-```
-Passed as 'object' in method ':initialize'
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
+puts(calls.to_s) #=> [[:initialize, {:name=>"Stan", :age=>18}], [:initialize, {:name=>"Jane", :age=>23}]]
 ```
 
-You can also set `passed_at(with_method_head: true)` to see the method’s head
+### tap_on!
+
+ `tap_on!(object)` - tracks any calls received by the object
+
+```ruby
+class PostsController < ApplicationController
+  include TappingDevice::Trackable
+
+  before_action :set_post, only: [:show, :edit, :update, :destroy]
+
+  def show
+    tap_on!(@post).and_print(:method_name_and_location)
+  end
+end
+```
+
+And you can see these in log:
 
 ```
-Passed as 'object' in method ':initialize'
-  > def initialize(template_object, object_name, method_name, object, tag_value)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
+name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
+user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
+to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
-- `detail_call_info` 
+Also check the `track_as_records` option if you want to track `ActiveRecord` records.
+
+### tap_passed!
+
+`tap_passed!(target)` tracks method calls that **takes the target as its argument**. This is particularly useful when debugging libraries. It saves your time from jumping between files and check which path the object will go.
+
+```ruby
+class PostsController < ApplicationController
+  include TappingDevice::Trackable
+  # GET /posts/new
+  def new
+    @post = Post.new
+
+    tap_passed!(@post) do |payload|
+      puts(payload.passed_at(with_method_head: true))
+    end
+  end
+end
+```
 
 ```
-initialize @ Student
-  <= {:name=>"Stan", :age=>25}
-  => 25
-  FROM /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
+Passed as 'record' in method ':polymorphic_mapping'
+  > def polymorphic_mapping(record)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:131
+Passed as 'klass' in method ':get_method_for_class'
+  > def get_method_for_class(klass)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:269
+Passed as 'record' in method ':handle_model'
+  > def handle_model(record)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:227
+Passed as 'record_or_hash_or_array' in method ':polymorphic_method'
+  > def self.polymorphic_method(recipient, record_or_hash_or_array, action, type, options)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:139
+```
+
+### tap_assoc!
+
+`tap_assoc!(activerecord_object)` tracks association calls on a record, like `post.comments`
+
+```ruby
+tap_assoc!(order).and_print(:method_name_and_location)
+```
+
+```
+payments FROM /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
+line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:44
+effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:110
+amending_orders FROM /MY_PROJECT/app/models/order.rb:385
+amends_order FROM /MY_PROJECT/app/models/order.rb:432
+```
+
+### tap_sql!
+
+`tap_sql!(anything_that_generates_sql_queries)` tracks sql queries generated from the target
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    # simulate current_user
+    @current_user = User.last
+    # reusable ActiveRecord::Relation
+    @posts = Post.all
+
+    tap_sql!(@posts) do |payload|
+      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
+    end
+  end
+end
+```
+
+```erb
+<h1>Posts (<%= @posts.count %>)</h1>
+......
+  <% @posts.each do |post| %>
+    ......
+  <% end %>
+......
+<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
+```
+
+```
+Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
+Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
+Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
 ```
 
 
@@ -239,125 +307,59 @@ to_param FROM  /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/r
 
 Like `exclude_by_paths`, but work in an opposite way.
 
-### `#tap_init!`
 
-```ruby
-calls = []
-tap_init!(Student) do |payload|
-  calls << [payload[:method_name], payload[:arguments]]
-end
+### Payload of The Call
+All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as block argument. It responds to
 
-Student.new("Stan", 18)
-Student.new("Jane", 23)
+- `target` - the target for `tap_x` call
+- `receiver` - the receiver object
+- `method_name` - method’s name (symbol) 
+	- e.g. `:name`
+- `method_object` - the method object that’s being called. It might be `nil` in some edge cases.
+- `arguments` - arguments of the method call
+	- e.g. `{name: “Stan”, age: 25}`
+- `return_value` - return value of the method call
+- `filepath` - path to the file that performs the method call
+- `line_number` 
+- `defined_class` - in which class that defines the method being called
+- `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
+- `sql` - sql that generated from the call (only present in `tap_sql!` payloads)
+- `tp` - trace point object of this call
 
-puts(calls.to_s) #=> [[:initialize, {:name=>"Stan", :age=>18}], [:initialize, {:name=>"Jane", :age=>23}]]
+
+#### Symbols for Payload Helpers
+- `FROM` for method call’s location
+- `<=` for arguments
+- `=>` for return value
+- `@` for defined class
+
+#### Payload Helpers
+- `method_name_and_location` - `initialize FROM /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7`
+- `method_name_and_arguments` - `initialize <= {:name=>\"Stan\", :age=>25}`
+- `method_name_and_return_value` - `ten => 10`
+- `method_name_and_defined_class` - `initialize @ Student`
+- `passed_at` - 
+```
+Passed as 'object' in method ':initialize'
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
 ```
 
-### `tap_on!`
-
-```ruby
-class PostsController < ApplicationController
-  include TappingDevice::Trackable
-
-  before_action :set_post, only: [:show, :edit, :update, :destroy]
-
-  def show
-    tap_on!(@post).and_print(:method_name_and_location)
-  end
-end
-```
-
-And you can see these in log:
+You can also set `passed_at(with_method_head: true)` to see the method’s head
 
 ```
-name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
+Passed as 'object' in method ':initialize'
+  > def initialize(template_object, object_name, method_name, object, tag_value)
+  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
 ```
 
-Also check the `track_as_records` option if you want to track `ActiveRecord` records.
-
-### `tap_passed!`
-
-This is particularly useful when debugging libraries. It saves your time from jumping between files and check which path the object will go.
-
-```ruby
-class PostsController < ApplicationController
-  include TappingDevice::Trackable
-  # GET /posts/new
-  def new
-    @post = Post.new
-
-    tap_passed!(@post) do |payload|
-      puts(payload.passed_at(with_method_head: true))
-    end
-  end
-end
-```
+- `detail_call_info` 
 
 ```
-Passed as 'record' in method ':polymorphic_mapping'
-  > def polymorphic_mapping(record)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:131
-Passed as 'klass' in method ':get_method_for_class'
-  > def get_method_for_class(klass)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:269
-Passed as 'record' in method ':handle_model'
-  > def handle_model(record)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:227
-Passed as 'record_or_hash_or_array' in method ':polymorphic_method'
-  > def self.polymorphic_method(recipient, record_or_hash_or_array, action, type, options)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:139
+initialize @ Student
+  <= {:name=>"Stan", :age=>25}
+  => 25
+  FROM /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
 ```
-
-### `tap_assoc!`
-
-```ruby
-tap_assoc!(order).and_print(:method_name_and_location)
-```
-
-```
-payments FROM /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-amending_orders FROM /MY_PROJECT/app/models/order.rb:385
-amends_order FROM /MY_PROJECT/app/models/order.rb:432
-```
-
-### `tap_sql!`
-
-```ruby
-class PostsController < ApplicationController
-  def index
-    # simulate current_user
-    @current_user = User.last
-    # reusable ActiveRecord::Relation
-    @posts = Post.all
-
-    tap_sql!(@posts) do |payload|
-      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
-    end
-  end
-end
-```
-
-```erb
-<h1>Posts (<%= @posts.count %>)</h1>
-......
-  <% @posts.each do |post| %>
-    ......
-  <% end %>
-......
-<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
-```
-
-```
-Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
-Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
-Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
-```
-
-
 
 ### Advance Usages
 
