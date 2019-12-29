@@ -185,9 +185,35 @@ initialize @ Student
 
 
 ### Options
-- `with_trace_to: 10` - the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty
-- `exclude_by_paths: [/path/]` - an array of call path patterns that we want to skip. This could be very helpful when working on large project like Rails applications.
-- `filter_by_paths: [/path/]` - only contain calls from the specified paths
+#### with_trace_to
+It takes an integer as the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty. 
+
+```ruby
+stan = Student.new("Stan", 18)
+tap_on!(stan, with_trace_to: 5)
+
+stan.name
+
+puts(device.calls.first.trace) #=>
+/Users/st0012/projects/tapping_device/spec/tapping_device_spec.rb:287:in `block (4 levels) in <top (required)>'
+/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:257:in `instance_exec'
+/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:257:in `block in run'
+/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:503:in `block in with_around_and_singleton_context_hooks'
+/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:460:in `block in with_around_example_hooks'
+/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/hooks.rb:464:in `block in run'
+```
+
+#### track_as_records
+It makes the device to track objects as they are ActiveRecord instances. For example:
+
+```ruby
+tap_on!(@post, track_as_records: true)
+post = Post.find(@post.id) # same record but a different object
+post.title #=> this call will be recorded as well
+```
+
+#### exclude_by_paths
+It takes an array of call path patterns that we want to skip. This could be very helpful when working on large project like Rails applications.
 
 ```ruby
 tap_on!(@post, exclude_by_paths: [/active_record/]).and_print(:method_name_and_location)
@@ -207,6 +233,9 @@ user_id FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 to_param FROM  /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
 
+#### filter_by_paths
+
+Like `exclude_by_paths`, but work in an opposite way.
 
 ### `#tap_init!`
 
@@ -243,6 +272,8 @@ name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
 user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
 to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
 ```
+
+Also check the `track_as_records` option if you want to track `ActiveRecord` records.
 
 ### `tap_passed!`
 
