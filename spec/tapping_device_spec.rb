@@ -1,5 +1,4 @@
 require "spec_helper"
-require "stoppable_examples"
 
 RSpec.describe TappingDevice do
   describe "tap_passed!"do

@@ -1,5 +1,5 @@
 require "spec_helper"
-require "stoppable_examples"
+require "shared_examples/stoppable_examples"
 
 RSpec.describe TappingDevice do
   let(:user) { User.create!(name: "Stan") }

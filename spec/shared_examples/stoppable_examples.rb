@@ -1,6 +1,6 @@
 RSpec.shared_examples "stoppable" do
   it "stopps tapping when stop! is called" do
-    device.send(subject, target)
+    device = send(subject, target)
 
     trigger_action.call(target)
 
@@ -14,11 +14,11 @@ RSpec.shared_examples "stoppable" do
   end
 
   it "stops tapping once fulfill stop_when condition" do
+    device = send(subject, target)
+
     device.stop_when do |payload|
       device.calls.count == 10
     end
-
-    device.send(subject, target)
 
     100.times do
       trigger_action.call(target)
