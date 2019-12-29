@@ -39,6 +39,7 @@ class TappingDevice
 
     SYMBOLS = {
       location: "FROM",
+      sql: "QUERIES",
       return_value: "=>",
       arguments: "<=",
       defined_class: "@"
