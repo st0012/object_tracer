@@ -172,8 +172,9 @@ class TappingDevice
   end
 
   def tap_passed?(object, tp)
-    # we don't care about calls from the device instance
+    # we don't care about calls from the device instance or helper methods
     return false if is_from_target?(self, tp)
+    return false if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
 
     method_object = get_method_object_from(tp.self, tp.callee_id)
     return false unless method_object.is_a?(Method)
