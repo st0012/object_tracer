@@ -13,10 +13,12 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v1
+
     - name: Set up Ruby ${{ matrix.ruby_version }}
       uses: actions/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby_version }}
+
     - name: Install sqlite
       run: |
         # See https://github.community/t5/GitHub-Actions/ubuntu-latest-Apt-repository-list-issues/td-p/41122/page/2
@@ -24,10 +26,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install libsqlite3-dev
 
-    - name: Build and test with Rails ${{ matrix.rails_version }}
+    - name: Build with Rails ${{ matrix.rails_version }}
       env:
         RAILS_VERSION: ${{ matrix.rails_version }}
       run: |
         gem install bundler
         bundle install --jobs 4 --retry 3
-        bundle exec rake
+
+    - name: Run test with Rails ${{ matrix.rails_version }} and publish result
+      uses: paambaati/codeclimate-action@v2.3.0
+      env:
+        CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+      with:
+        coverageCommand: bundle exec rake
+        debug: true
