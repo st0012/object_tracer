@@ -16,14 +16,14 @@
 	- [Track Calls that Generates SQL Queries](#track-calls-that-generates-sql-queries)
 - [Installation](#installation)
 - [Usages](#usages)
-	- Methods
-		- [tap_init!](#tap_init!)
-		- [tap_on!](#tap_on!)
-		- [tap_passed!](#tap_passed!)
-		- [tap_assoc!](#tap_assoc!)
-		- [tap_sql!](#tap_sql!)
-	- [Payload](#payload-of-the-call)
+	- Tapping Methods
+		- [tap_init!](#tap_init)
+		- [tap_on!](#tap_on)
+		- [tap_passed!](#tap_passed)
+		- [tap_assoc!](#tap_assoc)
+		- [tap_sql!](#tap_sql)
 	- [Options](#options)
+	- [Payload](#payload-of-the-call)
 	- [Advance Usages](#advance-usages)
 
 ## Introduction
