@@ -196,6 +196,7 @@ class TappingDevice
     options[:with_trace_to] ||= 50
     options[:root_device] ||= self
     options[:descendants] ||= []
+    options[:track_as_records] ||= false
     options
   end
 
@@ -207,7 +208,16 @@ class TappingDevice
   end
 
   def is_from_target?(object, tp)
-    object.__id__ == tp.self.__id__
+    comparsion = tp.self
+    is_the_same_record?(object, comparsion) || object.__id__ == comparsion.__id__
+  end
+
+  def is_the_same_record?(target, comparsion)
+    return false unless options[:track_as_records]
+    if target.is_a?(ActiveRecord::Base) && comparsion.is_a?(target.class)
+      primary_key = target.class.primary_key
+      target.send(primary_key) && target.send(primary_key) == comparsion.send(primary_key)
+    end
   end
 
   def record_call!(payload)

@@ -213,6 +213,33 @@ RSpec.describe TappingDevice do
       expect(names).to match_array([:alias_name])
     end
 
+    context "when targets are ActiveRecord::Base instances" do
+      context "with track_as_records: true" do
+        it "tracks ActiveRecord::Base instances with their ids" do
+          device = described_class.new(exclude_by_paths: [/gems/], track_as_records: true)
+          post = Post.create!(title: "foo", content: "bar")
+
+          device.tap_on!(post)
+
+          Post.last.title
+
+          expect(device.calls.count).to eq(1)
+        end
+      end
+      context "without track_as_records: true" do
+        it "treats the record like normal objects" do
+          device = described_class.new(exclude_by_paths: [/gems/])
+          post = Post.create!(title: "foo", content: "bar")
+
+          device.tap_on!(post)
+
+          Post.last.title
+
+          expect(device.calls.count).to eq(0)
+        end
+      end
+    end
+
     describe "yield parameters" do
       it "detects correct arguments" do
         stan = Student.new("Stan", 18)
