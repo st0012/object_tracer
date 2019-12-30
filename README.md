@@ -1,6 +1,7 @@
 # TappingDevice
 
-![](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
+![GitHub Action](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
+[![Gem Version](https://badge.fury.io/rb/tapping_device.svg)](https://badge.fury.io/rb/tapping_device)
 [![Maintainability](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/maintainability)](https://codeclimate.com/github/st0012/tapping_device/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/test_coverage)](https://codeclimate.com/github/st0012/tapping_device/test_coverage)
 [![Open Source Helpers](https://www.codetriage.com/st0012/tapping_device/badges/users.svg)](https://www.codetriage.com/st0012/tapping_device)
