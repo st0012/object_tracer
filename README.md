@@ -17,7 +17,7 @@
 - [Installation](#installation)
 - [Usages](#usages)
     - Tracing Helpers
-        - [print_trace](#print_trace)
+        - [print_traces](#print_traces)
         - [print_calls_in_detail](#print_calls_in_detail)
     - Tapping Methods
         - [tap_init!](#tap_init)
@@ -42,7 +42,7 @@ class OrdersController < ApplicationController
 
   def create
     @cart = Cart.find(order_params[:cart_id])
-    print_trace(@cart, exclude_by_paths: [/gems/])
+    print_traces(@cart, exclude_by_paths: [/gems/])
     @order = OrderCreationService.new.perform(@cart)
   end
 ```
@@ -120,7 +120,7 @@ $ gem install tapping_device
 ## Usages
 In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code and call the following helpers.
 
-### print_trace
+### print_traces
 
 It prints the object's trace. It's like mounting a GPS tracker + a spy camera on your object, so you can inspect your program through the object's eyes.
 
@@ -130,7 +130,7 @@ class OrdersController < ApplicationController
 
   def create
     @cart = Cart.find(order_params[:cart_id])
-    print_trace(@cart, exclude_by_paths: [/gems/])
+    print_traces(@cart, exclude_by_paths: [/gems/])
     @order = OrderCreationService.new.perform(@cart)
   end
 ```
