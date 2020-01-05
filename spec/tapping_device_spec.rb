@@ -27,7 +27,7 @@ RSpec.describe TappingDevice do
 
       expect do
         stan.name
-      end.to output("name <= {}\n").to_stdout
+      end.to output(":name <= {}\n").to_stdout
     end
   end
 
