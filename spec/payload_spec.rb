@@ -32,7 +32,7 @@ RSpec.describe TappingDevice::Payload do
     it "returns method_name, arugments, return_value, and filepath" do
       expect(subject.detail_call_info).to match(
        <<~MSG
-       initialize @ Student
+       :initialize # Student
          <= {:name=>"Stan", :age=>25}
          => 25
          FROM #{__FILE__}:7

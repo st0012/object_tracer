@@ -3,6 +3,90 @@ require "spec_helper"
 RSpec.describe TappingDevice::Trackable do
   include described_class
 
+  shared_context "order creation" do
+    class Promotion; end
+    class Order;end
+    class Cart
+      def total
+        10
+      end
+      def promotion
+        Promotion.new
+      end
+    end
+    class CartOperationService
+      def perform(cart)
+        validate_cart(cart)
+        apply_discount(cart)
+        create_order(cart)
+      end
+
+      def validate_cart(cart)
+        cart.total
+        cart
+      end
+
+      def apply_discount(cart)
+        cart.promotion
+        cart
+      end
+
+      def create_order(cart)
+        Order.new
+      end
+    end
+  end
+
+  describe "#print_calls_in_detail" do
+    include_context "order creation"
+
+    it "prints out target's calls in detail" do
+      cart = Cart.new
+      service = CartOperationService.new
+      print_calls_in_detail(service)
+
+      expect do
+        service.perform(cart)
+      end.to output(/:validate_cart # CartOperationService
+  <= {:cart=>#<Cart:.*>}
+  => #<Cart:.*>
+  FROM #{__FILE__}:.*
+:apply_discount # CartOperationService
+  <= {:cart=>#<Cart:.*>}
+  => #<Cart:.*>
+  FROM #{__FILE__}:.*
+:create_order # CartOperationService
+  <= {:cart=>#<Cart:.*>}
+  => #<Order:.*>
+  FROM #{__FILE__}:.*
+:perform # CartOperationService
+  <= {:cart=>#<Cart:.*>}
+  => #<Order:.*>
+  FROM #{__FILE__}:.*/
+      ).to_stdout
+    end
+  end
+
+  describe "#print_traces" do
+    include_context "order creation"
+
+    it "prints out what the target sees" do
+      cart = Cart.new
+      service = CartOperationService.new
+      print_traces(cart)
+
+      expect do
+        service.perform(cart)
+      end.to output(/Passed as 'cart' in 'CartOperationService#perform' at #{__FILE__}:\d+
+Passed as 'cart' in 'CartOperationService#validate_cart' at #{__FILE__}:\d+
+Called :total FROM #{__FILE__}:\d+
+Passed as 'cart' in 'CartOperationService#apply_discount' at #{__FILE__}:\d+
+Called :promotion FROM #{__FILE__}:\d+
+Passed as 'cart' in 'CartOperationService#create_order' at #{__FILE__}:\d+/
+      ).to_stdout
+    end
+  end
+
   describe "#tap_passed!" do
     def foo(obj)
       obj

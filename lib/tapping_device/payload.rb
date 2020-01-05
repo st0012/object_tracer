@@ -42,12 +42,12 @@ class TappingDevice
       sql: "QUERIES",
       return_value: "=>",
       arguments: "<=",
-      defined_class: "@"
+      defined_class: "#"
     }
 
     SYMBOLS.each do |name, symbol|
       define_method "method_name_and_#{name}" do
-        "#{method_name} #{symbol} #{send(name)}"
+        ":#{method_name} #{symbol} #{send(name)}"
       end
     end
 
