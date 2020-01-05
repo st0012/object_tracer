@@ -6,11 +6,13 @@ class TappingDevice
       end
     end
 
-    def print_traces(target)
-      device_1 = tap_on!(target, event_type: :call) do |payload|
+    def print_traces(target, options = {})
+      options[:event_type] = :call
+
+      device_1 = tap_on!(target, options) do |payload|
         puts("Called #{payload.method_name_and_location}")
       end
-      device_2 = tap_passed!(target, event_type: :call) do |payload|
+      device_2 = tap_passed!(target, options) do |payload|
         arg_name = payload.arguments.keys.detect { |k| payload.arguments[k] == target }
         next unless arg_name
         puts("Passed as '#{arg_name}' in '#{payload.defined_class}##{payload.method_name}' at #{payload.location}")
@@ -18,8 +20,8 @@ class TappingDevice
       [device_1, device_2]
     end
 
-    def print_calls_in_detail(target)
-      tap_on!(target).and_print(:detail_call_info)
+    def print_calls_in_detail(target, options = {})
+      tap_on!(target, options).and_print(:detail_call_info)
     end
 
     def new_device(options, &block)
