@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.4.7)
+    tapping_device (0.4.8)
       activerecord (>= 5.2)
 
 GEM
@@ -70,4 +70,4 @@ DEPENDENCIES
   tapping_device!
 
 BUNDLED WITH
-   2.0.2
+   2.1.1
