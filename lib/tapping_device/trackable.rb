@@ -18,6 +18,10 @@ class TappingDevice
       [device_1, device_2]
     end
 
+    def print_calls_in_detail(target)
+      tap_on!(target).and_print(:detail_call_info)
+    end
+
     def new_device(options, &block)
       TappingDevice.new(options, &block)
     end
