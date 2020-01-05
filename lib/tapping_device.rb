@@ -83,7 +83,7 @@ class TappingDevice
 
   def track(object, condition:)
     @target = object
-    @trace_point = TracePoint.new(:return) do |tp|
+    @trace_point = TracePoint.new(options[:event_type]) do |tp|
       if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
 
@@ -209,6 +209,7 @@ class TappingDevice
     options[:exclude_by_paths] ||= []
     options[:with_trace_to] ||= 50
     options[:root_device] ||= self
+    options[:event_type] ||= :return
     options[:descendants] ||= []
     options[:track_as_records] ||= false
     options
