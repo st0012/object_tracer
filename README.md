@@ -149,6 +149,9 @@ Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/servi
 
 It prints the object's calls in detail (including call location, arguments, and return value). It's useful for observing an object's behavior when debugging.
 
+#### Options
+- `awesome_print:` - will print calls in prettier format if set to `true`. Default is `false`
+
 ```ruby
 class OrdersController < ApplicationController
   include TappingDevice::Trackable
@@ -180,7 +183,7 @@ class OrdersController < ApplicationController
   FROM /Users/st0012/projects/tapping_device-demo/app/controllers/orders_controller.rb:11
 ```
 
-The output's order might look strange. This is because tapping_device needs to wait for the call to return in order to have its return value.
+The output's order might look strange. This is because `tapping_device` needs to wait for the call to return in order to have its return value.
 
 ### tap_init!
 
