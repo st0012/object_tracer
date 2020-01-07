@@ -1,3 +1,4 @@
+require "awesome_print"
 class TappingDevice
   class Payload < Hash
     ATTRS = [
@@ -38,7 +39,7 @@ class TappingDevice
     end
 
     SYMBOLS = {
-      location: "FROM",
+      location: "from:",
       sql: "QUERIES",
       return_value: "=>",
       arguments: "<=",
@@ -51,12 +52,20 @@ class TappingDevice
       end
     end
 
-    def detail_call_info
+    def detail_call_info(awesome_print: false)
+      arguments_output = arguments.inspect
+      return_value_output = return_value.inspect
+
+      if awesome_print
+        arguments_output = arguments.ai(ruby19_syntax: true, multiline: false)
+        return_value_output = return_value.ai(ruby19_syntax: true, multiline: false)
+      end
+
       <<~MSG
       #{method_name_and_defined_class}
-        <= #{arguments}
-        => #{return_value || "nil"}
-        FROM #{location}
+          from: #{location}
+          <= #{arguments_output}
+          => #{return_value_output}
       MSG
     end
   end

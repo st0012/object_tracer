@@ -3,6 +3,7 @@ PATH
   specs:
     tapping_device (0.4.8)
       activerecord (>= 5.2)
+      awesome_print
 
 GEM
   remote: https://rubygems.org/
@@ -18,6 +19,7 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2)
+    awesome_print (1.8.0)
     coderay (1.1.2)
     concurrent-ruby (1.1.5)
     database_cleaner (1.7.0)
