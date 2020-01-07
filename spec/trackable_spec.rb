@@ -48,21 +48,21 @@ RSpec.describe TappingDevice::Trackable do
       expect do
         service.perform(cart)
       end.to output(/:validate_cart # CartOperationService
-  <= {:cart=>#<Cart:.*>}
-  => #<Cart:.*>
-  FROM #{__FILE__}:.*
+    from: #{__FILE__}:.*
+    <= {:cart=>#<Cart:.*>}
+    => #<Cart:.*>
 :apply_discount # CartOperationService
-  <= {:cart=>#<Cart:.*>}
-  => #<Cart:.*>
-  FROM #{__FILE__}:.*
+    from: #{__FILE__}:.*
+    <= {:cart=>#<Cart:.*>}
+    => #<Cart:.*>
 :create_order # CartOperationService
-  <= {:cart=>#<Cart:.*>}
-  => #<Order:.*>
-  FROM #{__FILE__}:.*
+    from: #{__FILE__}:.*
+    <= {:cart=>#<Cart:.*>}
+    => #<Order:.*>
 :perform # CartOperationService
-  <= {:cart=>#<Cart:.*>}
-  => #<Order:.*>
-  FROM #{__FILE__}:.*/
+    from: #{__FILE__}:.*
+    <= {:cart=>#<Cart:.*>}
+    => #<Order:.*>/
       ).to_stdout
     end
   end
@@ -79,9 +79,9 @@ RSpec.describe TappingDevice::Trackable do
         service.perform(cart)
       end.to output(/Passed as 'cart' in 'CartOperationService#perform' at #{__FILE__}:\d+
 Passed as 'cart' in 'CartOperationService#validate_cart' at #{__FILE__}:\d+
-Called :total FROM #{__FILE__}:\d+
+Called :total from: #{__FILE__}:\d+
 Passed as 'cart' in 'CartOperationService#apply_discount' at #{__FILE__}:\d+
-Called :promotion FROM #{__FILE__}:\d+
+Called :promotion from: #{__FILE__}:\d+
 Passed as 'cart' in 'CartOperationService#create_order' at #{__FILE__}:\d+/
       ).to_stdout
     end

@@ -33,9 +33,9 @@ RSpec.describe TappingDevice::Payload do
       expect(subject.detail_call_info).to match(
        <<~MSG
        :initialize # Student
-         <= {:name=>"Stan", :age=>25}
-         => 25
-         FROM #{__FILE__}:7
+           from: #{__FILE__}:7
+           <= {:name=>"Stan", :age=>25}
+           => 25
        MSG
       )
     end
@@ -43,7 +43,7 @@ RSpec.describe TappingDevice::Payload do
 
   describe "#method_name_and_location" do
     it "returns method's name and where it's called" do
-      expect(subject.method_name_and_location).to match(/initialize FROM .+\/tapping_device\/spec\/payload_spec.rb:\d/)
+      expect(subject.method_name_and_location).to match(/initialize from: .+\/tapping_device\/spec\/payload_spec.rb:\d/)
     end
   end
   describe "#method_name_and_arguments" do

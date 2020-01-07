@@ -21,7 +21,11 @@ class TappingDevice
     end
 
     def print_calls_in_detail(target, options = {})
-      tap_on!(target, options).and_print(:detail_call_info)
+      awesome_print = options.delete(:awesome_print)
+
+      tap_on!(target, options) do |payload|
+        puts(payload.detail_call_info(awesome_print: awesome_print))
+      end
     end
 
     def new_device(options, &block)
