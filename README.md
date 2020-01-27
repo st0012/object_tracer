@@ -7,8 +7,10 @@
 [![Open Source Helpers](https://www.codetriage.com/st0012/tapping_device/badges/users.svg)](https://www.codetriage.com/st0012/tapping_device)
 
 ## Related Posts
+- [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing) 
 - [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
 - [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
+
 
 ## Table of Content
 - [Introduction](#introduction)
@@ -30,7 +32,9 @@
     - [Advance Usages](#advance-usages)
 
 ## Introduction
-`tapping_device` is a gem built on top of Ruby's `TracePoint` class that allows you to tap method calls of specified objects. The purpose of this gem is to make debugging Rails applications easier.  Here are some sample usages:
+`tapping_device` is a debugging tool built based on a concept called `object-oriented tracing` and on top of Ruby's `TracePoint` class. It allows you to inspect an object’s behavior, and thus build the program’s execution path for later debugging. Here’s a post to explain how to use `object-oriented tracing` and this gem to improve your debugging workflow: [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing).
+
+Sample usage:
 
 ### Print Object’s Traces
 
@@ -59,42 +63,6 @@ Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/servi
 
 (Also see [print_calls_in_detail](#print_calls_in_detail))
 
-### Track Calls that Generates SQL Queries
-
-`tap_sql!` method helps you track which method calls to generate SQL queries. This is particularly helpful when tracking calls created from a reused `ActiveRecord::Relation` object.
-
-```ruby
-class PostsController < ApplicationController
-  def index
-    # simulate current_user
-    @current_user = User.last
-    # reusable ActiveRecord::Relation
-    @posts = Post.all
-
-    tap_sql!(@posts) do |payload|
-      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
-    end
-  end
-end
-```
-
-```erb
-<h1>Posts (<%= @posts.count %>)</h1>
-......
-  <% @posts.each do |post| %>
-    ......
-  <% end %>
-......
-<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
-```
-
-And the output would be
-
-```
-Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
-Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
-Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
-```
 
 However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don't use this on production**
 
