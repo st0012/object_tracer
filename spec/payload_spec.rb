@@ -41,6 +41,13 @@ RSpec.describe TappingDevice::Payload do
     end
   end
 
+  describe "#method_object" do
+    it "returns correct method object" do
+      expect(subject.method_object.name).to eq(:initialize)
+      expect(subject.method_object.owner).to eq(Student)
+    end
+  end
+
   describe "#method_name_and_location" do
     it "returns method's name and where it's called" do
       expect(subject.method_name_and_location).to match(/initialize from: .+\/tapping_device\/spec\/payload_spec.rb:\d/)
