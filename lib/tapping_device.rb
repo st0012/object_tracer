@@ -130,15 +130,12 @@ class TappingDevice
   end
 
   def build_payload(tp:, filepath:, line_number:)
-    arguments = {}
-    tp.binding.local_variables.each { |name| arguments[name] = tp.binding.local_variable_get(name) }
-
     Payload.init({
       target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
       method_object: get_method_object_from(tp.self, tp.callee_id),
-      arguments: arguments,
+      arguments: collect_arguments(tp),
       return_value: (tp.return_value rescue nil),
       filepath: filepath,
       line_number: line_number,
@@ -176,15 +173,7 @@ class TappingDevice
     return false if is_from_target?(self, tp)
     return false if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
 
-    method_object = get_method_object_from(tp.self, tp.callee_id)
-    return false unless method_object.is_a?(Method)
-    # if a no-arugment method is called, tp.binding.local_variables will be those local variables in the same scope
-    # so we need to make sure the method takes arguments, then we can be sure that the locals are arguments
-    return false unless method_object && method_object.arity.to_i > 0
-
-    argument_values = tp.binding.local_variables.map { |name| tp.binding.local_variable_get(name) }
-
-    argument_values.any? do |value|
+    collect_arguments(tp).values.any? do |value|
       # during comparison, Ruby might perform data type conversion like calling `to_sym` on the value
       # but not every value supports every conversion methods
       object == value rescue false
@@ -202,6 +191,19 @@ class TappingDevice
     # if any part of the program uses Refinement to extend its methods
     # we might still get NoMethodError when trying to get that method outside the scope
     nil
+  end
+
+  def collect_arguments(tp)
+    parameters =
+      if RUBY_VERSION.to_f >= 2.6
+        tp.parameters
+      else
+        get_method_object_from(tp.self, tp.callee_id)&.parameters || []
+      end.map { |parameter| parameter[1] }
+
+    tp.binding.local_variables.each_with_object({}) do |name, args|
+      args[name] = tp.binding.local_variable_get(name) if parameters.include?(name)
+    end
   end
 
   def process_options(options)
