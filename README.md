@@ -42,8 +42,6 @@ Let your objects report to you, so you don’t need to guess how they work!
 
 ```ruby
 class OrdersController < ApplicationController
-  include TappingDevice::Trackable
-
   def create
     @cart = Cart.find(order_params[:cart_id])
     print_traces(@cart, exclude_by_paths: [/gems/])
@@ -86,7 +84,6 @@ $ gem install tapping_device
 ```
 
 ## Usages
-In order to use `tapping_device`, you need to include `TappingDevice::Trackable` module in where you want to track your code and call the following helpers.
 
 ### print_traces
 
@@ -94,8 +91,6 @@ It prints the object's trace. It's like mounting a GPS tracker + a spy camera on
 
 ```ruby
 class OrdersController < ApplicationController
-  include TappingDevice::Trackable
-
   def create
     @cart = Cart.find(order_params[:cart_id])
     print_traces(@cart, exclude_by_paths: [/gems/])
@@ -122,8 +117,6 @@ It prints the object's calls in detail (including call location, arguments, and 
 
 ```ruby
 class OrdersController < ApplicationController
-  include TappingDevice::Trackable
-
   def create
     @cart = Cart.find(order_params[:cart_id])
     service = OrderCreationService.new
@@ -175,8 +168,6 @@ puts(calls.to_s) #=> [[:initialize, {:name=>"Stan", :age=>18}], [:initialize, {:
 
 ```ruby
 class PostsController < ApplicationController
-  include TappingDevice::Trackable
-
   before_action :set_post, only: [:show, :edit, :update, :destroy]
 
   def show
@@ -201,7 +192,6 @@ Also check the `track_as_records` option if you want to track `ActiveRecord` rec
 
 ```ruby
 class PostsController < ApplicationController
-  include TappingDevice::Trackable
   # GET /posts/new
   def new
     @post = Post.new

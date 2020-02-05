@@ -66,6 +66,7 @@ class TappingDevice
           from: #{location}
           <= #{arguments_output}
           => #{return_value_output}
+
       MSG
     end
   end

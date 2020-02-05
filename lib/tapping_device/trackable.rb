@@ -33,3 +33,5 @@ class TappingDevice
     end
   end
 end
+
+include TappingDevice::Trackable

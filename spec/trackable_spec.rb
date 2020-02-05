@@ -1,8 +1,6 @@
 require "spec_helper"
 
 RSpec.describe TappingDevice::Trackable do
-  include described_class
-
   shared_context "order creation" do
     class Promotion; end
     class Order;end
@@ -51,14 +49,17 @@ RSpec.describe TappingDevice::Trackable do
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Cart:.*>
+
 :apply_discount # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Cart:.*>
+
 :create_order # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Order:.*>
+
 :perform # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
@@ -273,8 +274,6 @@ Passed as 'cart' in 'CartOperationService#create_order' at #{__FILE__}:\d+/
 end
 
 RSpec.describe TappingDevice::Trackable do
-  include described_class
-
   let!(:post) { Post.create!(title: "foo", content: "bar") }
   let(:locations) { [] }
 
