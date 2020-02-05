@@ -3,7 +3,6 @@ require "shared_examples/stoppable_examples"
 require "shared_examples/optionable_examples"
 
 RSpec.describe "tap_on!" do
-  include TappingDevice::Trackable
   let(:subject) { :tap_on! }
 
   it_behaves_like "stoppable" do

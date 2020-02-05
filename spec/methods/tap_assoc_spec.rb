@@ -3,8 +3,6 @@ require "shared_examples/stoppable_examples"
 require "shared_examples/optionable_examples"
 
 RSpec.describe "tap_assoc!" do
-  include TappingDevice::Trackable
-
   subject { :tap_assoc! }
 
   let(:target) { post }
