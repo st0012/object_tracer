@@ -2,14 +2,15 @@ require "spec_helper"
 
 RSpec.describe TappingDevice::Payload do
   let(:device) { TappingDevice.new }
+  let(:stan) { Student.new("Stan", 25) }
   subject do
     device.tap_init!(Student)
-    Student.new("Stan", 25)
+    stan
     device.calls.first
   end
 
   it "supports payload attributes as methods" do
-    expect(subject.receiver).to be_is_a(Student)
+    expect(subject.receiver).to eq(Student)
     expect(subject.arguments).to eq({ name: "Stan", age: 25 })
     expect(subject.keys).to eq(
       [
@@ -33,9 +34,9 @@ RSpec.describe TappingDevice::Payload do
       expect(subject.detail_call_info).to match(
        <<~MSG
        :initialize # Student
-           from: #{__FILE__}:7
+           from: #{__FILE__}:5
            <= {:name=>"Stan", :age=>25}
-           => 25
+           => #{stan.inspect}
        MSG
       )
     end

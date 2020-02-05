@@ -30,7 +30,10 @@ class TappingDevice
 
   def tap_init!(klass)
     raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-    track(klass, condition: :tap_init?)
+    track(klass, condition: :tap_init?) do |payload|
+      payload[:return_value] = payload[:receiver]
+      payload[:receiver] = klass
+    end
   end
 
   def tap_on!(object)
@@ -81,7 +84,7 @@ class TappingDevice
 
   private
 
-  def track(object, condition:)
+  def track(object, condition:, &payload_block)
     @target = object
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
       if send(condition, object, tp)
@@ -89,7 +92,7 @@ class TappingDevice
 
         next if should_be_skipped_by_paths?(filepath)
 
-        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
+        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number, &payload_block)
 
         record_call!(payload)
 
@@ -130,7 +133,7 @@ class TappingDevice
   end
 
   def build_payload(tp:, filepath:, line_number:)
-    Payload.init({
+    payload = Payload.init({
       target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
@@ -143,6 +146,10 @@ class TappingDevice
       trace: get_traces(tp),
       tp: tp
     })
+
+    yield(payload) if block_given?
+
+    payload
   end
 
   def tap_init?(klass, tp)

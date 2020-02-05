@@ -21,6 +21,13 @@ RSpec.describe "tap_init!" do
     Student.new("Jane", 23)
 
     expect(device.calls.count).to eq(2)
+    end
+  it "returns the instance object" do
+   device = tap_init!(Student)
+
+   stan = Student.new("Stan", 18)
+
+   expect(device.calls.first.return_value).to eq(stan)
   end
   it "can track subclass's initialization as well" do
     device = tap_init!(HighSchoolStudent)
