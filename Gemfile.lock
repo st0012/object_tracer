@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.4.9)
+    tapping_device (0.4.10)
       activerecord (>= 5.2)
       awesome_print
 
