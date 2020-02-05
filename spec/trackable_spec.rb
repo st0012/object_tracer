@@ -51,14 +51,17 @@ RSpec.describe TappingDevice::Trackable do
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Cart:.*>
+
 :apply_discount # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Cart:.*>
+
 :create_order # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
     => #<Order:.*>
+
 :perform # CartOperationService
     from: #{__FILE__}:.*
     <= {:cart=>#<Cart:.*>}
