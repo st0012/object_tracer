@@ -33,6 +33,10 @@ RSpec.describe TappingDevice do
 end
 
 RSpec.describe TappingDevice::Event do
+  # TODO: find out why DatabaseCleaner doesn't work here
+  after do
+    described_class.destroy_all
+  end
   describe "queryable: true" do
     it "recreates events table if there's none" do
       connection = TappingDevice.connection
