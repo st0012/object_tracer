@@ -5,6 +5,8 @@ require "tapping_device/payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/sql_tapping_methods"
+require "tapping_device/queryable"
+require "tapping_device/event"
 
 class TappingDevice
 
@@ -17,6 +19,7 @@ class TappingDevice
   @suspend_new = false
 
   include SqlTappingMethods
+  include Queryable
   extend Manageable
 
   def initialize(options = {}, &block)
@@ -86,6 +89,9 @@ class TappingDevice
 
   def track(object, condition:, &payload_block)
     @target = object
+
+    setup_for_queryable if @options[:queryable]
+
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
       if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
@@ -221,6 +227,7 @@ class TappingDevice
     options[:event_type] ||= :return
     options[:descendants] ||= []
     options[:track_as_records] ||= false
+    options[:queryable] ||= false
     options
   end
 
@@ -248,6 +255,7 @@ class TappingDevice
     return if @disabled
 
     @output_block.call(payload) if @output_block
+    save_event(payload) if @options[:queryable]
 
     if @block
       root_device.calls << @block.call(payload)
