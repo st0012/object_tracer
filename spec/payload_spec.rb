@@ -35,10 +35,48 @@ RSpec.describe TappingDevice::Payload do
        <<~MSG
        :initialize # Student
            from: #{__FILE__}:5
-           <= {:name=>"Stan", :age=>25}
-           => #{stan.inspect}
+           <= {name: "Stan", age: 25}
+           => #{stan.to_s}
        MSG
       )
+    end
+    describe "inspect:" do
+      subject do
+        TappingDevice::Payload.init({
+          method_name: :foo,
+          defined_class: Student,
+          arguments: [stan],
+          return_value: { arg: stan },
+          filepath: "location",
+          line_number: 5
+        })
+      end
+      context "when true" do
+        it "shows objects with #inspect" do
+          expect(subject.detail_call_info(inspect: true)).to eq(
+           <<~MSG
+           :foo # Student
+               from: location:5
+               <= [#{stan.inspect}]
+               => {arg: #{stan.inspect}}
+
+           MSG
+          )
+        end
+      end
+      context "when false (default)" do
+        it "shows objects with to_s" do
+          expect(subject.detail_call_info(inspect: false)).to match(
+           <<~MSG
+           :foo # Student
+               from: location:5
+               <= [#{stan.to_s}]
+               => {arg: #{stan.to_s}}
+
+           MSG
+          )
+        end
+      end
     end
   end
 

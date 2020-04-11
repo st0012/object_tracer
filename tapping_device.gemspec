@@ -32,8 +32,6 @@ Gem::Specification.new do |spec|
     spec.add_dependency "activerecord", ">= 5.2"
   end
 
-  spec.add_dependency "awesome_print"
-
   spec.add_development_dependency "sqlite3", ">= 1.3.6"
   spec.add_development_dependency "database_cleaner"
   spec.add_development_dependency "bundler", "~> 2.0"

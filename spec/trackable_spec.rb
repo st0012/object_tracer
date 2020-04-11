@@ -47,22 +47,22 @@ RSpec.describe TappingDevice::Trackable do
         service.perform(cart)
       end.to output(/:validate_cart # CartOperationService
     from: #{__FILE__}:.*
-    <= {:cart=>#<Cart:.*>}
+    <= {cart: #<Cart:.*>}
     => #<Cart:.*>
 
 :apply_discount # CartOperationService
     from: #{__FILE__}:.*
-    <= {:cart=>#<Cart:.*>}
+    <= {cart: #<Cart:.*>}
     => #<Cart:.*>
 
 :create_order # CartOperationService
     from: #{__FILE__}:.*
-    <= {:cart=>#<Cart:.*>}
+    <= {cart: #<Cart:.*>}
     => #<Order:.*>
 
 :perform # CartOperationService
     from: #{__FILE__}:.*
-    <= {:cart=>#<Cart:.*>}
+    <= {cart: #<Cart:.*>}
     => #<Order:.*>/
       ).to_stdout
     end

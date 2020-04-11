@@ -113,7 +113,7 @@ Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/servi
 It prints the object's calls in detail (including call location, arguments, and return value). It's useful for observing an object's behavior when debugging.
 
 #### Options
-- `awesome_print:` - will print calls in prettier format if set to `true`. Default is `false`
+- `inspect:` - will print objects with `#inspect` instead of `#to_s` if set to `true` (very noisy when having large objects). Default is `false`.
 
 ```ruby
 class OrdersController < ApplicationController
