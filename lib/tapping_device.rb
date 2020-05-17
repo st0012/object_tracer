@@ -25,6 +25,7 @@ class TappingDevice
     @options = process_options(options)
     @calls = []
     @disabled = false
+    @with_condition = nil
     self.class.devices << self
   end
 
@@ -51,6 +52,10 @@ class TappingDevice
 
   def and_print(payload_method)
     @output_block = -> (payload) { puts(payload.send(payload_method)) }
+  end
+
+  def with(&block)
+    @with_condition = block
   end
 
   def set_block(&block)
@@ -93,6 +98,8 @@ class TappingDevice
         next if should_be_skipped_by_paths?(filepath)
 
         payload = build_payload(tp: tp, filepath: filepath, line_number: line_number, &payload_block)
+
+        next unless with_condition_satisfied?(payload)
 
         record_call!(payload)
 
@@ -254,5 +261,9 @@ class TappingDevice
     else
       root_device.calls << payload
     end
+  end
+
+  def with_condition_satisfied?(payload)
+    @with_condition.blank? || @with_condition.call(payload)
   end
 end

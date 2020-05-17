@@ -66,6 +66,24 @@ RSpec.describe TappingDevice::Trackable do
     => #<Order:.*>/
       ).to_stdout
     end
+
+    context "with '.with' chained" do
+      it "only prints the calls that matches the with condition" do
+        cart = Cart.new
+        service = CartOperationService.new
+        print_calls_in_detail(service).with do |payload|
+          payload.method_name.to_s.match? /order/
+        end
+
+        expect do
+          service.perform(cart)
+        end.to output(/:create_order # CartOperationService
+    from: #{__FILE__}:.*
+    <= {cart: #<Cart:.*>}
+    => #<Order:.*>/
+        ).to_stdout
+      end
+    end
   end
 
   describe "#print_traces" do
