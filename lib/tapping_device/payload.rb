@@ -6,7 +6,7 @@ class TappingDevice
     ]
 
     ATTRS.each do |attr|
-      define_method attr do
+      define_method attr do |options = {}|
         self[attr]
       end
     end
@@ -24,7 +24,7 @@ class TappingDevice
       IO.readlines(source_file)[source_line-1]
     end
 
-    def location
+    def location(options = {})
       "#{filepath}:#{line_number}"
     end
   end

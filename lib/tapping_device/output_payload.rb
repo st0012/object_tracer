@@ -1,18 +1,18 @@
 class TappingDevice
   class OutputPayload < Payload
-    def method_name
-      ":#{super}"
-    end
-
     alias :raw_arguments :arguments
     alias :raw_return_value :return_value
 
-    def passed_at(with_method_head: false)
-      arg_name = raw_arguments.keys.detect { |k| raw_arguments[k] == target }
-      return unless arg_name
-      msg = "Passed as '#{arg_name}' in '#{defined_class}##{method_name}' at #{location}"
-      msg += "\n  > #{method_head.strip}" if with_method_head
-      msg
+    def method_name(options = {})
+      ":#{super(options)}"
+    end
+
+    def arguments(options = {})
+      generate_string_result(raw_arguments, options[:inspect])
+    end
+
+    def return_value(options = {})
+      generate_string_result(raw_return_value, options[:inspect])
     end
 
     PAYLOAD_ATTRIBUTES = {
@@ -28,8 +28,8 @@ class TappingDevice
       color = options[:color]
       color_reset = "\u001b[0m"
 
-      define_method "#{attribute}_with_color" do
-        "#{color}#{send(attribute)}#{color_reset}"
+      define_method "#{attribute}_with_color" do |options = {}|
+        "#{color}#{send(attribute, options)}#{color_reset}"
       end
 
       PAYLOAD_ATTRIBUTES.each do |and_attribute, and_options|
@@ -37,33 +37,35 @@ class TappingDevice
         and_symbol = and_options[:symbol]
         and_color = and_options[:color]
 
-        define_method "#{attribute}_and_#{and_attribute}" do
-          "#{send(attribute)} #{and_symbol} #{send(and_attribute)}"
+        define_method "#{attribute}_and_#{and_attribute}" do |options = {}|
+          "#{send(attribute, options)} #{and_symbol} #{send(and_attribute, options)}"
         end
 
-        define_method "#{attribute}_and_#{and_attribute}_with_color" do
-          "#{color}#{send(attribute)}#{color_reset} #{and_color}#{and_symbol} #{send(and_attribute)}#{color_reset}"
+        define_method "#{attribute}_and_#{and_attribute}_with_color" do |options = {}|
+          "#{color}#{send(attribute, options)}#{color_reset} #{and_color}#{and_symbol} #{send(and_attribute, options)}#{color_reset}"
         end
       end
     end
 
-    def arguments(inspect = false)
-      generate_string_result(raw_arguments, inspect)
+    def passed_at(with_method_head: false)
+      arg_name = raw_arguments.keys.detect { |k| raw_arguments[k] == target }
+      return unless arg_name
+      msg = "Passed as '#{arg_name}' in '#{defined_class}##{method_name}' at #{location}"
+      msg += "\n  > #{method_head.strip}" if with_method_head
+      msg
     end
 
-    def return_value(inspect = false)
-      generate_string_result(raw_return_value, inspect)
-    end
-
-    def detail_call_info(inspect: false)
+    def detail_call_info(options = {})
       <<~MSG
-      #{method_name_and_defined_class}
-          from: #{location}
-          <= #{arguments(inspect)}
-          => #{return_value(inspect)}
+      #{method_name_and_defined_class(options)}
+          from: #{location(options)}
+          <= #{arguments(options)}
+          => #{return_value(options)}
 
       MSG
     end
+
+    private
 
     def generate_string_result(obj, inspect)
       case obj
