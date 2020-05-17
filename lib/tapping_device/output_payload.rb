@@ -24,25 +24,35 @@ class TappingDevice
       defined_class: {symbol: "#", color: ""}
     }
 
-    PAYLOAD_ATTRIBUTES.each do |attribute, options|
-      color = options[:color]
+    PAYLOAD_ATTRIBUTES.each do |attribute, attribute_options|
+      color = attribute_options[:color]
       color_reset = "\u001b[0m"
 
-      define_method "#{attribute}_with_color" do |options = {}|
-        "#{color}#{send(attribute, options)}#{color_reset}"
+      alias_method "original_#{attribute}".to_sym, attribute
+
+      define_method attribute do |options = {}|
+        call_result = send("original_#{attribute}", options)
+
+        if options[:colorize]
+          "#{color}#{call_result}#{color_reset}"
+        else
+          call_result
+        end
       end
 
-      PAYLOAD_ATTRIBUTES.each do |and_attribute, and_options|
+      define_method "#{attribute}_with_color" do |options = {}|
+        send(attribute, options.merge(colorize: true))
+      end
+
+      PAYLOAD_ATTRIBUTES.each do |and_attribute, and_attribute_options|
         next if and_attribute == attribute
-        and_symbol = and_options[:symbol]
-        and_color = and_options[:color]
 
         define_method "#{attribute}_and_#{and_attribute}" do |options = {}|
-          "#{send(attribute, options)} #{and_symbol} #{send(and_attribute, options)}"
+          "#{send(attribute, options)} #{and_attribute_options[:symbol]} #{send(and_attribute, options)}"
         end
 
         define_method "#{attribute}_and_#{and_attribute}_with_color" do |options = {}|
-          "#{color}#{send(attribute, options)}#{color_reset} #{and_color}#{and_symbol} #{send(and_attribute, options)}#{color_reset}"
+          send("#{attribute}_and_#{and_attribute}", options.merge(colorize: true))
         end
       end
     end
