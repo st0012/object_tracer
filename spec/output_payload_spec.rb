@@ -14,17 +14,6 @@ RSpec.describe TappingDevice::OutputPayload do
   end
 
   describe "#detail_call_info" do
-    it "returns method_name, arugments, return_value, and filepath" do
-      expect(subject.detail_call_info).to match(
-        <<~MSG
-       :foo # Student
-           from: location:5
-           <= [#{stan}]
-           => {arg: #{stan.to_s}}
-
-MSG
-      )
-    end
     describe "inspect:" do
       context "when true" do
         it "shows objects with #inspect" do
