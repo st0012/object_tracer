@@ -13,8 +13,6 @@ class TappingDevice
         "Called #{output_payload.method_name_and_location}"
       end
       device_2 = tap_passed!(target, options).and_print do |output_payload|
-        arg_name = output_payload.arguments.keys.detect { |k| output_payload.arguments[k] == target }
-        next unless arg_name
         output_payload.passed_at
       end
       [device_1, device_2]

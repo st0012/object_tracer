@@ -4,8 +4,11 @@ class TappingDevice
       ":#{super}"
     end
 
+    alias :raw_arguments :arguments
+    alias :raw_return_value :return_value
+
     def passed_at(with_method_head: false)
-      arg_name = arguments.keys.detect { |k| arguments[k] == target }
+      arg_name = raw_arguments.keys.detect { |k| raw_arguments[k] == target }
       return unless arg_name
       msg = "Passed as '#{arg_name}' in '#{defined_class}##{method_name}' at #{location}"
       msg += "\n  > #{method_head.strip}" if with_method_head
@@ -44,15 +47,20 @@ class TappingDevice
       end
     end
 
-    def detail_call_info(inspect: false)
-      arguments_output = generate_string_result(arguments, inspect)
-      return_value_output = generate_string_result(return_value, inspect)
+    def arguments(inspect = false)
+      generate_string_result(raw_arguments, inspect)
+    end
 
+    def return_value(inspect = false)
+      generate_string_result(raw_return_value, inspect)
+    end
+
+    def detail_call_info(inspect: false)
       <<~MSG
       #{method_name_and_defined_class}
           from: #{location}
-          <= #{arguments_output}
-          => #{return_value_output}
+          <= #{arguments(inspect)}
+          => #{return_value(inspect)}
 
       MSG
     end
