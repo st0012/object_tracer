@@ -78,12 +78,12 @@ RSpec.describe TappingDevice::Trackable do
 
       expect do
         service.perform(cart)
-      end.to output(/Passed as 'cart' in 'CartOperationService#perform' at #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#validate_cart' at #{__FILE__}:\d+
+      end.to output(/Passed as 'cart' in 'CartOperationService#:perform' at #{__FILE__}:\d+
+Passed as 'cart' in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
 Called :total from: #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#apply_discount' at #{__FILE__}:\d+
+Passed as 'cart' in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
 Called :promotion from: #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#create_order' at #{__FILE__}:\d+/
+Passed as 'cart' in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       ).to_stdout
     end
   end
