@@ -73,18 +73,16 @@ RSpec.describe TappingDevice::OutputPayload do
     end
 
     it "returns the argument name, method name and location" do
-      expect(subject.passed_at).to eq(
-        "Passed as 'name' in 'Student#:initialize' at #{__FILE__}:73"
+      expect(subject.passed_at).to match(
+        /Passed as 'name' in 'Student#:initialize' at #{__FILE__}:\d+/
       )
     end
 
     context "with_method_head: true" do
       it "returns method definition's head as well" do
-        expect(subject.passed_at(with_method_head: true)).to eq(
-          <<~MSG.chomp
-          Passed as 'name' in 'Student#:initialize' at #{__FILE__}:73
-            > def initialize(name, age)
-          MSG
+        expect(subject.passed_at(with_method_head: true)).to match(
+        /Passed as 'name' in 'Student#:initialize' at #{__FILE__}:\d+
+  > def initialize\(name, age\)/
         )
       end
     end
