@@ -20,7 +20,7 @@ class TappingDevice
       [device_1, device_2]
     end
 
-    def print_calls_in_detail(target, options = {})
+    def print_calls(target, options = {})
       inspect = options.delete(:inspect)
       colorize = options.fetch(:colorize, true)
 

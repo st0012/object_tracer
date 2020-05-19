@@ -38,11 +38,11 @@ RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
   let(:service) { CartOperationService.new }
 
-  describe "#print_calls_in_detail" do
+  describe "#print_calls" do
     include_context "order creation"
 
     it "prints out target's calls in detail" do
-      print_calls_in_detail(service, colorize: false)
+      print_calls(service, colorize: false)
 
       expect do
         service.perform(cart)
@@ -70,7 +70,7 @@ RSpec.describe TappingDevice::Trackable do
 
     context "with '.with' chained" do
       it "only prints the calls that matches the with condition" do
-        print_calls_in_detail(service, colorize: false).with do |payload|
+        print_calls(service, colorize: false).with do |payload|
           payload.method_name.to_s.match? /order/
         end
 

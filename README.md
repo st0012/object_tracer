@@ -20,7 +20,7 @@
 - [Usages](#usages)
     - Tracing Helpers
         - [print_traces](#print_traces)
-        - [print_calls_in_detail](#print_calls_in_detail)
+        - [print_calls](#print_calls)
     - Tapping Methods
         - [tap_init!](#tap_init)
         - [tap_on!](#tap_on)
@@ -59,7 +59,7 @@ Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/servi
 ……
 ```
 
-(Also see [print_calls_in_detail](#print_calls_in_detail))
+(Also see [print_calls](#print_calls))
 
 
 However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don't use this on production**
@@ -108,7 +108,7 @@ Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/servi
 ……
 ```
 
-### print_calls_in_detail
+### print_calls
 
 It prints the object's calls in detail (including call location, arguments, and return value). It's useful for observing an object's behavior when debugging.
 
@@ -120,7 +120,7 @@ class OrdersController < ApplicationController
   def create
     @cart = Cart.find(order_params[:cart_id])
     service = OrderCreationService.new
-    print_calls_in_detail(service)
+    print_calls(service)
     @order = service.perform(@cart)
   end
 ```
