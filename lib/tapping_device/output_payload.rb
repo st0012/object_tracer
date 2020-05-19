@@ -15,18 +15,24 @@ class TappingDevice
       generate_string_result(raw_return_value, options[:inspect])
     end
 
+    COLORS = {
+      yellow: "\u001b[33;1m",
+      megenta: "\u001b[35;1m",
+      cyan: "\u001b[36;1m",
+      reset: "\u001b[0m"
+    }
+
     PAYLOAD_ATTRIBUTES = {
-      method_name: {symbol: "", color: "\u001b[33;1m"},
+      method_name: {symbol: "", color: COLORS[:yellow]},
       location: {symbol: "from:", color: ""},
       sql: {symbol: "QUERIES", color: ""},
-      return_value: {symbol: "=>", color: "\u001b[35;1m"},
-      arguments: {symbol: "<=", color: "\u001b[32;1m"},
+      return_value: {symbol: "=>", color: COLORS[:megenta]},
+      arguments: {symbol: "<=", color: COLORS[:cyan]},
       defined_class: {symbol: "#", color: ""}
     }
 
     PAYLOAD_ATTRIBUTES.each do |attribute, attribute_options|
       color = attribute_options[:color]
-      color_reset = "\u001b[0m"
 
       alias_method "original_#{attribute}".to_sym, attribute
 
@@ -34,7 +40,7 @@ class TappingDevice
         call_result = send("original_#{attribute}", options)
 
         if options[:colorize]
-          "#{color}#{call_result}#{color_reset}"
+          "#{color}#{call_result}#{COLORS[:reset]}"
         else
           call_result
         end
