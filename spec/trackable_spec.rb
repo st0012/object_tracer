@@ -41,7 +41,7 @@ RSpec.describe TappingDevice::Trackable do
     it "prints out target's calls in detail" do
       cart = Cart.new
       service = CartOperationService.new
-      print_calls_in_detail(service)
+      print_calls_in_detail(service, colorize: false)
 
       expect do
         service.perform(cart)
@@ -74,16 +74,16 @@ RSpec.describe TappingDevice::Trackable do
     it "prints out what the target sees" do
       cart = Cart.new
       service = CartOperationService.new
-      print_traces(cart)
+      print_traces(cart, colorize: false)
 
       expect do
         service.perform(cart)
-      end.to output(/Passed as 'cart' in 'CartOperationService#:perform' at #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
+      end.to output(/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
+Passed as :cart in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
 Called :total from: #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
+Passed as :cart in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
 Called :promotion from: #{__FILE__}:\d+
-Passed as 'cart' in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
+Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       ).to_stdout
     end
   end
