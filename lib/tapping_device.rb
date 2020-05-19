@@ -60,6 +60,8 @@ class TappingDevice
       else
         raise "need to provide either a payload method name or a block"
       end
+
+    self
   end
 
   def with(&block)
