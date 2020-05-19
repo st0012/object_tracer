@@ -2,6 +2,7 @@ require "active_record"
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
+require "tapping_device/output_payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/sql_tapping_methods"
@@ -50,8 +51,15 @@ class TappingDevice
     track(record, condition: :tap_associations?)
   end
 
-  def and_print(payload_method)
-    @output_block = -> (payload) { puts(payload.send(payload_method)) }
+  def and_print(payload_method = nil, &block)
+    @output_block =
+      if block
+        -> (output_payload) { puts(block.call(output_payload)) }
+      elsif payload_method
+        -> (output_payload) { puts(output_payload.send(payload_method)) }
+      else
+        raise "need to provide either a payload method name or a block"
+      end
   end
 
   def with(&block)
@@ -254,7 +262,7 @@ class TappingDevice
   def record_call!(payload)
     return if @disabled
 
-    @output_block.call(payload) if @output_block
+    @output_block.call(OutputPayload.init(payload)) if @output_block
 
     if @block
       root_device.calls << @block.call(payload)
