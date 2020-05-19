@@ -2,6 +2,7 @@ require "spec_helper"
 
 RSpec.describe TappingDevice::OutputPayload do
   let(:stan) { Student.new("Stan", 25) }
+  let(:options) { {colorize: false} }
   subject do
     TappingDevice::OutputPayload.init({
       method_name: :foo,
@@ -16,8 +17,10 @@ RSpec.describe TappingDevice::OutputPayload do
   describe "#detail_call_info" do
     describe "inspect:" do
       context "when true" do
+        let(:options) { {colorize: false, inspect: true} }
+
         it "shows objects with #inspect" do
-          expect(subject.detail_call_info(inspect: true)).to eq(
+          expect(subject.detail_call_info(options)).to eq(
             <<~MSG
            :foo # Student
                from: location:5
@@ -29,8 +32,10 @@ RSpec.describe TappingDevice::OutputPayload do
         end
       end
       context "when false (default)" do
+        let(:options) { {colorize: false, inspect: false} }
+
         it "shows objects with to_s" do
-          expect(subject.detail_call_info(inspect: false)).to match(
+          expect(subject.detail_call_info(options)).to match(
             <<~MSG
            :foo # Student
                from: location:5
@@ -73,15 +78,17 @@ RSpec.describe TappingDevice::OutputPayload do
     end
 
     it "returns the argument name, method name and location" do
-      expect(subject.passed_at).to match(
-        /Passed as 'name' in 'Student#:initialize' at #{__FILE__}:\d+/
+      expect(subject.passed_at(options)).to match(
+        /Passed as :name in 'Student#:initialize' at #{__FILE__}:\d+/
       )
     end
 
     context "with_method_head: true" do
+      let(:options) { {colorize: false, with_method_head: true} }
+
       it "returns method definition's head as well" do
-        expect(subject.passed_at(with_method_head: true)).to match(
-        /Passed as 'name' in 'Student#:initialize' at #{__FILE__}:\d+
+        expect(subject.passed_at(options)).to match(
+        /Passed as :name in 'Student#:initialize' at #{__FILE__}:\d+
   > def initialize\(name, age\)/
         )
       end

@@ -63,10 +63,15 @@ class TappingDevice
       end
     end
 
-    def passed_at(with_method_head: false)
+    def passed_at(options = {})
+      with_method_head = options.fetch(:with_method_head, false)
       arg_name = raw_arguments.keys.detect { |k| raw_arguments[k] == target }
+
       return unless arg_name
-      msg = "Passed as '#{arg_name}' in '#{defined_class}##{method_name}' at #{location}"
+
+      arg_name = ":#{arg_name}"
+      arg_name = value_with_color(arg_name, :cyan) if options[:colorize]
+      msg = "Passed as #{arg_name} in '#{defined_class(options)}##{method_name(options)}' at #{location(options)}"
       msg += "\n  > #{method_head.strip}" if with_method_head
       msg
     end
@@ -82,6 +87,10 @@ class TappingDevice
     end
 
     private
+
+    def value_with_color(value, color)
+      "#{COLORS[color]}#{value}#{COLORS[:reset]}"
+    end
 
     def generate_string_result(obj, inspect)
       case obj
