@@ -75,14 +75,12 @@ $ rspec spec/requests/posts_controller_spec.rb:1687
 
 You'll see all the method calls made by the `guardian` object, e.g.
 
-
-[image:A21F4511-E86B-4DD2-BCDE-F1C9124C7255-9062-0004D558933A8267/截圖 2020-05-24 下午3.01.28.png]
-
+<img src="https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls.png" alt="image of print_calls output" width="50%">
 
 Each entry consists of 5 parts
 
 
-[image:51B41D29-A063-430B-87AE-C8D8EF9D8FF6-9062-0004D62BF838E17C/Payload Explained.png]
+![explanation of individual entry](https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls%20-%20single%20entry.png)
 
 
 ### Example - `print_traces`
@@ -106,9 +104,9 @@ And after running the test case
 $ rspec spec/requests/posts_controller_spec.rb:603
 ```
 
-[image:5D190BF6-989C-444D-AE56-0B4956457A16-9062-0004D6D314CD4DCF/截圖 2020-05-24 下午3.28.02.png]
+You will see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
 
-You can see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
+![image of print_traces output](https://github.com/st0012/tapping_device/blob/update-readme/images/print_traces.png)
 
 **You can try these examples yourself on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
 
