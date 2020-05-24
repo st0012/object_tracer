@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["st0012"]
   spec.email         = ["stan001212@gmail.com"]
 
-  spec.summary       = %q{tapping_device provides useful helpers to intercept method calls}
-  spec.description   = %q{tapping_device provides useful helpers to intercept method calls}
+  spec.summary       = %q{tapping_device lets you understand what your Ruby objects do without digging into the code}
+  spec.description   = %q{tapping_device lets you understand what your Ruby objects do without digging into the code} 
   spec.homepage      = "https://github.com/st0012/tapping_device"
   spec.license       = "MIT"
 
