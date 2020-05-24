@@ -6,63 +6,110 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/test_coverage)](https://codeclimate.com/github/st0012/tapping_device/test_coverage)
 [![Open Source Helpers](https://www.codetriage.com/st0012/tapping_device/badges/users.svg)](https://www.codetriage.com/st0012/tapping_device)
 
-## Related Posts
-- [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing) 
-- [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
-- [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
-
-
-## Table of Content
-- [Introduction](#introduction)
-    - [Print Object’s Traces](print-objects-traces)
-    - [Track Calls that Generates SQL Queries](#track-calls-that-generates-sql-queries)
-- [Installation](#installation)
-- [Usages](#usages)
-    - Tracing Helpers
-        - [print_traces](#print_traces)
-        - [print_calls](#print_calls)
-    - Tapping Methods
-        - [tap_init!](#tap_init)
-        - [tap_on!](#tap_on)
-        - [tap_passed!](#tap_passed)
-        - [tap_assoc!](#tap_assoc)
-        - [tap_sql!](#tap_sql)
-    - [Options](#options)
-    - [Payload](#payload-of-the-call)
-    - [Advance Usages](#advance-usages)
 
 ## Introduction
-`tapping_device` is a debugging tool built based on a concept called `object-oriented tracing` and on top of Ruby's `TracePoint` class. It allows you to inspect an object’s behavior, and thus build the program’s execution path for later debugging. Here’s a post to explain how to use `object-oriented tracing` and this gem to improve your debugging workflow: [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing).
 
-Sample usage:
+I'm a super lazy person and I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
 
-### Print Object’s Traces
+### Contract Tracing For Objects
 
-Let your objects report to you, so you don’t need to guess how they work!
+The concept is very simple. It's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
+
+- `print_calls(object)` to see what method calls the object performs
+- `print_traces(object)` to see how the object interacts with other objects (like used as an argument)
+
+### Example - `print_calls`
+
+Still sounds vague? Let's see some examples:
+
+In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's see what `Guadian` does when a user creates a post; here's the action:
+
 
 ```ruby
-class OrdersController < ApplicationController
   def create
-    @cart = Cart.find(order_params[:cart_id])
-    print_traces(@cart, exclude_by_paths: [/gems/])
-    @order = OrderCreationService.new.perform(@cart)
+    @manager_params = create_params
+    @manager_params[:first_post_checks] = !is_api?
+
+    manager = NewPostManager.new(current_user, @manager_params)
+
+    if is_api?
+      memoized_payload = DistributedMemoizer.memoize(signature_for(@manager_params), 120) do
+        result = manager.perform
+        MultiJson.dump(serialize_data(result, NewPostResultSerializer, root: false))
+      end
+
+      parsed_payload = JSON.parse(memoized_payload)
+      backwards_compatible_json(parsed_payload, parsed_payload['success'])
+    else
+      result = manager.perform
+      json = serialize_data(result, NewPostResultSerializer, root: false)
+      backwards_compatible_json(json, result.success?)
+    end
   end
 ```
 
-```
-Passed as 'cart' in 'OrderCreationService#perform' at /Users/st0012/projects/tapping_device-demo/app/controllers/orders_controller.rb:10
-Passed as 'cart' in 'OrderCreationService#validate_cart' at /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:8
-Called :reserved_until FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:18
-Called :errors FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:9
-Passed as 'cart' in 'OrderCreationService#apply_discount' at /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:10
-Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:24
-……
+You don't see anything like it in the controller action, how should you know what it does? Digging into the code? Not so hurry!
+
+With `TappingDevice` installed
+
+```ruby
+gem 'tapping_device', group: :development
 ```
 
-(Also see [print_calls](#print_calls))
+you can use `print_calls` to show what method calls the object performs
+
+```ruby
+  def create
+    print_calls(guardian)
+    @manager_params = create_params
+   
+    # .....
+```
 
 
-However, depending on the size of your application, tapping any object could **harm the performance significantly**. **Don't use this on production**
+Now, if you execute the code, like via tests:
+
+```shell
+$ rspec spec/requests/posts_controller_spec.rb:1687
+```
+
+You'll see all the method calls made by the `guardian` object, e.g.
+
+<img src="https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls.png" alt="image of print_calls output" width="50%">
+
+Each entry consists of 5 parts
+
+
+![explanation of individual entry](https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls%20-%20single%20entry.png)
+
+
+### Example - `print_traces`
+
+If you're not interested in what an object does, but what it interacts with other parts of the program, e.g., used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
+
+```ruby
+  def create
+    @manager_params = create_params
+    @manager_params[:first_post_checks] = !is_api?
+   
+    manager = NewPostManager.new(current_user, @manager_params)
+
+    print_traces(manager)
+    # .....
+```
+
+And after running the test case
+
+```shell
+$ rspec spec/requests/posts_controller_spec.rb:603
+```
+
+You will see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
+
+![image of print_traces output](https://github.com/st0012/tapping_device/blob/update-readme/images/print_traces.png)
+
+**You can try these examples yourself on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
+
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -77,346 +124,53 @@ And then execute:
 $ bundle
 ```
 
-Or install it yourself as:
+Or install it directly:
 
 ```
 $ gem install tapping_device
 ```
 
-## Usages
+**Depending on the size of your application, `TappingDevice` could harm the performance significantly.  So make sure you don't put it inside the production group**
 
-### print_traces
 
-It prints the object's trace. It's like mounting a GPS tracker + a spy camera on your object, so you can inspect your program through the object's eyes.
+## Advance Usages & Options 
 
-```ruby
-class OrdersController < ApplicationController
-  def create
-    @cart = Cart.find(order_params[:cart_id])
-    print_traces(@cart, exclude_by_paths: [/gems/])
-    @order = OrderCreationService.new.perform(@cart)
-  end
-```
+### Add Conditions With `.with`
 
-```
-Passed as 'cart' in 'OrderCreationService#perform' at /Users/st0012/projects/tapping_device-demo/app/controllers/orders_controller.rb:10
-Passed as 'cart' in 'OrderCreationService#validate_cart' at /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:8
-Called :reserved_until FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:18
-Called :errors FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:9
-Passed as 'cart' in 'OrderCreationService#apply_discount' at /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:10
-Called :apply_discount FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:24
-……
-```
-
-### print_calls
-
-It prints the object's calls in detail (including call location, arguments, and return value). It's useful for observing an object's behavior when debugging.
-
-#### Options
-- `inspect:` - will print objects with `#inspect` instead of `#to_s` if set to `true` (very noisy when having large objects). Default is `false`.
+Sometimes we don't need to know all the calls or traces of an object; we just want some of them. In those cases, we can chain the helpers with `.with` to filter the calls/traces.
 
 ```ruby
-class OrdersController < ApplicationController
-  def create
-    @cart = Cart.find(order_params[:cart_id])
-    service = OrderCreationService.new
-    print_calls(service)
-    @order = service.perform(@cart)
-  end
-```
-
-```
-:validate_cart # OrderCreationService
-  <= {:cart=>#<Cart id: 1, total: 10, customer_id: 1, promotion_id: nil, reserved_until: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">}
-  => nil
-  FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:8
-:apply_discount # OrderCreationService
-  <= {:cart=>#<Cart id: 1, total: 5, customer_id: 1, promotion_id: 1, reserved_until: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">, :promotion=>#<Promotion id: 1, amount: 0.5e1, customer_id: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">}
-  => true
-  FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:10
-:create_order # OrderCreationService
-  <= {:cart=>#<Cart id: 1, total: 5, customer_id: 1, promotion_id: 1, reserved_until: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">}
-  => #<Order:0x00007f9ebcb17f08>
-  FROM /Users/st0012/projects/tapping_device-demo/app/services/order_creation_service.rb:11
-:perform # OrderCreationService
-  <= {:cart=>#<Cart id: 1, total: 5, customer_id: 1, promotion_id: 1, reserved_until: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">, :promotion=>#<Promotion id: 1, amount: 0.5e1, customer_id: nil, created_at: "2020-01-05 09:48:28", updated_at: "2020-01-05 09:48:28">}
-  => #<Order:0x00007f9ebcb17f08>
-  FROM /Users/st0012/projects/tapping_device-demo/app/controllers/orders_controller.rb:11
-```
-
-The output's order might look strange. This is because `tapping_device` needs to wait for the call to return in order to have its return value.
-
-### tap_init!
-
-`tap_init!(class)` -  tracks a class’ instance initialization
-
-```ruby
-calls = []
-tap_init!(Student) do |payload|
-  calls << [payload[:method_name], payload[:arguments]]
-end
-
-Student.new("Stan", 18)
-Student.new("Jane", 23)
-
-puts(calls.to_s) #=> [[:initialize, {:name=>"Stan", :age=>18}], [:initialize, {:name=>"Jane", :age=>23}]]
-```
-
-### tap_on!
-
- `tap_on!(object)` - tracks any calls received by the object.
-
-```ruby
-class PostsController < ApplicationController
-  before_action :set_post, only: [:show, :edit, :update, :destroy]
-
-  def show
-    tap_on!(@post).and_print(:method_name_and_location)
-  end
+# only prints calls with name matches /foo/
+print_calls(object).with do |payload|
+  payload.method_name.to_s.match?(/foo/)
 end
 ```
 
-And you can see these in log:
+### `colorize: false`
 
-```
-name FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-user_id FROM /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-to_param FROM /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
-```
+By default `print_calls` and `print_traces` colorize their output. If you don't want the colors, you can use `colorize: false` to disable it.
 
-Also check the `track_as_records` option if you want to track `ActiveRecord` records.
-
-### tap_passed!
-
-`tap_passed!(target)` tracks method calls that **takes the target as its argument**. This is particularly useful when debugging libraries. It saves your time from jumping between files and check which path the object will go.
 
 ```ruby
-class PostsController < ApplicationController
-  # GET /posts/new
-  def new
-    @post = Post.new
-
-    tap_passed!(@post) do |payload|
-      puts(payload.passed_at(with_method_head: true))
-    end
-  end
-end
-```
-
-```
-Passed as 'record' in method ':polymorphic_mapping'
-  > def polymorphic_mapping(record)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:131
-Passed as 'klass' in method ':get_method_for_class'
-  > def get_method_for_class(klass)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:269
-Passed as 'record' in method ':handle_model'
-  > def handle_model(record)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:227
-Passed as 'record_or_hash_or_array' in method ':polymorphic_method'
-  > def self.polymorphic_method(recipient, record_or_hash_or_array, action, type, options)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionpack-6.0.0/lib/action_dispatch/routing/polymorphic_routes.rb:139
-```
-
-### tap_assoc!
-
-`tap_assoc!(activerecord_object)` tracks association calls on a record, like `post.comments`
-
-```ruby
-tap_assoc!(order).and_print(:method_name_and_location)
-```
-
-```
-payments FROM /RUBY_PATH/gems/2.6.0/gems/jsonapi-resources-0.9.10/lib/jsonapi/resource.rb:124
-line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:44
-effective_line_items FROM /MY_PROJECT/app/models/line_item_container_helpers.rb:110
-amending_orders FROM /MY_PROJECT/app/models/order.rb:385
-amends_order FROM /MY_PROJECT/app/models/order.rb:432
-```
-
-### tap_sql!
-
-`tap_sql!(anything_that_generates_sql_queries)` tracks sql queries generated from the target
-
-```ruby
-class PostsController < ApplicationController
-  def index
-    # simulate current_user
-    @current_user = User.last
-    # reusable ActiveRecord::Relation
-    @posts = Post.all
-
-    tap_sql!(@posts) do |payload|
-      puts("Method: #{payload[:method_name]} generated sql: #{payload[:sql]} from #{payload[:filepath]}:#{payload[:line_number]}")
-    end
-  end
-end
-```
-
-```erb
-<h1>Posts (<%= @posts.count %>)</h1>
-......
-  <% @posts.each do |post| %>
-    ......
-  <% end %>
-......
-<p>Posts created by you: <%= @posts.where(user: @current_user).count %></p>
-```
-
-```
-Method: count generated sql: SELECT COUNT(*) FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:3
-Method: each generated sql: SELECT "posts".* FROM "posts" from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:16
-Method: count generated sql: SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = ? from /PROJECT_PATH/rails-6-sample/app/views/posts/index.html.erb:31
+print_calls(object, colorize: false)
 ```
 
 
-### Options
-#### with_trace_to
-It takes an integer as the number of traces we want to put into `trace`. Default is `nil`, so `trace` would be empty. 
+### `inspect: true`
 
-```ruby
-stan = Student.new("Stan", 18)
-tap_on!(stan, with_trace_to: 5)
+As you might have noticed, all the objects are converted into strings with `#to_s` instead of `#inspect`.  This is because when used on some Rails objects, `#inspect` can generate a significantly larger string than `#to_s`. For example:
 
-stan.name
-
-puts(device.calls.first.trace) #=>
-/Users/st0012/projects/tapping_device/spec/tapping_device_spec.rb:287:in `block (4 levels) in <top (required)>'
-/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:257:in `instance_exec'
-/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:257:in `block in run'
-/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:503:in `block in with_around_and_singleton_context_hooks'
-/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/example.rb:460:in `block in with_around_example_hooks'
-/Users/st0012/.rbenv/versions/2.5.1/lib/ruby/gems/2.5.0/gems/rspec-core-3.8.2/lib/rspec/core/hooks.rb:464:in `block in run'
+``` ruby
+post.to_s #=> #<Post:0x00007f89a55201d0>
+post.inspect #=> #<Post id: 649, user_id: 3, topic_id: 600, post_number: 1, raw: "Hello world", cooked: "<p>Hello world</p>", created_at: "2020-05-24 08:07:29", updated_at: "2020-05-24 08:07:29", reply_to_post_number: nil, reply_count: 0, quote_count: 0, deleted_at: nil, off_topic_count: 0, like_count: 0, incoming_link_count: 0, bookmark_count: 0, score: nil, reads: 0, post_type: 1, sort_order: 1, last_editor_id: 3, hidden: false, hidden_reason_id: nil, notify_moderators_count: 0, spam_count: 0, illegal_count: 0, inappropriate_count: 0, last_version_at: "2020-05-24 08:07:29", user_deleted: false, reply_to_user_id: nil, percent_rank: 1.0, notify_user_count: 0, like_score: 0, deleted_by_id: nil, edit_reason: nil, word_count: 2, version: 1, cook_method: 1, wiki: false, baked_at: "2020-05-24 08:07:29", baked_version: 2, hidden_at: nil, self_edits: 0, reply_quoted: false, via_email: false, raw_email: nil, public_version: 1, action_code: nil, image_url: nil, locked_by_id: nil, image_upload_id: nil>
 ```
 
-#### track_as_records
-It makes the device to track objects as they are ActiveRecord instances. For example:
 
-```ruby
-tap_on!(@post, track_as_records: true)
-post = Post.find(@post.id) # same record but a different object
-post.title #=> this call will be recorded as well
-```
+## Lower-Level Helpers
+`print_calls` and `print_traces` aren't the only helpers you can get from `TappingDevice`. They are actually built on top of other helpers, which you can use as well. To know more about them, please check [this page](https://github.com/st0012/tapping_device/wiki/Advance-Usages)
 
-#### exclude_by_paths
-It takes an array of call path patterns that we want to skip. This could be very helpful when working on a large project like Rails applications.
-
-```ruby
-tap_on!(@post, exclude_by_paths: [/active_record/]).and_print(:method_name_and_location)
-```
-
-```
-_read_attribute FROM  /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-name FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-_read_attribute FROM  /RUBY_PATH/gems/2.6.0/gems/activerecord-5.2.0/lib/active_record/attribute_methods/read.rb:40
-user_id FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-.......
-
-# versus
-
-name FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:5
-user_id FROM  /PROJECT_PATH/sample/app/views/posts/show.html.erb:10
-to_param FROM  /RUBY_PATH/gems/2.6.0/gems/actionpack-5.2.0/lib/action_dispatch/routing/route_set.rb:236
-```
-
-#### filter_by_paths
-
-Like `exclude_by_paths`, but work in the opposite way.
-
-
-### Payload of The Call
-All tapping methods (start with `tap_`) takes a block and yield a `Payload` object as a block argument. It responds to
-
-- `target` - the target for `tap_x` call
-- `receiver` - the receiver object
-- `method_name` - method’s name (symbol) 
-    - e.g. `:name`
-- `method_object` - the method object that's being called. It might be `nil` in some edge cases.
-- `arguments` - arguments of the method call
-    - e.g. `{name: “Stan”, age: 25}`
-- `return_value` - return value of the method call
-- `filepath` - path to the file that performs the method call
-- `line_number` 
-- `defined_class` - in which class that defines the method being called
-- `trace` - stack trace of the call. Default is an empty array unless `with_trace_to` option is set
-- `sql` - sql that generated from the call (only present in `tap_sql!` payloads)
-- `tp` - trace point object of this call
-
-
-#### Symbols for Payload Helpers
-- `FROM` for method call’s location
-- `<=` for arguments
-- `=>` for return value
-- `@` for defined class
-
-#### Payload Helpers
-- `method_name_and_location` - `initialize FROM /PROJECT_PATH/tapping_device/spec/payload_spec.rb:7`
-- `method_name_and_arguments` - `initialize <= {:name=>\"Stan\", :age=>25}`
-- `method_name_and_return_value` - `ten => 10`
-- `method_name_and_defined_class` - `initialize @ Student`
-- `passed_at` - 
-```
-Passed as 'object' in method ':initialize'
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
-```
-
-You can also set `passed_at(with_method_head: true)` to see the method's head.
-
-```
-Passed as 'object' in method ':initialize'
-  > def initialize(template_object, object_name, method_name, object, tag_value)
-  at /Users/st0012/.rbenv/versions/2.6.3/lib/ruby/gems/2.6.0/gems/actionview-6.0.0/lib/action_view/helpers/tags/label.rb:60
-```
-
-- `detail_call_info` 
-
-```
-initialize @ Student
-  <= {:name=>"Stan", :age=>25}
-  => 25
-  FROM /Users/st0012/projects/tapping_device/spec/payload_spec.rb:7
-```
-
-### Advance Usages
-
-Tapping methods introduced above like `tap_on!` are designed for simple use cases. They're actually short for
-
-```ruby
-device = TappingDevice.new { # tapping action }
-device.tap_on!(object)
-```
-
-And if you want to do some more configurations like stopping them manually or setting stop condition, you must have a `TappingDevie` instance. You can either get them like the above code or save the return value of `tap_*!` method calls.
-
-#### Stop tapping
-
-Once you have a `TappingDevice` instance in hand, you will be able to stop the tapping by
-1. Manually calling `device.stop!`
-2. Setting stop condition with `device.stop_when`, like
-
-```ruby
-device.stop_when do |payload|
-  device.calls.count >= 10 # stop after gathering 10 calls’ data
-end
-```
-
-#### Device states & Managing Devices
-
-Each `TappingDevice` instance can have 3 states:
-
-- `Initial` - means the instance is initialized but hasn't tapped on anything.
-- `Enabled` - means the instance is tapping on something (has called `tap_*` methods).
-- `Disabled` - means the instance has been disabled. It will no longer receive any call info.
-
-When debugging, we may create many device instances and tap objects in several places. Then it'll be quite annoying to manage their states. So `TappingDevice` has several class methods that allows you to manage all `TappingDevice` instances:
-
-- `TappingDevice.devices` - Lists all registered devices with `initial` or `enabled` state. Note that any instance that's been stopped will be removed from the list.
-- `TappingDevice.stop_all!` - Stops all registered devices and remove them from the `devices` list.
-- `TappingDevice.suspend_new!` - Suspends any device instance from changing their state from `initial` to `enabled`. Which means any  `tap_*` calls after it will no longer work. 
-- `TappingDevice.reset!` - Cancels `suspend_new` (if called) and stops/removes all created devices. Useful to reset the environment between test cases.
 
 ## Development
-
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
