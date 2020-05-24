@@ -13,16 +13,16 @@ I'm a super lazy person and I hate digging into code. So I created `TappingDevic
 
 ### Contract Tracing For Objects
 
-The concept is very simple, it's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
+The concept is very simple. It's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
 
 - `print_calls(object)` to see what method calls the object performs
-- `print_traces(object)` to see how the object interacts with other objects (like used as an arugment)
+- `print_traces(object)` to see how the object interacts with other objects (like used as an argument)
 
 ### Example - `print_calls`
 
 Still sounds vague? Let's see some examples:
 
-In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's see what `Guadian` does when a user creates a post, here's the action:
+In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's see what `Guadian` does when a user creates a post; here's the action:
 
 
 ```ruby
@@ -48,7 +48,7 @@ In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class
   end
 ```
 
-You don't see anything like it in the action, how should you know what it does? Digging into the code? Not so hurry!
+You don't see anything like it in the controller action, how should you know what it does? Digging into the code? Not so hurry!
 
 With `TappingDevice` installed
 
@@ -67,7 +67,7 @@ you can use `print_calls` to show what method calls the object performs
 ```
 
 
-Now if you execute the code, like via tests 
+Now, if you execute the code, like via tests:
 
 ```shell
 $ rspec spec/requests/posts_controller_spec.rb:1687
@@ -85,7 +85,7 @@ Each entry consists of 5 parts
 
 ### Example - `print_traces`
 
-If you're not interested in what an object does, but what it interacts with other parts of the program, e.g. used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
+If you're not interested in what an object does, but what it interacts with other parts of the program, e.g., used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
 
 ```ruby
   def create
@@ -137,7 +137,7 @@ $ gem install tapping_device
 
 ### Add Conditions With `.with`
 
-Sometimes we don't need to know all the calls or traces of an object, we just want some of them. In those cases, we can chain the helpers with `.with` to filter the calls/traces.
+Sometimes we don't need to know all the calls or traces of an object; we just want some of them. In those cases, we can chain the helpers with `.with` to filter the calls/traces.
 
 ```ruby
 # only prints calls with name matches /foo/
