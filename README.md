@@ -9,7 +9,7 @@
 
 ## Introduction
 
-I'm a super lazy person and I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
+I'm a lazy person and I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
 
 ### Contract Tracing For Objects
 
@@ -75,12 +75,12 @@ $ rspec spec/requests/posts_controller_spec.rb:1687
 
 You'll see all the method calls made by the `guardian` object, e.g.
 
-<img src="https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls.png" alt="image of print_calls output" width="50%">
+<img src="https://github.com/st0012/tapping_device/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
 
 Each entry consists of 5 parts
 
 
-![explanation of individual entry](https://github.com/st0012/tapping_device/blob/update-readme/images/print_calls%20-%20single%20entry.png)
+![explanation of individual entry](https://github.com/st0012/tapping_device/blob/master/images/print_calls%20-%20single%20entry.png)
 
 
 ### Example - `print_traces`
@@ -106,7 +106,7 @@ $ rspec spec/requests/posts_controller_spec.rb:603
 
 You will see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
 
-![image of print_traces output](https://github.com/st0012/tapping_device/blob/update-readme/images/print_traces.png)
+![image of print_traces output](https://github.com/st0012/tapping_device/blob/master/images/print_traces.png)
 
 **You can try these examples yourself on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
 
