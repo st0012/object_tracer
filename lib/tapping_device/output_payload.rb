@@ -15,20 +15,32 @@ class TappingDevice
       generate_string_result(raw_return_value, options[:inspect])
     end
 
-    COLORS = {
-      yellow: "\u001b[33;1m",
-      megenta: "\u001b[35;1m",
-      cyan: "\u001b[36;1m",
-      reset: "\u001b[0m"
+    def self.full_color_code(code)
+    end
+
+    COLOR_CODES = {
+      green: 10,
+      yellow: 11,
+      blue: 12,
+      megenta: 13,
+      cyan: 14,
+      orange: 214
     }
 
+    COLORS = COLOR_CODES.each_with_object({}) do |(name, code), hash|
+      hash[name] = "\u001b[38;5;#{code}m"
+    end.merge(
+      reset: "\u001b[0m",
+      nocolor: ""
+    )
+
     PAYLOAD_ATTRIBUTES = {
-      method_name: {symbol: "", color: COLORS[:yellow]},
-      location: {symbol: "from:", color: ""},
-      sql: {symbol: "QUERIES", color: ""},
+      method_name: {symbol: "", color: COLORS[:blue]},
+      location: {symbol: "from:", color: COLORS[:green]},
+      sql: {symbol: "QUERIES", color: COLORS[:nocolor]},
       return_value: {symbol: "=>", color: COLORS[:megenta]},
-      arguments: {symbol: "<=", color: COLORS[:cyan]},
-      defined_class: {symbol: "#", color: ""}
+      arguments: {symbol: "<=", color: COLORS[:orange]},
+      defined_class: {symbol: "#", color: COLORS[:yellow]}
     }
 
     PAYLOAD_ATTRIBUTES.each do |attribute, attribute_options|
@@ -36,6 +48,7 @@ class TappingDevice
 
       alias_method "original_#{attribute}".to_sym, attribute
 
+      # regenerate attributes with `colorize: true` support
       define_method attribute do |options = {}|
         call_result = send("original_#{attribute}", options)
 
@@ -70,7 +83,7 @@ class TappingDevice
       return unless arg_name
 
       arg_name = ":#{arg_name}"
-      arg_name = value_with_color(arg_name, :cyan) if options[:colorize]
+      arg_name = value_with_color(arg_name, :orange) if options[:colorize]
       msg = "Passed as #{arg_name} in '#{defined_class(options)}##{method_name(options)}' at #{location(options)}"
       msg += "\n  > #{method_head.strip}" if with_method_head
       msg
