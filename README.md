@@ -9,18 +9,20 @@
 
 ## Introduction
 
-I'm a super lazy person, I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
+I'm a super lazy person and I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
+
+### Contract Tracing For Objects
 
 The concept is very simple, it's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
 
 - `print_calls(object)` to see what method calls the object performs
 - `print_traces(object)` to see how the object interacts with other objects (like used as an arugment)
 
- Still sounds vague? Let's see some examples:
+### Example - `print_calls`
+
+Still sounds vague? Let's see some examples:
 
 In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's see what `Guadian` does when a user creates a post, here's the action:
-
-https://github.com/st0012/discourse/blob/faeb5793baf408fa0ea7fc4425722842e41bc85e/app/controllers/posts_controller.rb#L164-L183
 
 
 ```ruby
@@ -65,7 +67,11 @@ you can use `print_calls` to show what method calls the object performs
 ```
 
 
-Now if you execute the code, like via tests `rspec spec/requests/posts_controller_spec.rb:602`
+Now if you execute the code, like via tests 
+
+```shell
+$ rspec spec/requests/posts_controller_spec.rb:1687
+```
 
 You'll see all the method calls made by the `guardian` object, e.g.
 
@@ -78,6 +84,8 @@ Each entry consists of 5 parts
 
 [image:51B41D29-A063-430B-87AE-C8D8EF9D8FF6-9062-0004D62BF838E17C/Payload Explained.png]
 
+
+### Example - `print_traces`
 
 If you're not interested in what an object does, but what it interacts with other parts of the program, e.g. used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
 
@@ -92,10 +100,18 @@ If you're not interested in what an object does, but what it interacts with othe
     # .....
 ```
 
+And after running the test case
+
+```shell
+$ rspec spec/requests/posts_controller_spec.rb:603
+```
 
 [image:5D190BF6-989C-444D-AE56-0B4956457A16-9062-0004D6D314CD4DCF/截圖 2020-05-24 下午3.28.02.png]
 
-You can see from the above output that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
+You can see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
+
+**You can try these examples yourself on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
+
 
 ## Installation
 Add this line to your application's Gemfile:
