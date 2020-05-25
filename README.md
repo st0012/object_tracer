@@ -8,22 +8,20 @@
 
 
 ## Introduction
+`TappingDevice` makes the objects tell you what they do, so you don't need to track them yourself.
 
-I'm a lazy person and I hate digging into code. So I created `TappingDevice` to make the program tell me what it does, instead of me reading the code and simulate it in my head.
-
-### Contract Tracing For Objects
+#### Contract Tracing For Objects
 
 The concept is very simple. It's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
 
-- `print_calls(object)` to see what method calls the object performs
+- `print_calls(object)` to see what the object does
 - `print_traces(object)` to see how the object interacts with other objects (like used as an argument)
-
-### Example - `print_calls`
 
 Still sounds vague? Let's see some examples:
 
-In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's see what `Guadian` does when a user creates a post; here's the action:
+### `print_calls` To Track Method Calls
 
+In [Discourse](https://github.com/discourse/discourse), it uses the `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's say we want to know what the `Guadian` would do when a user creates a post; here's the controller action:
 
 ```ruby
   def create
@@ -48,42 +46,34 @@ In [Discourse](https://github.com/discourse/discourse), it uses `Guardian` class
   end
 ```
 
-You don't see anything like it in the controller action, how should you know what it does? Digging into the code? Not so hurry!
+As you can see, it doesn't even exist in the controller action, which makes tracking it by reading code very hard to do.
 
-With `TappingDevice` installed
-
-```ruby
-gem 'tapping_device', group: :development
-```
-
-you can use `print_calls` to show what method calls the object performs
+But with `TappingDevice`. You can use `print_calls` to show what method calls the object performs
 
 ```ruby
   def create
+    # you can retrieve the current guardian object by calling guardian in the controller
     print_calls(guardian)
     @manager_params = create_params
    
     # .....
 ```
 
-
 Now, if you execute the code, like via tests:
 
 ```shell
-$ rspec spec/requests/posts_controller_spec.rb:1687
+$ rspec spec/requests/posts_controller_spec.rb:603
 ```
 
-You'll see all the method calls made by the `guardian` object, e.g.
 
 <img src="https://github.com/st0012/tapping_device/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
 
-Each entry consists of 5 parts
-
+As you can see, each entry consists multiple pieces of information. Here's a short explanation of them
 
 ![explanation of individual entry](https://github.com/st0012/tapping_device/blob/master/images/print_calls%20-%20single%20entry.png)
 
 
-### Example - `print_traces`
+### `print_traces` To See The Object's Traces
 
 If you're not interested in what an object does, but what it interacts with other parts of the program, e.g., used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
 
@@ -108,7 +98,7 @@ You will see that it performs 2 calls: `perform` and `perform_create_post`. And 
 
 ![image of print_traces output](https://github.com/st0012/tapping_device/blob/master/images/print_traces.png)
 
-**You can try these examples yourself on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
+**You can try these examples on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
 
 
 ## Installation
@@ -135,7 +125,7 @@ $ gem install tapping_device
 
 ## Advance Usages & Options 
 
-### Add Conditions With `.with`
+#### Add Conditions With `.with`
 
 Sometimes we don't need to know all the calls or traces of an object; we just want some of them. In those cases, we can chain the helpers with `.with` to filter the calls/traces.
 
@@ -146,7 +136,7 @@ print_calls(object).with do |payload|
 end
 ```
 
-### `colorize: false`
+#### `colorize: false`
 
 By default `print_calls` and `print_traces` colorize their output. If you don't want the colors, you can use `colorize: false` to disable it.
 
@@ -156,7 +146,7 @@ print_calls(object, colorize: false)
 ```
 
 
-### `inspect: true`
+#### `inspect: true`
 
 As you might have noticed, all the objects are converted into strings with `#to_s` instead of `#inspect`.  This is because when used on some Rails objects, `#inspect` can generate a significantly larger string than `#to_s`. For example:
 
@@ -168,6 +158,12 @@ post.inspect #=> #<Post id: 649, user_id: 3, topic_id: 600, post_number: 1, raw:
 
 ## Lower-Level Helpers
 `print_calls` and `print_traces` aren't the only helpers you can get from `TappingDevice`. They are actually built on top of other helpers, which you can use as well. To know more about them, please check [this page](https://github.com/st0012/tapping_device/wiki/Advance-Usages)
+
+
+## Related Blog Posts
+- [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing) 
+- [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
+- [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
 
 
 ## Development
