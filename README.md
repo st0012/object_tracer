@@ -65,12 +65,20 @@ Now, if you execute the code, like via tests:
 $ rspec spec/requests/posts_controller_spec.rb:603
 ```
 
+You can get all the method calls it performs with basically everything you need to know
 
 <img src="https://github.com/st0012/tapping_device/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
 
-As you can see, each entry consists multiple pieces of information. Here's a short explanation of them
+Let's take a closer look at each entry. Everyone of them contains the method call's
+- method name 
+- method source class/module
+- call site
+- arguments
+- return value
 
 ![explanation of individual entry](https://github.com/st0012/tapping_device/blob/master/images/print_calls%20-%20single%20entry.png)
+
+These are the information you'd have to look up one by one manually (probably with many debug code writing). Now you can get all of them in just one line of code.
 
 
 ### `print_traces` To See The Object's Traces
@@ -123,7 +131,7 @@ $ gem install tapping_device
 **Depending on the size of your application, `TappingDevice` could harm the performance significantly.  So make sure you don't put it inside the production group**
 
 
-## Advance Usages & Options 
+### Advance Usages & Options 
 
 #### Add Conditions With `.with`
 
@@ -156,11 +164,11 @@ post.inspect #=> #<Post id: 649, user_id: 3, topic_id: 600, post_number: 1, raw:
 ```
 
 
-## Lower-Level Helpers
+### Lower-Level Helpers
 `print_calls` and `print_traces` aren't the only helpers you can get from `TappingDevice`. They are actually built on top of other helpers, which you can use as well. To know more about them, please check [this page](https://github.com/st0012/tapping_device/wiki/Advance-Usages)
 
 
-## Related Blog Posts
+### Related Blog Posts
 - [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing) 
 - [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
 - [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
