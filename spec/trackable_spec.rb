@@ -101,6 +101,20 @@ Called :promotion from: #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       ).to_stdout
     end
+
+    it "works with .with" do
+      print_traces(cart, colorize: false).with do |trace|
+        trace.arguments.keys.include?(:cart)
+      end
+
+      expect do
+        service.perform(cart)
+      end.to output(/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
+Passed as :cart in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
+Passed as :cart in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
+Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
+      ).to_stdout
+    end
   end
 
   describe "#tap_passed!" do
