@@ -40,6 +40,12 @@ RSpec.describe "tap_on!" do
     expect(call.method_name).to eq(:age)
     expect(call.return_value).to eq(18)
   end
+  it "doesn't track the calls from tapping_device" do
+    device = tap_on!(self)
+    device.stop!
+
+    expect(device.calls.count).to eq(0)
+  end
   it "tracks alias" do
     c = Class.new(Student)
     c.class_eval do

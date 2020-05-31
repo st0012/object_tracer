@@ -109,6 +109,13 @@ class TappingDevice
 
         next unless with_condition_satisfied?(payload)
 
+        # skip TappingDevice related calls
+        if Module.respond_to?(:module_parents)
+          next if payload.defined_class.module_parents.include?(TappingDevice)
+        else
+          next if payload.defined_class.parents.include?(TappingDevice)
+        end
+
         record_call!(payload)
 
         stop_if_condition_fulfilled(payload)
