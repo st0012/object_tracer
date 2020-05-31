@@ -17,7 +17,7 @@ class TappingDevice
       device_2 = tap_passed!(target, options).and_print do |output_payload|
         output_payload.passed_at(inspect: inspect, colorize: colorize)
       end
-      [device_1, device_2]
+      CollectionProxy.new([device_1, device_2])
     end
 
     def print_calls(target, options = {})
@@ -31,6 +31,20 @@ class TappingDevice
 
     def new_device(options, &block)
       TappingDevice.new(options, &block)
+    end
+
+    class CollectionProxy
+      def initialize(devices)
+        @devices = devices
+      end
+
+      [:stop!, :stop_when, :with].each do |method|
+        define_method method do |&block|
+          @devices.each do |device|
+            device.send(method, &block)
+          end
+        end
+      end
     end
   end
 end
