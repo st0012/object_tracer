@@ -5,7 +5,6 @@ require "tapping_device/payload"
 require "tapping_device/output_payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
-require "tapping_device/sql_tapping_methods"
 
 class TappingDevice
 
@@ -17,7 +16,6 @@ class TappingDevice
   @devices = []
   @suspend_new = false
 
-  include SqlTappingMethods
   extend Manageable
 
   def initialize(options = {}, &block)
