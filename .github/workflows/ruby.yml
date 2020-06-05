@@ -33,10 +33,13 @@ jobs:
         gem install bundler
         bundle install --jobs 4 --retry 3
 
-    - name: Run test with Rails ${{ matrix.rails_version }} and publish result
-      uses: paambaati/codeclimate-action@v2.3.0
+    - name: Run test with Rails ${{ matrix.rails_version }}
+      run: bundle exec rake
+
+    - name: Publish Test Coverage
+      uses: paambaati/codeclimate-action@v2.6.0
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
       with:
-        coverageCommand: bundle exec rake
+        coverageCommand: 
         debug: true
