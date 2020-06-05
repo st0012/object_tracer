@@ -21,7 +21,7 @@ Still sounds vague? Let's see some examples:
 
 ### `print_calls` To Track Method Calls
 
-In [Discourse](https://github.com/discourse/discourse), it uses the `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's say we want to know what the `Guadian` would do when a user creates a post; here's the controller action:
+In [Discourse](https://github.com/discourse/discourse), it uses the `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's say we want to know what the `Guardian` would do when a user creates a post; here's the controller action:
 
 ```ruby
   def create
