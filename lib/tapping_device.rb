@@ -90,7 +90,7 @@ class TappingDevice
 
         next if should_be_skipped_by_paths?(filepath)
 
-        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number, &payload_block)
+        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
         next unless with_condition_satisfied?(payload)
 
@@ -146,7 +146,7 @@ class TappingDevice
   end
 
   def build_payload(tp:, filepath:, line_number:)
-    payload = Payload.init({
+    Payload.init({
       target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
@@ -159,10 +159,6 @@ class TappingDevice
       trace: get_traces(tp),
       tp: tp
     })
-
-    yield(payload) if block_given?
-
-    payload
   end
 
   def get_method_object_from(target, method_name)
