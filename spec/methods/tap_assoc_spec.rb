@@ -16,6 +16,10 @@ RSpec.describe "tap_assoc!" do
   let(:user) { User.create!(name: "Stan") }
   let(:post) { Post.create!(title: "foo", content: "bar", user: user) }
 
+  it "raises error if the object is not an instance of ActiveRecord::Base" do
+    expect { tap_assoc!(1) }.to raise_error(TappingDevice::NotAnActiveRecordInstanceError)
+  end
+
   it "tracks every association calls" do
     device = tap_assoc!(post)
 

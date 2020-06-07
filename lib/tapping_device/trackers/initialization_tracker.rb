@@ -2,7 +2,7 @@ class TappingDevice
   module Trackers
     class InitializationTracker < TappingDevice
       def start_tracking(klass)
-        raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
+        raise NotAClassError.new(klass) unless klass.is_a?(Class)
         track(klass, condition: :tap_init?) do |payload|
           payload[:return_value] = payload[:receiver]
           payload[:receiver] = klass

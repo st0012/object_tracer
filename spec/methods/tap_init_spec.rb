@@ -12,6 +12,10 @@ RSpec.describe "tap_init!" do
   it_behaves_like "stoppable"
   it_behaves_like "optionable"
 
+  it "raises error if the object is not a calss" do
+    expect { tap_init!(1) }.to raise_error(TappingDevice::NotAClassError)
+  end
+
   it "tracks Student's initialization" do
     device = tap_init!(Student)
 

@@ -2,7 +2,7 @@ class TappingDevice
   module Trackers
     class AssociactionCallTracker < TappingDevice
       def start_tracking(record)
-        raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
+        raise NotAnActiveRecordInstanceError.new(record) unless record.is_a?(ActiveRecord::Base)
         track(record, condition: :tap_associations?)
       end
 
