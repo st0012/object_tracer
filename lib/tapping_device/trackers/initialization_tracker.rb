@@ -2,7 +2,7 @@ class TappingDevice
   module Trackers
     class InitializationTracker < TappingDevice
       def start_tracking(klass)
-        track(klass, condition: :tap_init?) do |payload|
+        track(klass) do |payload|
           payload[:return_value] = payload[:receiver]
           payload[:receiver] = klass
         end
@@ -12,7 +12,7 @@ class TappingDevice
         raise NotAClassError.new(target) unless target.is_a?(Class)
       end
 
-      def tap_init?(tp)
+      def filter_condition_satisfied?(tp)
         receiver = tp.self
         method_name = tp.callee_id
 

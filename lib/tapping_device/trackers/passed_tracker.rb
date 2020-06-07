@@ -3,10 +3,10 @@ class TappingDevice
     # PassedTracker tracks calls that use the target object as an argument
     class PassedTracker < TappingDevice
       def start_tracking(object)
-        track(object, condition: :tap_passed?)
+        track(object)
       end
 
-      def tap_passed?(tp)
+      def filter_condition_satisfied?(tp)
         # we don't care about calls from the device instance or helper methods
         return false if is_from_target?(tp)
         return false if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice

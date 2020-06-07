@@ -80,12 +80,12 @@ class TappingDevice
 
   private
 
-  def track(object, condition:, &payload_block)
+  def track(object, &payload_block)
     @target = object
     validate_target!
 
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
-      if send(condition, tp)
+      if filter_condition_satisfied?(tp)
         filepath, line_number = get_call_location(tp)
 
         next if should_be_skipped_by_paths?(filepath)
@@ -113,6 +113,10 @@ class TappingDevice
   end
 
   def validate_target!; end
+
+  def filter_condition_satisfied?(tp)
+    false
+  end
 
   def get_call_location(tp, padding: 0)
     caller(get_trace_index(tp) + padding).first.split(":")[0..1]
