@@ -1,6 +1,6 @@
 class TappingDevice
   module Trackable
-    [:tap_on!, :tap_assoc!, :tap_passed!].each do |method|
+    [:tap_on!, :tap_assoc!].each do |method|
       define_method method do |object, options = {}, &block|
         new_device(options, &block).send(method, object)
       end
@@ -8,6 +8,10 @@ class TappingDevice
 
     def tap_init!(object, options = {}, &block)
       TappingDevice::Trackers::InitializationTracker.new(options, &block).start_tracking(object)
+    end
+
+    def tap_passed!(object, options = {}, &block)
+      TappingDevice::Trackers::PassedTracker.new(options, &block).start_tracking(object)
     end
 
     def print_traces(target, options = {})
