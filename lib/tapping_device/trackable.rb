@@ -16,6 +16,10 @@ class TappingDevice
       TappingDevice::Trackers::MethodCallTracker.new(options, &block).track(object)
     end
 
+    def tap_mutation!(object, options = {}, &block)
+      TappingDevice::Trackers::MutationTracker.new(options, &block).track(object)
+    end
+
     def print_traces(target, options = {})
       options[:event_type] = :call
       inspect = options.delete(:inspect)
@@ -35,6 +39,15 @@ class TappingDevice
       colorize = options.fetch(:colorize, true)
 
       tap_on!(target, options).and_print do |output_payload|
+        output_payload.detail_call_info(inspect: inspect, colorize: colorize)
+      end
+    end
+
+    def print_mutations(target, options = {})
+      inspect = options.delete(:inspect)
+      colorize = options.fetch(:colorize, true)
+
+      tap_mutation!(target, options).and_print do |output_payload|
         output_payload.detail_call_info(inspect: inspect, colorize: colorize)
       end
     end

@@ -54,6 +54,14 @@ class Student
   def age=(age)
     @age = age
   end
+
+  def id=(id)
+    @id = id
+  end
+
+  def id
+    @id
+  end
 end
 
 class HighSchoolStudent < Student;end

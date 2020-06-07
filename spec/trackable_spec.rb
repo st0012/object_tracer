@@ -117,6 +117,52 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     end
   end
 
+  describe "#print_mutations" do
+    let(:student) { Student.new("Stan", 26) }
+    it "prints calls that changes the amount of the object's instance variables" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.id = 1
+      end.to output(/:id= # Student
+    from: #{__FILE__}:.*
+    <= {id: 1}
+    => 1/
+).to_stdout
+    end
+
+    it "remembers changed value" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.id = 1
+        student.id = 1
+        student.id = 2
+      end.to output(/:id= # Student
+    from: #{__FILE__}:.*
+    <= {id: 1}
+    => 1
+
+:id= # Student
+    from: #{__FILE__}:.*
+    <= {id: 2}
+    => 2/
+).to_stdout
+    end
+
+    it "prints calls that changes the object's instance variables" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.age = 18
+      end.to output(/:age= # Student
+    from: #{__FILE__}:.*
+    <= {age: 18}
+    => 18/
+).to_stdout
+    end
+  end
+
   describe "#tap_passed!" do
     def foo(obj)
       obj

@@ -9,6 +9,7 @@ require "tapping_device/trackers/initialization_tracker"
 require "tapping_device/trackers/passed_tracker"
 require "tapping_device/trackers/association_call_tracker"
 require "tapping_device/trackers/method_call_tracker"
+require "tapping_device/trackers/mutation_tracker"
 
 class TappingDevice
 
