@@ -1,17 +1,16 @@
 require "spec_helper"
 
 RSpec.describe TappingDevice do
+  include TappingDevice::Trackable
+
   it "supports multiple tappings" do
     stan = Student.new("Stan", 18)
 
     count_1 = 0
     count_2 = 0
 
-    device_1 = described_class.new { count_1 += 1 }
-    device_2 = described_class.new { count_2 -= 1 }
-
-    device_1.tap_on!(stan)
-    device_2.tap_on!(stan)
+    tap_on!(stan) { count_1 += 1 }
+    tap_on!(stan) { count_2 -= 1 }
 
     stan.name
 
@@ -31,9 +30,9 @@ RSpec.describe TappingDevice do
         f = Foo.new
         arguments = nil
 
-        described_class.new(event_type: :call) do |payload|
+        tap_on!(f, event_type: :call) do |payload|
           arguments = payload.arguments
-        end.tap_on!(f)
+        end
 
         f.foo
 
@@ -57,11 +56,9 @@ RSpec.describe TappingDevice do
     # end
   end
   describe "#and_print" do
-    let(:device) { described_class.new }
-
     it "outputs payload with given payload method" do
       stan = Student.new("Stan", 18)
-      device.tap_on!(stan).and_print(:method_name_and_arguments)
+      tap_on!(stan).and_print(:method_name_and_arguments)
 
       expect do
         stan.name
@@ -89,12 +86,11 @@ RSpec.describe TappingDevice do
     it "stops all devices and won't enable new ones" do
       described_class.suspend_new!
 
-      device_1 = described_class.new
-      device_1.tap_init!(Student)
+      device = tap_init!(Student)
 
       Student.new("stan", 0)
 
-      expect(device_1.calls.count).to eq(0)
+      expect(device.calls.count).to eq(0)
     end
   end
 end

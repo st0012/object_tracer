@@ -5,6 +5,10 @@ require "tapping_device/payload"
 require "tapping_device/output_payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
+require "tapping_device/trackers/initialization_tracker"
+require "tapping_device/trackers/passed_tracker"
+require "tapping_device/trackers/association_call_tracker"
+require "tapping_device/trackers/method_call_tracker"
 
 class TappingDevice
 
@@ -25,28 +29,7 @@ class TappingDevice
     @calls = []
     @disabled = false
     @with_condition = nil
-    self.class.devices << self
-  end
-
-  def tap_init!(klass)
-    raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-    track(klass, condition: :tap_init?) do |payload|
-      payload[:return_value] = payload[:receiver]
-      payload[:receiver] = klass
-    end
-  end
-
-  def tap_on!(object)
-    track(object, condition: :tap_on?)
-  end
-
-  def tap_passed!(object)
-    track(object, condition: :tap_passed?)
-  end
-
-  def tap_assoc!(record)
-    raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-    track(record, condition: :tap_associations?)
+    TappingDevice.devices << self
   end
 
   def and_print(payload_method = nil, &block)
@@ -72,7 +55,7 @@ class TappingDevice
 
   def stop!
     @disabled = true
-    self.class.delete_device(self)
+    TappingDevice.delete_device(self)
   end
 
   def stop_when(&block)
@@ -95,36 +78,85 @@ class TappingDevice
     options[:descendants]
   end
 
-  private
-
-  def track(object, condition:, &payload_block)
+  def track(object, &payload_block)
     @target = object
+    validate_target!
+
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
-      if send(condition, object, tp)
-        filepath, line_number = get_call_location(tp)
+      next unless filter_condition_satisfied?(tp)
+      next if is_tapping_device_call?(tp)
 
-        next if should_be_skipped_by_paths?(filepath)
+      filepath, line_number = get_call_location(tp)
+      payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
-        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number, &payload_block)
+      next if should_be_skipped_by_paths?(filepath)
+      next unless with_condition_satisfied?(payload)
 
-        next unless with_condition_satisfied?(payload)
+      record_call!(payload)
 
-        # skip TappingDevice related calls
-        if Module.respond_to?(:module_parents)
-          next if payload.defined_class.module_parents.include?(TappingDevice)
-        else
-          next if payload.defined_class.parents.include?(TappingDevice)
-        end
-
-        record_call!(payload)
-
-        stop_if_condition_fulfilled(payload)
-      end
+      stop_if_condition_fulfilled!(payload)
     end
 
-    @trace_point.enable unless self.class.suspend_new
+    @trace_point.enable unless TappingDevice.suspend_new
 
     self
+  end
+
+  private
+
+  def validate_target!; end
+
+  def filter_condition_satisfied?(tp)
+    false
+  end
+
+  # this needs to be placed upfront so we can exclude noise before doing more work
+  def should_be_skipped_by_paths?(filepath)
+    options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
+      (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
+  end
+
+  def is_tapping_device_call?(tp)
+    if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
+      return true
+    end
+
+    if Module.respond_to?(:module_parents)
+      tp.defined_class.module_parents.include?(TappingDevice)
+    else
+      tp.defined_class.parents.include?(TappingDevice)
+    end
+  end
+
+  def with_condition_satisfied?(payload)
+    @with_condition.blank? || @with_condition.call(payload)
+  end
+
+  def build_payload(tp:, filepath:, line_number:)
+    Payload.init({
+      target: @target,
+      receiver: tp.self,
+      method_name: tp.callee_id,
+      method_object: get_method_object_from(tp.self, tp.callee_id),
+      arguments: collect_arguments(tp),
+      return_value: (tp.return_value rescue nil),
+      filepath: filepath,
+      line_number: line_number,
+      defined_class: tp.defined_class,
+      trace: get_traces(tp),
+      tp: tp
+    })
+  end
+
+  def get_method_object_from(target, method_name)
+    target.method(method_name)
+  rescue ArgumentError
+    method_method = Object.method(:method).unbind
+    method_method.bind(target).call(method_name)
+  rescue NameError
+    # if any part of the program uses Refinement to extend its methods
+    # we might still get NoMethodError when trying to get that method outside the scope
+    nil
   end
 
   def get_call_location(tp, padding: 0)
@@ -146,80 +178,6 @@ class TappingDevice
     else
       []
     end
-  end
-
-  # this needs to be placed upfront so we can exclude noise before doing more work
-  def should_be_skipped_by_paths?(filepath)
-    options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
-      (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
-  end
-
-  def build_payload(tp:, filepath:, line_number:)
-    payload = Payload.init({
-      target: @target,
-      receiver: tp.self,
-      method_name: tp.callee_id,
-      method_object: get_method_object_from(tp.self, tp.callee_id),
-      arguments: collect_arguments(tp),
-      return_value: (tp.return_value rescue nil),
-      filepath: filepath,
-      line_number: line_number,
-      defined_class: tp.defined_class,
-      trace: get_traces(tp),
-      tp: tp
-    })
-
-    yield(payload) if block_given?
-
-    payload
-  end
-
-  def tap_init?(klass, tp)
-    receiver = tp.self
-    method_name = tp.callee_id
-
-    if klass.ancestors.include?(ActiveRecord::Base)
-      method_name == :new && receiver.ancestors.include?(klass)
-    else
-      method_name == :initialize && receiver.is_a?(klass)
-    end
-  end
-
-  def tap_on?(object, tp)
-    is_from_target?(object, tp)
-  end
-
-  def tap_associations?(object, tp)
-    return false unless tap_on?(object, tp)
-
-    model_class = object.class
-    associations = model_class.reflections
-    associations.keys.include?(tp.callee_id.to_s)
-  end
-
-  def tap_passed?(object, tp)
-    # we don't care about calls from the device instance or helper methods
-    return false if is_from_target?(self, tp)
-    return false if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
-
-    collect_arguments(tp).values.any? do |value|
-      # during comparison, Ruby might perform data type conversion like calling `to_sym` on the value
-      # but not every value supports every conversion methods
-      object == value rescue false
-    end
-  rescue
-    false
-  end
-
-  def get_method_object_from(target, method_name)
-    target.method(method_name)
-  rescue ArgumentError
-    method_method = Object.method(:method).unbind
-    method_method.bind(target).call(method_name)
-  rescue NameError
-    # if any part of the program uses Refinement to extend its methods
-    # we might still get NoMethodError when trying to get that method outside the scope
-    nil
   end
 
   def collect_arguments(tp)
@@ -246,19 +204,12 @@ class TappingDevice
     options
   end
 
-  def stop_if_condition_fulfilled(payload)
-    if @stop_when&.call(payload)
-      stop!
-      root_device.stop!
-    end
-  end
-
-  def is_from_target?(object, tp)
+  def is_from_target?(tp)
     comparsion = tp.self
-    is_the_same_record?(object, comparsion) || object.__id__ == comparsion.__id__
+    is_the_same_record?(comparsion) || target.__id__ == comparsion.__id__
   end
 
-  def is_the_same_record?(target, comparsion)
+  def is_the_same_record?(comparsion)
     return false unless options[:track_as_records]
     if target.is_a?(ActiveRecord::Base) && comparsion.is_a?(target.class)
       primary_key = target.class.primary_key
@@ -278,7 +229,10 @@ class TappingDevice
     end
   end
 
-  def with_condition_satisfied?(payload)
-    @with_condition.blank? || @with_condition.call(payload)
+  def stop_if_condition_fulfilled!(payload)
+    if @stop_when&.call(payload)
+      stop!
+      root_device.stop!
+    end
   end
 end

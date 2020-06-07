@@ -1,10 +1,11 @@
 require "spec_helper"
 
 RSpec.describe TappingDevice::Payload do
-  let(:device) { TappingDevice.new }
+  include TappingDevice::Trackable
+
   let(:stan) { Student.new("Stan", 25) }
   subject do
-    device.tap_init!(Student)
+    device = tap_init!(Student)
     stan
     device.calls.first
   end

@@ -1,9 +1,19 @@
 class TappingDevice
   module Trackable
-    [:tap_on!, :tap_init!, :tap_assoc!, :tap_passed!].each do |method|
-      define_method method do |object, options = {}, &block|
-        new_device(options, &block).send(method, object)
-      end
+    def tap_init!(object, options = {}, &block)
+      TappingDevice::Trackers::InitializationTracker.new(options, &block).track(object)
+    end
+
+    def tap_passed!(object, options = {}, &block)
+      TappingDevice::Trackers::PassedTracker.new(options, &block).track(object)
+    end
+
+    def tap_assoc!(object, options = {}, &block)
+      TappingDevice::Trackers::AssociactionCallTracker.new(options, &block).track(object)
+    end
+
+    def tap_on!(object, options = {}, &block)
+      TappingDevice::Trackers::MethodCallTracker.new(options, &block).track(object)
     end
 
     def print_traces(target, options = {})
@@ -27,10 +37,6 @@ class TappingDevice
       tap_on!(target, options).and_print do |output_payload|
         output_payload.detail_call_info(inspect: inspect, colorize: colorize)
       end
-    end
-
-    def new_device(options, &block)
-      TappingDevice.new(options, &block)
     end
 
     class CollectionProxy
