@@ -8,6 +8,7 @@ require "tapping_device/exceptions"
 require "tapping_device/trackers/initialization_tracker"
 require "tapping_device/trackers/passed_tracker"
 require "tapping_device/trackers/association_call_tracker"
+require "tapping_device/trackers/method_call_tracker"
 
 class TappingDevice
 
@@ -29,10 +30,6 @@ class TappingDevice
     @disabled = false
     @with_condition = nil
     TappingDevice.devices << self
-  end
-
-  def tap_on!(object)
-    track(object, condition: :tap_on?)
   end
 
   def and_print(payload_method = nil, &block)
@@ -158,10 +155,6 @@ class TappingDevice
     yield(payload) if block_given?
 
     payload
-  end
-
-  def tap_on?(object, tp)
-    is_from_target?(object, tp)
   end
 
   def get_method_object_from(target, method_name)

@@ -7,7 +7,7 @@ class TappingDevice
       end
 
       def tap_associations?(object, tp)
-        return false unless tap_on?(object, tp)
+        return false unless is_from_target?(object, tp)
 
         model_class = object.class
         associations = model_class.reflections
