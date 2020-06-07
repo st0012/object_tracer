@@ -2,10 +2,6 @@ class TappingDevice
   module Trackers
     # PassedTracker tracks calls that use the target object as an argument
     class PassedTracker < TappingDevice
-      def start_tracking(object)
-        track(object)
-      end
-
       def filter_condition_satisfied?(tp)
         # we don't care about calls from the device instance or helper methods
         return false if is_from_target?(tp)

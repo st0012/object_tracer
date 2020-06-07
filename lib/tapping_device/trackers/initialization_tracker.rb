@@ -1,10 +1,6 @@
 class TappingDevice
   module Trackers
     class InitializationTracker < TappingDevice
-      def start_tracking(klass)
-        track(klass)
-      end
-
       def build_payload(tp:, filepath:, line_number:)
         payload = super
         payload[:return_value] = payload[:receiver]
