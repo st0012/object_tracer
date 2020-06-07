@@ -12,14 +12,14 @@ class TappingDevice
         raise NotAClassError.new(target) unless target.is_a?(Class)
       end
 
-      def tap_init?(klass, tp)
+      def tap_init?(tp)
         receiver = tp.self
         method_name = tp.callee_id
 
-        if klass.ancestors.include?(ActiveRecord::Base)
-          method_name == :new && receiver.ancestors.include?(klass)
+        if target.ancestors.include?(ActiveRecord::Base)
+          method_name == :new && receiver.ancestors.include?(target)
         else
-          method_name == :initialize && receiver.is_a?(klass)
+          method_name == :initialize && receiver.is_a?(target)
         end
       end
     end

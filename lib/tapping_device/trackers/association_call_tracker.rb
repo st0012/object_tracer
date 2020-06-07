@@ -9,10 +9,10 @@ class TappingDevice
         raise NotAnActiveRecordInstanceError.new(target) unless target.is_a?(ActiveRecord::Base)
       end
 
-      def tap_associations?(object, tp)
-        return false unless is_from_target?(object, tp)
+      def tap_associations?(tp)
+        return false unless is_from_target?(tp)
 
-        model_class = object.class
+        model_class = target.class
         associations = model_class.reflections
         associations.keys.include?(tp.callee_id.to_s)
       end

@@ -85,7 +85,7 @@ class TappingDevice
     validate_target!
 
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
-      if send(condition, object, tp)
+      if send(condition, tp)
         filepath, line_number = get_call_location(tp)
 
         next if should_be_skipped_by_paths?(filepath)
@@ -203,12 +203,12 @@ class TappingDevice
     end
   end
 
-  def is_from_target?(object, tp)
+  def is_from_target?(tp)
     comparsion = tp.self
-    is_the_same_record?(object, comparsion) || object.__id__ == comparsion.__id__
+    is_the_same_record?(comparsion) || target.__id__ == comparsion.__id__
   end
 
-  def is_the_same_record?(target, comparsion)
+  def is_the_same_record?(comparsion)
     return false unless options[:track_as_records]
     if target.is_a?(ActiveRecord::Base) && comparsion.is_a?(target.class)
       primary_key = target.class.primary_key

@@ -5,8 +5,8 @@ class TappingDevice
         track(object, condition: :tap_on?)
       end
 
-      def tap_on?(object, tp)
-        is_from_target?(object, tp)
+      def tap_on?(tp)
+        is_from_target?(tp)
       end
     end
   end
