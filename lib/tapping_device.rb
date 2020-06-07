@@ -83,26 +83,18 @@ class TappingDevice
     validate_target!
 
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
-      if filter_condition_satisfied?(tp)
-        filepath, line_number = get_call_location(tp)
+      next unless filter_condition_satisfied?(tp)
+      next if is_tapping_device_call?(tp)
 
-        next if should_be_skipped_by_paths?(filepath)
+      filepath, line_number = get_call_location(tp)
+      payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
-        payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
+      next if should_be_skipped_by_paths?(filepath)
+      next unless with_condition_satisfied?(payload)
 
-        next unless with_condition_satisfied?(payload)
+      record_call!(payload)
 
-        # skip TappingDevice related calls
-        if Module.respond_to?(:module_parents)
-          next if payload.defined_class.module_parents.include?(TappingDevice)
-        else
-          next if payload.defined_class.parents.include?(TappingDevice)
-        end
-
-        record_call!(payload)
-
-        stop_if_condition_fulfilled(payload)
-      end
+      stop_if_condition_fulfilled(payload)
     end
 
     @trace_point.enable unless TappingDevice.suspend_new
@@ -143,6 +135,22 @@ class TappingDevice
   def should_be_skipped_by_paths?(filepath)
     options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
+  end
+
+  def is_tapping_device_call?(tp)
+    if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
+      return true
+    end
+
+    if Module.respond_to?(:module_parents)
+      tp.defined_class.module_parents.include?(TappingDevice)
+    else
+      tp.defined_class.parents.include?(TappingDevice)
+    end
+  end
+
+  def with_condition_satisfied?(payload)
+    @with_condition.blank? || @with_condition.call(payload)
   end
 
   def build_payload(tp:, filepath:, line_number:)
@@ -226,9 +234,5 @@ class TappingDevice
     else
       root_device.calls << payload
     end
-  end
-
-  def with_condition_satisfied?(payload)
-    @with_condition.blank? || @with_condition.call(payload)
   end
 end
