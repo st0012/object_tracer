@@ -7,6 +7,7 @@ require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/trackers/initialization_tracker"
 require "tapping_device/trackers/passed_tracker"
+require "tapping_device/trackers/association_call_tracker"
 
 class TappingDevice
 
@@ -32,11 +33,6 @@ class TappingDevice
 
   def tap_on!(object)
     track(object, condition: :tap_on?)
-  end
-
-  def tap_assoc!(record)
-    raise "argument should be an instance of ActiveRecord::Base" unless record.is_a?(ActiveRecord::Base)
-    track(record, condition: :tap_associations?)
   end
 
   def and_print(payload_method = nil, &block)
@@ -166,14 +162,6 @@ class TappingDevice
 
   def tap_on?(object, tp)
     is_from_target?(object, tp)
-  end
-
-  def tap_associations?(object, tp)
-    return false unless tap_on?(object, tp)
-
-    model_class = object.class
-    associations = model_class.reflections
-    associations.keys.include?(tp.callee_id.to_s)
   end
 
   def get_method_object_from(target, method_name)

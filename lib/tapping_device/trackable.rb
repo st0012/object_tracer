@@ -14,6 +14,10 @@ class TappingDevice
       TappingDevice::Trackers::PassedTracker.new(options, &block).start_tracking(object)
     end
 
+    def tap_assoc!(object, options = {}, &block)
+      TappingDevice::Trackers::AssociactionCallTracker.new(options, &block).start_tracking(object)
+    end
+
     def print_traces(target, options = {})
       options[:event_type] = :call
       inspect = options.delete(:inspect)
