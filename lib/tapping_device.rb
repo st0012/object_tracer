@@ -25,7 +25,7 @@ class TappingDevice
     @calls = []
     @disabled = false
     @with_condition = nil
-    self.class.devices << self
+    TappingDevice.devices << self
   end
 
   def tap_init!(klass)
@@ -72,7 +72,7 @@ class TappingDevice
 
   def stop!
     @disabled = true
-    self.class.delete_device(self)
+    TappingDevice.delete_device(self)
   end
 
   def stop_when(&block)
@@ -122,7 +122,7 @@ class TappingDevice
       end
     end
 
-    @trace_point.enable unless self.class.suspend_new
+    @trace_point.enable unless TappingDevice.suspend_new
 
     self
   end
