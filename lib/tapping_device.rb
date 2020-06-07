@@ -94,7 +94,7 @@ class TappingDevice
 
       record_call!(payload)
 
-      stop_if_condition_fulfilled(payload)
+      stop_if_condition_fulfilled!(payload)
     end
 
     @trace_point.enable unless TappingDevice.suspend_new
@@ -108,27 +108,6 @@ class TappingDevice
 
   def filter_condition_satisfied?(tp)
     false
-  end
-
-  def get_call_location(tp, padding: 0)
-    caller(get_trace_index(tp) + padding).first.split(":")[0..1]
-  end
-
-  def get_trace_index(tp)
-    if tp.event == :c_call
-      C_CALLER_START_POINT
-    else
-      CALLER_START_POINT
-    end
-  end
-
-  def get_traces(tp)
-    if with_trace_to = options[:with_trace_to]
-      trace_index = get_trace_index(tp)
-      caller[trace_index..(trace_index + with_trace_to)]
-    else
-      []
-    end
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work
@@ -180,6 +159,27 @@ class TappingDevice
     nil
   end
 
+  def get_call_location(tp, padding: 0)
+    caller(get_trace_index(tp) + padding).first.split(":")[0..1]
+  end
+
+  def get_trace_index(tp)
+    if tp.event == :c_call
+      C_CALLER_START_POINT
+    else
+      CALLER_START_POINT
+    end
+  end
+
+  def get_traces(tp)
+    if with_trace_to = options[:with_trace_to]
+      trace_index = get_trace_index(tp)
+      caller[trace_index..(trace_index + with_trace_to)]
+    else
+      []
+    end
+  end
+
   def collect_arguments(tp)
     parameters =
       if RUBY_VERSION.to_f >= 2.6
@@ -204,13 +204,6 @@ class TappingDevice
     options
   end
 
-  def stop_if_condition_fulfilled(payload)
-    if @stop_when&.call(payload)
-      stop!
-      root_device.stop!
-    end
-  end
-
   def is_from_target?(tp)
     comparsion = tp.self
     is_the_same_record?(comparsion) || target.__id__ == comparsion.__id__
@@ -233,6 +226,13 @@ class TappingDevice
       root_device.calls << @block.call(payload)
     else
       root_device.calls << payload
+    end
+  end
+
+  def stop_if_condition_fulfilled!(payload)
+    if @stop_when&.call(payload)
+      stop!
+      root_device.stop!
     end
   end
 end
