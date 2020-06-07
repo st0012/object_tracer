@@ -2,8 +2,11 @@ class TappingDevice
   module Trackers
     class AssociactionCallTracker < TappingDevice
       def start_tracking(record)
-        raise NotAnActiveRecordInstanceError.new(record) unless record.is_a?(ActiveRecord::Base)
         track(record, condition: :tap_associations?)
+      end
+
+      def validate_target!
+        raise NotAnActiveRecordInstanceError.new(target) unless target.is_a?(ActiveRecord::Base)
       end
 
       def tap_associations?(object, tp)

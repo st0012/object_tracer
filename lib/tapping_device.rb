@@ -82,6 +82,8 @@ class TappingDevice
 
   def track(object, condition:, &payload_block)
     @target = object
+    validate_target!
+
     @trace_point = TracePoint.new(options[:event_type]) do |tp|
       if send(condition, object, tp)
         filepath, line_number = get_call_location(tp)
@@ -109,6 +111,8 @@ class TappingDevice
 
     self
   end
+
+  def validate_target!; end
 
   def get_call_location(tp, padding: 0)
     caller(get_trace_index(tp) + padding).first.split(":")[0..1]
