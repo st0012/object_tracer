@@ -1,6 +1,8 @@
 require "spec_helper"
 
 RSpec.describe TappingDevice::OutputPayload do
+  include TappingDevice::Trackable
+
   let(:stan) { Student.new("Stan", 25) }
   let(:options) { {colorize: false} }
   subject do
@@ -62,15 +64,13 @@ RSpec.describe TappingDevice::OutputPayload do
   describe "#passed_at" do
     subject do
       name = "Stan"
-      device = TappingDevice.new
-      device.tap_passed!(name)
+      device = tap_passed!(name)
       Student.new(name, 25)
       described_class.init(device.calls.first)
     end
 
     it "returns nil if the payload is not from `tap_passed!`" do
-      new_device = TappingDevice.new
-      new_device.tap_init!(Student)
+      new_device = tap_init!(Student)
       Student.new("Stan", 25)
 
       subject = described_class.init(new_device.calls.first)

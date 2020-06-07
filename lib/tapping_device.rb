@@ -5,6 +5,7 @@ require "tapping_device/payload"
 require "tapping_device/output_payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
+require "tapping_device/trackers/initialization_tracker"
 
 class TappingDevice
 
@@ -26,14 +27,6 @@ class TappingDevice
     @disabled = false
     @with_condition = nil
     TappingDevice.devices << self
-  end
-
-  def tap_init!(klass)
-    raise "argument should be a class, got #{klass}" unless klass.is_a?(Class)
-    track(klass, condition: :tap_init?) do |payload|
-      payload[:return_value] = payload[:receiver]
-      payload[:receiver] = klass
-    end
   end
 
   def tap_on!(object)
@@ -172,17 +165,6 @@ class TappingDevice
     yield(payload) if block_given?
 
     payload
-  end
-
-  def tap_init?(klass, tp)
-    receiver = tp.self
-    method_name = tp.callee_id
-
-    if klass.ancestors.include?(ActiveRecord::Base)
-      method_name == :new && receiver.ancestors.include?(klass)
-    else
-      method_name == :initialize && receiver.is_a?(klass)
-    end
   end
 
   def tap_on?(object, tp)
