@@ -10,7 +10,7 @@
 ## Introduction
 `TappingDevice` makes the objects tell you what they do, so you don't need to track them yourself.
 
-#### Contract Tracing For Objects
+#### Contact Tracing For Objects
 
 The concept is very simple. It's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
 
