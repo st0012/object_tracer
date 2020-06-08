@@ -48,7 +48,7 @@ class TappingDevice
       colorize = options.fetch(:colorize, true)
 
       tap_mutation!(target, options).and_print do |output_payload|
-        output_payload.detail_call_info(inspect: inspect, colorize: colorize)
+        output_payload.call_info_with_ivar_changes(inspect: inspect, colorize: colorize)
       end
     end
 

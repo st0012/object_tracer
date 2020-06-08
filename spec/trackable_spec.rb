@@ -119,16 +119,29 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
 
   describe "#print_mutations" do
     let(:student) { Student.new("Stan", 26) }
-    it "prints calls that changes the amount of the object's instance variables" do
+
+    class Student
+      def remove_id
+        remove_instance_variable(:@id)
+      end
+    end
+
+    it "prints calls that define/undefine an object's instance variables" do
       print_mutations(student, colorize: false)
 
       expect do
         student.id = 1
+        student.remove_id
       end.to output(/:id= # Student
-    from: #{__FILE__}:.*
-    <= {id: 1}
-    => 1/
-).to_stdout
+    from: #{__FILE__}:\d+
+    changes:
+      @id: \[undefined\] => 1
+
+:remove_id # Student
+    from: #{__FILE__}:\d+
+    changes:
+      @id: 1 => \[undefined\].*/
+      ).to_stdout
     end
 
     it "remembers changed value" do
@@ -137,28 +150,16 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       expect do
         student.id = 1
         student.id = 1
-        student.id = 2
+        student.id = nil
       end.to output(/:id= # Student
     from: #{__FILE__}:.*
-    <= {id: 1}
-    => 1
+    changes:
+      @id: \[undefined\] => 1
 
 :id= # Student
     from: #{__FILE__}:.*
-    <= {id: 2}
-    => 2/
-).to_stdout
-    end
-
-    it "prints calls that changes the object's instance variables" do
-      print_mutations(student, colorize: false)
-
-      expect do
-        student.age = 18
-      end.to output(/:age= # Student
-    from: #{__FILE__}:.*
-    <= {age: 18}
-    => 18/
+    changes:
+      @id: 1 => nil/
 ).to_stdout
     end
   end

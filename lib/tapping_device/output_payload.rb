@@ -1,5 +1,7 @@
 class TappingDevice
   class OutputPayload < Payload
+    UNDEFINED = "[undefined]"
+
     alias :raw_arguments :arguments
     alias :raw_return_value :return_value
 
@@ -36,6 +38,7 @@ class TappingDevice
       location: {symbol: "from:", color: COLORS[:green]},
       return_value: {symbol: "=>", color: COLORS[:megenta]},
       arguments: {symbol: "<=", color: COLORS[:orange]},
+      ivar_changes: {symbol: "changes:\n", color: COLORS[:blue]},
       defined_class: {symbol: "#", color: COLORS[:yellow]}
     }
 
@@ -95,6 +98,31 @@ class TappingDevice
       MSG
     end
 
+    def ivar_changes(options = {})
+      super.map do |ivar, value_changes|
+        before = generate_string_result(value_changes[:before], options[:inspect])
+        after = generate_string_result(value_changes[:after], options[:inspect])
+
+        if options[:colorize]
+          ivar = "#{COLORS[:orange]}#{ivar}#{COLORS[:reset]}"
+          before = "#{COLORS[:blue]}#{before.to_s}#{COLORS[:reset]}"
+          after = "#{COLORS[:blue]}#{after.to_s}#{COLORS[:reset]}"
+        end
+
+        "      #{ivar}: #{before.to_s} => #{after.to_s}"
+      end.join("\n")
+    end
+
+    def call_info_with_ivar_changes(options = {})
+      <<~MSG
+      #{method_name_and_defined_class(options)}
+          from: #{location(options)}
+          changes:
+      #{ivar_changes(options)}
+
+      MSG
+    end
+
     private
 
     def value_with_color(value, color)
@@ -107,8 +135,12 @@ class TappingDevice
         array_to_string(obj, inspect)
       when Hash
         hash_to_string(obj, inspect)
+      when UNDEFINED
+        UNDEFINED
       when String
         "\"#{obj}\""
+      when nil
+        "nil"
       else
         inspect ? obj.inspect : obj.to_s
       end
