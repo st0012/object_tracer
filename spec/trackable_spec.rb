@@ -126,6 +126,18 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       end
     end
 
+    it "tracks attr_writer as well" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.name = "Sean"
+      end.to output(/:name= # #<Class:#<Student:\w+>>
+    from: #{__FILE__}:\d+
+    changes:
+      @name: "Stan" => "Sean"/
+      ).to_stdout
+    end
+
     it "prints calls that define/undefine an object's instance variables" do
       print_mutations(student, colorize: false)
 

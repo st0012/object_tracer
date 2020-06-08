@@ -1,9 +1,12 @@
+require "pry" # for using Method#source
+
 class TappingDevice
   module Trackers
     class MutationTracker < TappingDevice
       def track(object)
         super
         snapshot_instance_variables
+        hijack_attr_writers
         self
       end
 
@@ -14,6 +17,24 @@ class TappingDevice
 
         @latest_instance_variables = target_instance_variables
         @latest_instance_variables != @instance_variables_snapshot
+      end
+
+      def hijack_attr_writers
+        writer_methods = target.methods.grep(/\w+=/)
+        writer_methods.each do |method_name|
+          if target.method(method_name).source.match?(/attr_writer|attr_accessor/)
+            ivar_name = "@#{method_name.to_s.sub("=", "")}"
+
+            # need to use instance_eval to make the call site location consistent with normal methods
+            target.instance_eval(
+              <<~CODE
+                def #{method_name}(val)
+                  #{ivar_name} = val
+                end
+              CODE
+            )
+          end
+        end
       end
 
       def build_payload(tp:, filepath:, line_number:)
