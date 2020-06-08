@@ -78,7 +78,7 @@ class TappingDevice
     options[:descendants]
   end
 
-  def track(object, &payload_block)
+  def track(object)
     @target = object
     validate_target!
 

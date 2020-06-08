@@ -15,9 +15,6 @@ class TappingDevice
       generate_string_result(raw_return_value, options[:inspect])
     end
 
-    def self.full_color_code(code)
-    end
-
     COLOR_CODES = {
       green: 10,
       yellow: 11,
@@ -37,7 +34,6 @@ class TappingDevice
     PAYLOAD_ATTRIBUTES = {
       method_name: {symbol: "", color: COLORS[:blue]},
       location: {symbol: "from:", color: COLORS[:green]},
-      sql: {symbol: "QUERIES", color: COLORS[:nocolor]},
       return_value: {symbol: "=>", color: COLORS[:megenta]},
       arguments: {symbol: "<=", color: COLORS[:orange]},
       defined_class: {symbol: "#", color: COLORS[:yellow]}
