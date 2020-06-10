@@ -83,16 +83,7 @@ class TappingDevice
     @target = object
     validate_target!
 
-    @trace_point = TracePoint.new(options[:event_type]) do |tp|
-      next unless filter_condition_satisfied?(tp)
-      next if is_tapping_device_call?(tp)
-
-      filepath, line_number = get_call_location(tp)
-      payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
-
-      next if should_be_skipped_by_paths?(filepath)
-      next unless with_condition_satisfied?(payload)
-
+    @trace_point = build_minimum_trace_point(event_type: options[:event_type]) do |payload|
       record_call!(payload)
 
       stop_if_condition_fulfilled!(payload)
@@ -104,6 +95,21 @@ class TappingDevice
   end
 
   private
+
+  def build_minimum_trace_point(event_type:)
+    TracePoint.new(event_type) do |tp|
+      next unless filter_condition_satisfied?(tp)
+      next if is_tapping_device_call?(tp)
+
+      filepath, line_number = get_call_location(tp)
+      payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
+
+      next if should_be_skipped_by_paths?(filepath)
+      next unless with_condition_satisfied?(payload)
+
+      yield(payload)
+    end
+  end
 
   def validate_target!; end
 

@@ -25,14 +25,7 @@ class TappingDevice
       # we need to snapshot instance variables at the beginning of every method call
       # so we can get a correct state for the later comparison
       def insert_snapshot_taking_trace_point
-        @ivar_snapshot_trace_point = TracePoint.new(:call) do |tp|
-          next unless is_from_target?(tp)
-          next if is_tapping_device_call?(tp)
-
-          filepath, _ = get_call_location(tp)
-
-          next if should_be_skipped_by_paths?(filepath)
-
+        @ivar_snapshot_trace_point = build_minimum_trace_point(event_type: :call) do
           snapshot_instance_variables
         end
 
@@ -42,10 +35,14 @@ class TappingDevice
       def filter_condition_satisfied?(tp)
         return false unless is_from_target?(tp)
 
-        @latest_instance_variables = target_instance_variables
-        @instance_variables_snapshot = @snapshot_stack.pop
+        if snapshot_capturing_event?(tp)
+          true
+        else
+          @latest_instance_variables = target_instance_variables
+          @instance_variables_snapshot = @snapshot_stack.pop
 
-        @latest_instance_variables != @instance_variables_snapshot
+          @latest_instance_variables != @instance_variables_snapshot
+        end
       end
 
       def hijack_attr_writers
@@ -68,7 +65,11 @@ class TappingDevice
 
       def build_payload(tp:, filepath:, line_number:)
         payload = super
-        payload[:ivar_changes] = capture_ivar_changes
+
+        if change_capturing_event?(tp)
+          payload[:ivar_changes] = capture_ivar_changes
+        end
+
         payload
       end
 
@@ -102,6 +103,14 @@ class TappingDevice
         target.instance_variables.each_with_object({}) do |ivar, hash|
           hash[ivar] = target.instance_variable_get(ivar)
         end
+      end
+
+      def snapshot_capturing_event?(tp)
+        tp.event == :call
+      end
+
+      def change_capturing_event?(tp)
+        !snapshot_capturing_event?(tp)
       end
 
       # belows are debugging helpers
