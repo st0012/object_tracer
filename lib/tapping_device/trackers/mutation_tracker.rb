@@ -3,19 +3,48 @@ require "pry" # for using Method#source
 class TappingDevice
   module Trackers
     class MutationTracker < TappingDevice
+      def initialize(options, &block)
+        super
+        @snapshot_stack = []
+      end
+
       def track(object)
         super
-        snapshot_instance_variables
         hijack_attr_writers
+        insert_snapshot_taking_trace_point
         self
       end
 
+      def stop!
+        super
+        @ivar_snapshot_trace_point.disable
+      end
+
       private
+
+      # we need to snapshot instance variables at the beginning of every method call
+      # so we can get a correct state for the later comparison
+      def insert_snapshot_taking_trace_point
+        @ivar_snapshot_trace_point = TracePoint.new(:call) do |tp|
+          next unless is_from_target?(tp)
+          next if is_tapping_device_call?(tp)
+
+          filepath, _ = get_call_location(tp)
+
+          next if should_be_skipped_by_paths?(filepath)
+
+          snapshot_instance_variables
+        end
+
+        @ivar_snapshot_trace_point.enable unless TappingDevice.suspend_new
+      end
 
       def filter_condition_satisfied?(tp)
         return false unless is_from_target?(tp)
 
         @latest_instance_variables = target_instance_variables
+        @instance_variables_snapshot = @snapshot_stack.pop
+
         @latest_instance_variables != @instance_variables_snapshot
       end
 
@@ -43,11 +72,6 @@ class TappingDevice
         payload
       end
 
-      def record_call!(payload)
-        super
-        @instance_variables_snapshot = @latest_instance_variables
-      end
-
       def capture_ivar_changes
         changes = {}
 
@@ -71,13 +95,28 @@ class TappingDevice
       end
 
       def snapshot_instance_variables
-        @instance_variables_snapshot = target_instance_variables
+        @snapshot_stack.push(target_instance_variables)
       end
 
       def target_instance_variables
         target.instance_variables.each_with_object({}) do |ivar, hash|
           hash[ivar] = target.instance_variable_get(ivar)
         end
+      end
+
+      # belows are debugging helpers
+      # I'll leave them for a while in case there's a bug in the tracker
+      def print_snapshot_stack(tp)
+        puts("===== STACK - #{tp.callee_id} (#{tp.event}) =====")
+        puts(@snapshot_stack)
+        puts("================ END STACK =================")
+      end
+
+      def print_state_comparison
+        puts("###############")
+        puts(@latest_instance_variables)
+        puts(@instance_variables_snapshot)
+        puts("###############")
       end
     end
   end

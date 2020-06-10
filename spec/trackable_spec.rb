@@ -124,6 +124,13 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       def remove_id
         remove_instance_variable(:@id)
       end
+
+      # this is to test if it can distinguish state changes made by different level of calls
+      def reset_data!
+        @id = 0
+        @name = ""
+        self.age = 0
+      end
     end
 
     it "tracks attr_writer as well" do
@@ -172,6 +179,26 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     from: #{__FILE__}:.*
     changes:
       @id: 1 => nil/
+).to_stdout
+    end
+
+    it "tracks multiple levels of state changes" do
+      student.id = 1
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.reset_data!
+      end.to output(/:age= # Student
+    from: #{__FILE__}:.*
+    changes:
+      @age: 26 => 0
+
+:reset_data! # Student
+    from: #{__FILE__}:.*
+    changes:
+      @name: "Stan" => ""
+      @age: 26 => 0
+      @id: 1 => 0/
 ).to_stdout
     end
   end
