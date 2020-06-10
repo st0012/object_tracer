@@ -3,6 +3,7 @@ PATH
   specs:
     tapping_device (0.5.1)
       activerecord (>= 5.2)
+      pry
 
 GEM
   remote: https://rubygems.org/
@@ -62,7 +63,6 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 2.0)
   database_cleaner
-  pry
   rake (~> 13.0)
   rspec (~> 3.0)
   simplecov (= 0.17.1)

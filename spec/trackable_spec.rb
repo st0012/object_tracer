@@ -117,6 +117,92 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     end
   end
 
+  describe "#print_mutations" do
+    let(:student) { Student.new("Stan", 26) }
+
+    class Student
+      def remove_id
+        remove_instance_variable(:@id)
+      end
+
+      # this is to test if it can distinguish state changes made by different level of calls
+      def reset_data!
+        @id = 0
+        @name = ""
+        self.age = 0
+      end
+    end
+
+    it "tracks attr_writer as well" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.name = "Sean"
+      end.to output(/:name= # #<Class:#<Student:\w+>>
+    from: #{__FILE__}:\d+
+    changes:
+      @name: "Stan" => "Sean"/
+      ).to_stdout
+    end
+
+    it "prints calls that define/undefine an object's instance variables" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.id = 1
+        student.remove_id
+      end.to output(/:id= # Student
+    from: #{__FILE__}:\d+
+    changes:
+      @id: \[undefined\] => 1
+
+:remove_id # Student
+    from: #{__FILE__}:\d+
+    changes:
+      @id: 1 => \[undefined\].*/
+      ).to_stdout
+    end
+
+    it "remembers changed value" do
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.id = 1
+        student.id = 1
+        student.id = nil
+      end.to output(/:id= # Student
+    from: #{__FILE__}:.*
+    changes:
+      @id: \[undefined\] => 1
+
+:id= # Student
+    from: #{__FILE__}:.*
+    changes:
+      @id: 1 => nil/
+).to_stdout
+    end
+
+    it "tracks multiple levels of state changes" do
+      student.id = 1
+      print_mutations(student, colorize: false)
+
+      expect do
+        student.reset_data!
+      end.to output(/:age= # Student
+    from: #{__FILE__}:.*
+    changes:
+      @age: 26 => 0
+
+:reset_data! # Student
+    from: #{__FILE__}:.*
+    changes:
+      @name: "Stan" => ""
+      @age: 26 => 0
+      @id: 1 => 0/
+).to_stdout
+    end
+  end
+
   describe "#tap_passed!" do
     def foo(obj)
       obj

@@ -36,6 +36,8 @@ class Comment < ActiveRecord::Base
 end
 
 class Student
+  attr_writer :name
+
   def initialize(name, age)
     @name = name
     @age = age
@@ -53,6 +55,14 @@ class Student
 
   def age=(age)
     @age = age
+  end
+
+  def id=(id)
+    @id = id
+  end
+
+  def id
+    @id
   end
 end
 
