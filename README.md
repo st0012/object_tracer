@@ -16,10 +16,11 @@ The concept is very simple. It's basically like [contact tracing](https://en.wik
 
 - `print_calls(object)` to see what the object does
 - `print_traces(object)` to see how the object interacts with other objects (like used as an argument)
+- `print_mutations(object)` to see what actions changed the object's state (instance variables)
 
 Still sounds vague? Let's see some examples:
 
-### `print_calls` To Track Method Calls
+### `print_calls` - Track Method Calls
 
 In [Discourse](https://github.com/discourse/discourse), it uses the `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's say we want to know what the `Guardian` would do when a user creates a post; here's the controller action:
 
@@ -81,7 +82,7 @@ Let's take a closer look at each entry. Everyone of them contains the method cal
 These are the information you'd have to look up one by one manually (probably with many debug code writing). Now you can get all of them in just one line of code.
 
 
-### `print_traces` To See The Object's Traces
+### `print_traces` - See The Object's Traces
 
 If you're not interested in what an object does, but what it interacts with other parts of the program, e.g., used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
 
@@ -105,6 +106,71 @@ $ rspec spec/requests/posts_controller_spec.rb:603
 You will see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
 
 ![image of print_traces output](https://github.com/st0012/tapping_device/blob/master/images/print_traces.png)
+
+### `print_mutations` - Display All State Changes At Once
+
+Another thing that often bothers developers in debugging is to track an object's internal state changes. And `tapping_device` allows you to see all state changes with just one line of code. Let me keep using [Discourse](https://github.com/discourse/discourse) to demonstrate it. 
+
+When updating a post, it uses an object called `PostRevisor` to revise it:
+
+```ruby
+# app/controllers/posts_controller.rb
+class PostsController
+  def update
+    # ......
+    revisor = PostRevisor.new(post, topic)
+    revisor.revise!(current_user, changes, opts)
+    # ......
+  end
+end
+```
+
+In the `PostReviser#revise!`, it uses many instance variables to track different information:
+
+```ruby
+  # lib/post_revisor.rb
+  def revise!(editor, fields, opts = {})
+    @editor = editor
+    @fields = fields.with_indifferent_access
+    @opts = opts
+
+    @topic_changes = TopicChanges.new(@topic, editor)
+    
+    # ......
+
+    @revised_at = @opts[:revised_at] || Time.now
+    @last_version_at = @post.last_version_at || Time.now
+
+    @version_changed = false
+    @post_successfully_saved = true
+
+    @validate_post = true
+    # ......
+  end
+```
+
+Tracking the changes of that many instance variables can be a painful task, especially when we want to know the values before and after certain method call. This is why I created `print_mutations` to save us from this. 
+
+Like other helpers, you only need 1 line of code
+
+```ruby
+# app/controllers/posts_controller.rb
+class PostsController
+  def update
+    # ......
+    revisor = PostRevisor.new(post, topic)
+    print_mutations(revisor)
+    revisor.revise!(current_user, changes, opts)
+    # ......
+  end
+end
+```
+
+And then you'll see all the state changes:
+
+![image of print_mutations output](https://github.com/st0012/tapping_device/blob/master/images/print_mutations.png)
+
+Now you can see what method changes which states. And more importantly, you get to see all the sate changes at once!
 
 **You can try these examples on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
 
@@ -190,3 +256,4 @@ The gem is available as open-source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the TappingDevice project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/tapping_device/blob/master/CODE_OF_CONDUCT.md).
+
