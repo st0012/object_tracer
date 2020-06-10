@@ -168,7 +168,7 @@ end
 
 And then you'll see all the state changes:
 
-![image of print_mutations output](https://github.com/st0012/tapping_device/blob/master/images/print_mutations.png)
+<img src="https://github.com/st0012/tapping_device/blob/master/images/print_mutations.png" alt="image of print_mutations output" width="50%">
 
 Now you can see what method changes which states. And more importantly, you get to see all the sate changes at once!
 
