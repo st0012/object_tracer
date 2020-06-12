@@ -1,4 +1,5 @@
 require "active_record"
+require "pry" # for using Method#source
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
@@ -83,6 +84,11 @@ class TappingDevice
     @target = object
     validate_target!
 
+    if options[:hijack_attr_methods]
+      hijack_attr_readers
+      hijack_attr_writers
+    end
+
     @trace_point = build_minimum_trace_point(event_type: options[:event_type]) do |payload|
       record_call!(payload)
 
@@ -108,6 +114,39 @@ class TappingDevice
       next unless with_condition_satisfied?(payload)
 
       yield(payload)
+    end
+  end
+
+  def hijack_attr_readers
+    target.methods.each do |method_name|
+      next if method_name.match?(/\w+=/)
+      next unless target.method(method_name).source_location
+
+      if target.method(method_name).source.match?(/attr_reader|attr_accessor/)
+        # need to use instance_eval to make the call site location consistent with normal methods
+        target.instance_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{method_name}
+            @#{method_name}
+          end
+        RUBY
+      end
+    end
+  end
+
+  def hijack_attr_writers
+    target.methods.each do |method_name|
+      next unless method_name.match?(/\w+=/)
+
+      if target.method(method_name).source.match?(/attr_writer|attr_accessor/)
+        ivar_name = "@#{method_name.to_s.sub("=", "")}"
+
+        # need to use instance_eval to make the call site location consistent with normal methods
+        target.instance_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{method_name}(val)
+            #{ivar_name} = val
+          end
+        RUBY
+      end
     end
   end
 
@@ -207,6 +246,7 @@ class TappingDevice
     options[:root_device] ||= self
     options[:event_type] ||= :return
     options[:descendants] ||= []
+    options[:hijack_attr_method] ||= false
     options[:track_as_records] ||= false
     options
   end

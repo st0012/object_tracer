@@ -60,6 +60,34 @@ RSpec.describe "tap_on!" do
     expect(device.calls.first.method_name).to eq(:alias_name)
   end
 
+  context "with options[:hijack_attr_methods] = true" do
+    it "tracks attr_writers" do
+      c = Class.new(Student)
+      c.class_eval do
+        attr_writer :name
+      end
+      stan = c.new("Stan", 18)
+
+      device = tap_on!(stan, hijack_attr_methods: true)
+
+      stan.name = "Sean"
+
+      expect(device.calls.first.method_name).to eq(:name=)
+    end
+    it "tracks attr_readers" do
+      c = Class.new(Student)
+      c.class_eval do
+        attr_reader :name
+      end
+      stan = c.new("Stan", 18)
+      device = tap_on!(stan, hijack_attr_methods: true)
+
+      stan.name
+
+      expect(device.calls.first.method_name).to eq(:name)
+    end
+  end
+
   context "when targets are ActiveRecord::Base instances" do
     context "with track_as_records: true" do
       it "tracks ActiveRecord::Base instances with their ids" do
