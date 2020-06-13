@@ -20,8 +20,7 @@ class TappingDevice
     end
 
     def method_head
-      source_file, source_line = method_object.source_location
-      IO.readlines(source_file)[source_line-1]
+      method_object.source.strip if method_object.source_location
     end
 
     def location(options = {})
