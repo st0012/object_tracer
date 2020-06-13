@@ -1,16 +1,14 @@
-require "pry" # for using Method#source
-
 class TappingDevice
   module Trackers
     class MutationTracker < TappingDevice
       def initialize(options, &block)
+        options[:hijack_attr_methods] = true
         super
         @snapshot_stack = []
       end
 
       def track(object)
         super
-        hijack_attr_writers
         insert_snapshot_taking_trace_point
         self
       end
@@ -42,24 +40,6 @@ class TappingDevice
           @instance_variables_snapshot = @snapshot_stack.pop
 
           @latest_instance_variables != @instance_variables_snapshot
-        end
-      end
-
-      def hijack_attr_writers
-        writer_methods = target.methods.grep(/\w+=/)
-        writer_methods.each do |method_name|
-          if target.method(method_name).source.match?(/attr_writer|attr_accessor/)
-            ivar_name = "@#{method_name.to_s.sub("=", "")}"
-
-            # need to use instance_eval to make the call site location consistent with normal methods
-            target.instance_eval(
-              <<~CODE
-                def #{method_name}(val)
-                  #{ivar_name} = val
-                end
-              CODE
-            )
-          end
         end
       end
 

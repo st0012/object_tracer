@@ -1,10 +1,12 @@
 require "active_record"
+require "pry" # for using Method#source
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
 require "tapping_device/output_payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
+require "tapping_device/method_hijacker"
 require "tapping_device/trackers/initialization_tracker"
 require "tapping_device/trackers/passed_tracker"
 require "tapping_device/trackers/association_call_tracker"
@@ -82,6 +84,8 @@ class TappingDevice
   def track(object)
     @target = object
     validate_target!
+
+    MethodHijacker.new(@target).hijack_methods! if options[:hijack_attr_methods]
 
     @trace_point = build_minimum_trace_point(event_type: options[:event_type]) do |payload|
       record_call!(payload)
@@ -207,6 +211,7 @@ class TappingDevice
     options[:root_device] ||= self
     options[:event_type] ||= :return
     options[:descendants] ||= []
+    options[:hijack_attr_method] ||= false
     options[:track_as_records] ||= false
     options
   end
