@@ -38,15 +38,9 @@ RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
   let(:service) { CartOperationService.new }
 
-  describe "#print_calls" do
-    include_context "order creation"
-
-    it "prints out target's calls in detail" do
-      print_calls(service, colorize: false)
-
-      expect do
-        service.perform(cart)
-      end.to output(/:validate_cart # CartOperationService
+  shared_examples "output calls examples" do
+    let(:expected_output) do
+/:validate_cart # CartOperationService
     from: #{__FILE__}:.*
     <= {cart: #<Cart:.*>}
     => #<Cart:.*>
@@ -65,59 +59,66 @@ RSpec.describe TappingDevice::Trackable do
     from: #{__FILE__}:.*
     <= {cart: #<Cart:.*>}
     => #<Order:.*>/
-      ).to_stdout
+    end
+
+    it "prints out target's calls in detail" do
+      print_calls(service, colorize: false)
+
+      expect { service.perform(cart) }.to produce_expected_output(expected_output)
     end
 
     context "with '.with' chained" do
-      it "only prints the calls that matches the with condition" do
-        print_calls(service, colorize: false).with do |payload|
-          payload.method_name.to_s.match? /order/
-        end
-
-        expect do
-          service.perform(cart)
-        end.to output(/:create_order # CartOperationService
+      let(:expected_output) do
+/:create_order # CartOperationService
     from: #{__FILE__}:.*
     <= {cart: #<Cart:.*>}
     => #<Order:.*>/
-        ).to_stdout
+      end
+      it "only prints the calls that matches the with condition" do
+        print_calls(service, colorize: false).with do |payload|
+          payload.method_name.to_s.match?(/order/)
+        end
+
+        expect { service.perform(cart) }.to produce_expected_output(expected_output)
       end
     end
   end
 
-  describe "#print_traces" do
-    include_context "order creation"
-
-    it "prints out what the target sees" do
-      print_traces(cart, colorize: false)
-
-      expect do
-        service.perform(cart)
-      end.to output(/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
+  shared_examples "output traces examples" do
+    let(:expected_output) do
+/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
 Called :total from: #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
 Called :promotion from: #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
-      ).to_stdout
     end
 
-    it "works with .with" do
-      print_traces(cart, colorize: false).with do |trace|
-        trace.arguments.keys.include?(:cart)
-      end
+    it "prints out what the target sees" do
+      print_traces(cart, colorize: false)
 
-      expect do
-        service.perform(cart)
-      end.to output(/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
+      expect { service.perform(cart) }.to produce_expected_output(expected_output)
+    end
+
+    context "when chained with .with" do
+      let(:expected_output) do
+/Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:apply_discount' at #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
-      ).to_stdout
+      end
+
+      it "filters output according to the condition" do
+        print_traces(cart, colorize: false).with do |trace|
+          trace.arguments.keys.include?(:cart)
+        end
+
+        expect { service.perform(cart) }.to produce_expected_output(expected_output)
+      end
     end
   end
 
-  describe "#print_mutations" do
+  shared_examples "output mutations examples" do
     let(:student) { Student.new("Stan", 26) }
 
     class Student
@@ -134,24 +135,18 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     end
 
     it "tracks attr_writer as well" do
-      print_mutations(student, colorize: false)
-
-      expect do
-        student.name = "Sean"
-      end.to output(/:name= # #<Class:#<Student:\w+>>
+      expected_output = /:name= # #<Class:#<Student:\w+>>
     from: #{__FILE__}:\d+
     changes:
       @name: "Stan" => "Sean"/
-      ).to_stdout
+
+      print_mutations(student, colorize: false)
+
+      expect { student.name = "Sean" }.to produce_expected_output(expected_output)
     end
 
     it "prints calls that define/undefine an object's instance variables" do
-      print_mutations(student, colorize: false)
-
-      expect do
-        student.id = 1
-        student.remove_id
-      end.to output(/:id= # Student
+      expected_output = /:id= # Student
     from: #{__FILE__}:\d+
     changes:
       @id: \[undefined\] => 1
@@ -160,17 +155,17 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     from: #{__FILE__}:\d+
     changes:
       @id: 1 => \[undefined\].*/
-      ).to_stdout
-    end
 
-    it "remembers changed value" do
       print_mutations(student, colorize: false)
 
       expect do
         student.id = 1
-        student.id = 1
-        student.id = nil
-      end.to output(/:id= # Student
+        student.remove_id
+      end.to produce_expected_output(expected_output)
+    end
+
+    it "remembers changed value" do
+      expected_output = /:id= # Student
     from: #{__FILE__}:.*
     changes:
       @id: \[undefined\] => 1
@@ -179,16 +174,18 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     from: #{__FILE__}:.*
     changes:
       @id: 1 => nil/
-).to_stdout
-    end
 
-    it "tracks multiple levels of state changes" do
-      student.id = 1
       print_mutations(student, colorize: false)
 
       expect do
-        student.reset_data!
-      end.to output(/:age= # Student
+        student.id = 1
+        student.id = 1
+        student.id = nil
+      end.to produce_expected_output(expected_output)
+    end
+
+    it "tracks multiple levels of state changes" do
+      expected_output = /:age= # Student
     from: #{__FILE__}:.*
     changes:
       @age: 26 => 0
@@ -199,7 +196,31 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       @name: "Stan" => ""
       @age: 26 => 0
       @id: 1 => 0/
-).to_stdout
+
+      student.id = 1
+      print_mutations(student, colorize: false)
+
+      expect { student.reset_data! }.to produce_expected_output(expected_output)
+    end
+  end
+
+  describe "print_* helpers" do
+    def produce_expected_output(expected_output)
+      output(expected_output).to_stdout
+    end
+
+    describe "#print_calls" do
+      include_context "order creation"
+      it_behaves_like "output calls examples"
+    end
+
+    describe "#print_traces" do
+      include_context "order creation"
+      it_behaves_like "output traces examples"
+    end
+
+    describe "#print_mutations" do
+      it_behaves_like "output mutations examples"
     end
   end
 
