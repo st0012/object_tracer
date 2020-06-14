@@ -4,6 +4,7 @@ require "bundler/setup"
 require "pry"
 require "model"
 require "database_cleaner"
+require "matchers/write_to_file_matcher"
 require 'simplecov'
 SimpleCov.start
 
