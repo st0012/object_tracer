@@ -6,22 +6,15 @@ class TappingDevice
   module Output
     module Helpers
       def and_write(payload_method = nil, filepath: "/tmp/tapping_device.log", &block)
-        @output_writer = Output::FileWriter.new(filepath: filepath)
-
-        @output_block =
-          if block
-            block
-          elsif payload_method
-            -> (output_payload) { output_payload.send(payload_method) }
-          else
-            raise "need to provide either a payload method name or a block"
-          end
-
-        self
+        and_output(payload_method, output_writer: Output::FileWriter.new(filepath: filepath), &block)
       end
 
       def and_print(payload_method = nil, &block)
-        @output_writer = Output::StdoutWriter.new
+        and_output(payload_method, output_writer: StdoutWriter.new, &block)
+      end
+
+      def and_output(payload_method = nil, output_writer:, &block)
+        @output_writer = output_writer
 
         @output_block =
           if block

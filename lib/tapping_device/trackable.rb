@@ -21,64 +21,59 @@ class TappingDevice
     end
 
     def print_traces(target, options = {})
-      output_options = extract_output_options(options)
-      options[:event_type] = :call
-
-      device_1 = tap_on!(target, options).and_print do |output_payload|
-        "Called #{output_payload.method_name_and_location(output_options)}\n"
-      end
-      device_2 = tap_passed!(target, options).and_print do |output_payload|
-        output_payload.passed_at(output_options)
-      end
-      CollectionProxy.new([device_1, device_2])
+      output_traces(target, options, output_action: :and_print)
     end
 
     def write_traces(target, options = {})
+      output_traces(target, options, output_action: :and_write)
+    end
+
+    def print_calls(target, options = {})
+      output_calls(target, options, output_action: :and_print)
+    end
+
+    def write_calls(target, options = {})
+      output_calls(target, options, output_action: :and_write)
+    end
+
+    def print_mutations(target, options = {})
+      output_mutations(target, options, output_action: :and_print)
+    end
+
+    def write_mutations(target, options = {})
+      output_mutations(target, options, output_action: :and_write)
+    end
+
+    private
+
+    def output_calls(target, options = {}, output_action:)
+      output_options = extract_output_options(options)
+
+      tap_on!(target, options).send(output_action) do |output_payload|
+        output_payload.detail_call_info(output_options)
+      end
+    end
+
+    def output_traces(target, options = {}, output_action:)
       output_options = extract_output_options(options)
       options[:event_type] = :call
 
-      device_1 = tap_on!(target, options).and_write do |output_payload|
+      device_1 = tap_on!(target, options).send(output_action) do |output_payload|
         "Called #{output_payload.method_name_and_location(output_options)}\n"
       end
-      device_2 = tap_passed!(target, options).and_write do |output_payload|
+      device_2 = tap_passed!(target, options).send(output_action) do |output_payload|
         output_payload.passed_at(output_options)
       end
       CollectionProxy.new([device_1, device_2])
     end
 
-    def print_calls(target, options = {})
+    def output_mutations(target, options = {}, output_action:)
       output_options = extract_output_options(options)
 
-      tap_on!(target, options).and_print do |output_payload|
-        output_payload.detail_call_info(output_options)
-      end
-    end
-
-    def write_calls(target, options = {})
-      output_options = extract_output_options(options)
-
-      tap_on!(target, options).and_write do |output_payload|
-        output_payload.detail_call_info(output_options)
-      end
-    end
-
-    def print_mutations(target, options = {})
-      output_options = extract_output_options(options)
-
-      tap_mutation!(target, options).and_print do |output_payload|
+      tap_mutation!(target, options).send(output_action) do |output_payload|
         output_payload.call_info_with_ivar_changes(output_options)
       end
     end
-
-    def write_mutations(target, options = {})
-      output_options = extract_output_options(options)
-
-      tap_mutation!(target, options).and_write do |output_payload|
-        output_payload.call_info_with_ivar_changes(output_options)
-      end
-    end
-
-    private
 
     def extract_output_options(options)
       {inspect: options.delete(:inspect), colorize: options.fetch(:colorize, true)}

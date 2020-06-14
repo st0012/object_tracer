@@ -223,7 +223,7 @@ class TappingDevice
   def record_call!(payload)
     return if @disabled
 
-    write_output!(payload) if @output_writer
+    write_output!(payload) if @output_writer && @output_block
 
     if @block
       root_device.calls << @block.call(payload)
