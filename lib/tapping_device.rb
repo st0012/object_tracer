@@ -5,7 +5,7 @@ require "pry" # for using Method#source
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
-require "tapping_device/output/payload"
+require "tapping_device/output"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/method_hijacker"
@@ -27,6 +27,8 @@ class TappingDevice
 
   extend Manageable
 
+  include Output::Helpers
+
   def initialize(options = {}, &block)
     @block = block
     @output_block = nil
@@ -35,19 +37,6 @@ class TappingDevice
     @disabled = false
     @with_condition = nil
     TappingDevice.devices << self
-  end
-
-  def and_print(payload_method = nil, &block)
-    @output_block =
-      if block
-        -> (output_payload) { puts(block.call(output_payload)) }
-      elsif payload_method
-        -> (output_payload) { puts(output_payload.send(payload_method)) }
-      else
-        raise "need to provide either a payload method name or a block"
-      end
-
-    self
   end
 
   def with(&block)
@@ -234,13 +223,17 @@ class TappingDevice
   def record_call!(payload)
     return if @disabled
 
-    @output_block.call(Output::Payload.init(payload)) if @output_block
+    write_output!(payload) if @output_writer
 
     if @block
       root_device.calls << @block.call(payload)
     else
       root_device.calls << payload
     end
+  end
+
+  def write_output!(payload)
+    @output_writer.write!(@output_block.call(Output::Payload.init(payload)))
   end
 
   def stop_if_condition_fulfilled!(payload)
