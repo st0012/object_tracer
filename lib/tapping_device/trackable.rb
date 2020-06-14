@@ -47,36 +47,37 @@ class TappingDevice
     private
 
     def output_calls(target, options = {}, output_action:)
-      output_options = extract_output_options(options)
+      device_options, output_options = separate_options(options)
 
-      tap_on!(target, options).send(output_action, options: output_options) do |output_payload, output_options|
+      tap_on!(target, device_options).send(output_action, options: output_options) do |output_payload, output_options|
         output_payload.detail_call_info(output_options)
       end
     end
 
     def output_traces(target, options = {}, output_action:)
-      output_options = extract_output_options(options)
-      options[:event_type] = :call
+      device_options, output_options = separate_options(options)
+      device_options[:event_type] = :call
 
-      device_1 = tap_on!(target, options).send(output_action, options: output_options) do |output_payload, output_options|
+      device_1 = tap_on!(target, device_options).send(output_action, options: output_options) do |output_payload, output_options|
         "Called #{output_payload.method_name_and_location(output_options)}\n"
       end
-      device_2 = tap_passed!(target, options).send(output_action, options: output_options) do |output_payload, output_options|
+      device_2 = tap_passed!(target, device_options).send(output_action, options: output_options) do |output_payload, output_options|
         output_payload.passed_at(output_options)
       end
       CollectionProxy.new([device_1, device_2])
     end
 
     def output_mutations(target, options = {}, output_action:)
-      output_options = extract_output_options(options)
+      device_options, output_options = separate_options(options)
 
-      tap_mutation!(target, options).send(output_action, options: output_options) do |output_payload, output_options|
+      tap_mutation!(target, device_options).send(output_action, options: output_options) do |output_payload, output_options|
         output_payload.call_info_with_ivar_changes(output_options)
       end
     end
 
-    def extract_output_options(options)
-      {inspect: options.delete(:inspect), colorize: options.fetch(:colorize, true), filepath: options[:filepath]}
+    def separate_options(options)
+      output_options = {inspect: options.delete(:inspect), colorize: options.fetch(:colorize, true), filepath: options[:filepath]}
+      [options, output_options]
     end
 
     class CollectionProxy
