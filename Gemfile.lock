@@ -3,6 +3,7 @@ PATH
   specs:
     tapping_device (0.5.2)
       activerecord (>= 5.2)
+      activesupport
       pry
 
 GEM

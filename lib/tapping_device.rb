@@ -1,4 +1,5 @@
 require "active_record"
+require "active_support/core_ext/module/introspection"
 require "pry" # for using Method#source
 require "tapping_device/version"
 require "tapping_device/manageable"
@@ -134,7 +135,7 @@ class TappingDevice
 
     if Module.respond_to?(:module_parents)
       tp.defined_class.module_parents.include?(TappingDevice)
-    else
+    elsif Module.respond_to?(:parents)
       tp.defined_class.parents.include?(TappingDevice)
     end
   end

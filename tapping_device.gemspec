@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency "pry" # for using Method#source in MutationTracker
+  spec.add_dependency "activesupport"
 
   spec.add_development_dependency "sqlite3", ">= 1.3.6"
   spec.add_development_dependency "database_cleaner"
