@@ -236,6 +236,22 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       write_to_file(filepath, expected_output)
     end
 
+    it "writes to designated file if filepath is provided" do
+      student = Student.new("Stan", 26)
+      filepath = "/tmp/another_file.log"
+
+      expected_output = /:name= # #<Class:#<Student:\w+>>
+    from: #{__FILE__}:\d+
+    changes:
+      @name: "Stan" => "Sean"/
+
+      write_mutations(student, filepath: filepath, colorize: false)
+
+      expect { student.name = "Sean" }.to produce_expected_output(filepath, expected_output)
+
+      File.delete(filepath)
+    end
+
     describe "#write_calls" do
       include_context "order creation"
       it_behaves_like "output calls examples", action: "write"

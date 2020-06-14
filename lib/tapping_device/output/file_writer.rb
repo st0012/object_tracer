@@ -1,14 +1,19 @@
 class TappingDevice
   module Output
-    class FileWriter
-      def initialize(options = {})
-        @path = options[:filepath]
-        File.write(@path, "")
+    class FileWriter < Writer
+      def initialize(options, output_block)
+        @path = options.delete(:filepath) || "/tmp/tapping_device.log"
+
+        File.write(@path, "") # clean file
+
+        super
       end
 
-      def write!(message)
+      def write!(payload)
+        output = generate_output(payload)
+
         File.open(@path, "a") do |f|
-          f << message
+          f << output
         end
       end
     end

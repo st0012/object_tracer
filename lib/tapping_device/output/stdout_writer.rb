@@ -1,10 +1,8 @@
 class TappingDevice
   module Output
-    class StdoutWriter
-      def initialize(_options = {}); end
-
-      def write!(message)
-        puts(message)
+    class StdoutWriter < Writer
+      def write!(payload)
+        puts(generate_output(payload))
       end
     end
   end
