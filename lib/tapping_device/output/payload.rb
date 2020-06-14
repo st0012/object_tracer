@@ -84,8 +84,8 @@ class TappingDevice
 
         arg_name = ":#{arg_name}"
         arg_name = value_with_color(arg_name, :orange) if options[:colorize]
-        msg = "Passed as #{arg_name} in '#{defined_class(options)}##{method_name(options)}' at #{location(options)}"
-        msg += "\n  > #{method_head}" if with_method_head
+        msg = "Passed as #{arg_name} in '#{defined_class(options)}##{method_name(options)}' at #{location(options)}\n"
+        msg += "  > #{method_head}\n" if with_method_head
         msg
       end
 

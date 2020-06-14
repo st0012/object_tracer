@@ -38,7 +38,8 @@ RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
   let(:service) { CartOperationService.new }
 
-  shared_examples "output calls examples" do
+  shared_examples "output calls examples" do |action:|
+    let(:helper_method) { "#{action}_calls" }
     let(:expected_output) do
 /:validate_cart # CartOperationService
     from: #{__FILE__}:.*
@@ -62,7 +63,7 @@ RSpec.describe TappingDevice::Trackable do
     end
 
     it "prints out target's calls in detail" do
-      print_calls(service, colorize: false)
+      send(helper_method, service, colorize: false)
 
       expect { service.perform(cart) }.to produce_expected_output(expected_output)
     end
@@ -75,7 +76,7 @@ RSpec.describe TappingDevice::Trackable do
     => #<Order:.*>/
       end
       it "only prints the calls that matches the with condition" do
-        print_calls(service, colorize: false).with do |payload|
+        send(helper_method, service, colorize: false).with do |payload|
           payload.method_name.to_s.match?(/order/)
         end
 
@@ -84,7 +85,9 @@ RSpec.describe TappingDevice::Trackable do
     end
   end
 
-  shared_examples "output traces examples" do
+  shared_examples "output traces examples" do |action:|
+    let(:helper_method) { "#{action}_traces" }
+
     let(:expected_output) do
 /Passed as :cart in 'CartOperationService#:perform' at #{__FILE__}:\d+
 Passed as :cart in 'CartOperationService#:validate_cart' at #{__FILE__}:\d+
@@ -95,7 +98,7 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     end
 
     it "prints out what the target sees" do
-      print_traces(cart, colorize: false)
+      send(helper_method, cart, colorize: false)
 
       expect { service.perform(cart) }.to produce_expected_output(expected_output)
     end
@@ -109,7 +112,7 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       end
 
       it "filters output according to the condition" do
-        print_traces(cart, colorize: false).with do |trace|
+        send(helper_method, cart, colorize: false).with do |trace|
           trace.arguments.keys.include?(:cart)
         end
 
@@ -118,7 +121,8 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     end
   end
 
-  shared_examples "output mutations examples" do
+  shared_examples "output mutations examples" do |action:|
+    let(:helper_method) { "#{action}_mutations" }
     let(:student) { Student.new("Stan", 26) }
 
     class Student
@@ -140,7 +144,7 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     changes:
       @name: "Stan" => "Sean"/
 
-      print_mutations(student, colorize: false)
+      send(helper_method, student, colorize: false)
 
       expect { student.name = "Sean" }.to produce_expected_output(expected_output)
     end
@@ -156,7 +160,7 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     changes:
       @id: 1 => \[undefined\].*/
 
-      print_mutations(student, colorize: false)
+      send(helper_method, student, colorize: false)
 
       expect do
         student.id = 1
@@ -175,7 +179,7 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
     changes:
       @id: 1 => nil/
 
-      print_mutations(student, colorize: false)
+      send(helper_method, student, colorize: false)
 
       expect do
         student.id = 1
@@ -198,7 +202,8 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
       @id: 1 => 0/
 
       student.id = 1
-      print_mutations(student, colorize: false)
+
+      send(helper_method, student, colorize: false)
 
       expect { student.reset_data! }.to produce_expected_output(expected_output)
     end
@@ -211,16 +216,38 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
 
     describe "#print_calls" do
       include_context "order creation"
-      it_behaves_like "output calls examples"
+      it_behaves_like "output calls examples", action: "print"
     end
 
     describe "#print_traces" do
       include_context "order creation"
-      it_behaves_like "output traces examples"
+      it_behaves_like "output traces examples", action: "print"
     end
 
     describe "#print_mutations" do
-      it_behaves_like "output mutations examples"
+      it_behaves_like "output mutations examples", action: "print"
+    end
+  end
+
+  describe "write_* helpers" do
+    let(:output_filepath) { "/tmp/tapping_device.log" }
+
+    def produce_expected_output(filepath = output_filepath, expected_output)
+      write_to_file(filepath, expected_output)
+    end
+
+    describe "#write_calls" do
+      include_context "order creation"
+      it_behaves_like "output calls examples", action: "write"
+    end
+
+    describe "#write_traces" do
+      include_context "order creation"
+      it_behaves_like "output traces examples", action: "write"
+    end
+
+    describe "#write_mutations" do
+      it_behaves_like "output mutations examples", action: "write"
     end
   end
 end
