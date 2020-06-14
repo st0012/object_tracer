@@ -1,10 +1,11 @@
 require "active_record"
 require "active_support/core_ext/module/introspection"
 require "pry" # for using Method#source
+
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
-require "tapping_device/output_payload"
+require "tapping_device/output/payload"
 require "tapping_device/trackable"
 require "tapping_device/exceptions"
 require "tapping_device/method_hijacker"
@@ -233,7 +234,7 @@ class TappingDevice
   def record_call!(payload)
     return if @disabled
 
-    @output_block.call(OutputPayload.init(payload)) if @output_block
+    @output_block.call(Output::Payload.init(payload)) if @output_block
 
     if @block
       root_device.calls << @block.call(payload)
