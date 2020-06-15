@@ -1,12 +1,12 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::OutputPayload do
+RSpec.describe TappingDevice::Output::Payload do
   include TappingDevice::Trackable
 
   let(:stan) { Student.new("Stan", 25) }
   let(:options) { {colorize: false} }
   subject do
-    TappingDevice::OutputPayload.init({
+    TappingDevice::Output::Payload.init({
       method_name: :foo,
       defined_class: Student,
       arguments: [stan],

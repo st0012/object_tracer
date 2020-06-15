@@ -174,6 +174,20 @@ Now you can see what method changes which states. And more importantly, you get 
 
 **You can try these examples on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
 
+### `write_*` helpers
+
+`tapping_device` also provides helpers that write the events into files:
+
+- `write_calls(object)`
+- `write_traces(object)`
+- `write_mutations(object)`
+
+The default destination is `/tmp/tapping_device.log`. You can change it with the `filepath`  option:
+
+```ruby
+write_calls(object, filepath: "/tmp/another_file")
+```
+
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -288,4 +302,3 @@ The gem is available as open-source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the TappingDevice project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/tapping_device/blob/master/CODE_OF_CONDUCT.md).
-
