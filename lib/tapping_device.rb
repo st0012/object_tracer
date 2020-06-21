@@ -4,6 +4,7 @@ require "pry" # for using Method#source
 
 require "tapping_device/version"
 require "tapping_device/manageable"
+require "tapping_device/configurable"
 require "tapping_device/payload"
 require "tapping_device/output"
 require "tapping_device/trackable"
@@ -27,6 +28,7 @@ class TappingDevice
 
   extend Manageable
 
+  include Configurable
   include Output::Helpers
 
   def initialize(options = {}, &block)
@@ -196,14 +198,15 @@ class TappingDevice
   end
 
   def process_options(options)
-    options[:filter_by_paths] ||= []
-    options[:exclude_by_paths] ||= []
-    options[:with_trace_to] ||= 50
-    options[:root_device] ||= self
-    options[:event_type] ||= :return
+    options[:filter_by_paths] ||= config[:filter_by_paths]
+    options[:exclude_by_paths] ||= config[:exclude_by_paths]
+    options[:with_trace_to] ||= config[:with_trace_to]
+    options[:event_type] ||= config[:event_type]
+    options[:hijack_attr_methods] ||= config[:hijack_attr_methods]
+    options[:track_as_records] ||= config[:track_as_records]
+
     options[:descendants] ||= []
-    options[:hijack_attr_method] ||= false
-    options[:track_as_records] ||= false
+    options[:root_device] ||= self
     options
   end
 
@@ -241,5 +244,9 @@ class TappingDevice
       stop!
       root_device.stop!
     end
+  end
+
+  def config
+    TappingDevice.config
   end
 end
