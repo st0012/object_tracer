@@ -230,26 +230,26 @@ Passed as :cart in 'CartOperationService#:create_order' at #{__FILE__}:\d+/
   end
 
   describe "write_* helpers" do
-    let(:output_filepath) { "/tmp/tapping_device.log" }
+    let(:output_log_file) { "/tmp/tapping_device.log" }
 
-    def produce_expected_output(filepath = output_filepath, expected_output)
-      write_to_file(filepath, expected_output)
+    def produce_expected_output(log_file = output_log_file, expected_output)
+      write_to_file(log_file, expected_output)
     end
 
-    it "writes to designated file if filepath is provided" do
+    it "writes to designated file if log_file is provided" do
       student = Student.new("Stan", 26)
-      filepath = "/tmp/another_file.log"
+      log_file = "/tmp/another_file.log"
 
       expected_output = /:name= # #<Class:#<Student:\w+>>
     from: #{__FILE__}:\d+
     changes:
       @name: "Stan" => "Sean"/
 
-      write_mutations(student, filepath: filepath, colorize: false)
+      write_mutations(student, log_file: log_file, colorize: false)
 
-      expect { student.name = "Sean" }.to produce_expected_output(filepath, expected_output)
+      expect { student.name = "Sean" }.to produce_expected_output(log_file, expected_output)
 
-      File.delete(filepath)
+      File.delete(log_file)
     end
 
     describe "#write_calls" do

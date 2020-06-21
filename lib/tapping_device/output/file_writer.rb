@@ -2,7 +2,7 @@ class TappingDevice
   module Output
     class FileWriter < Writer
       def initialize(options, output_block)
-        @path = options[:filepath]
+        @path = options[:log_file]
 
         File.write(@path, "") # clean file
 

@@ -8,7 +8,7 @@ class TappingDevice
     DEFAULT_OPTIONS = {
       inspect: false,
       colorize: true,
-      filepath: "/tmp/tapping_device.log"
+      log_file: "/tmp/tapping_device.log"
     }
 
     module Helpers
