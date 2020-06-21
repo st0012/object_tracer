@@ -2,7 +2,7 @@ class TappingDevice
   module Output
     class FileWriter < Writer
       def initialize(options, output_block)
-        @path = options.delete(:filepath) || "/tmp/tapping_device.log"
+        @path = options[:filepath]
 
         File.write(@path, "") # clean file
 

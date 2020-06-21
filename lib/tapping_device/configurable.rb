@@ -11,8 +11,8 @@ class TappingDevice
       with_trace_to: 50,
       event_type: :return,
       hijack_attr_methods: false,
-      track_as_records: false
-    }
+      track_as_records: false,
+    }.merge(TappingDevice::Output::DEFAULT_OPTIONS)
 
     included do
       include ActiveSupport::Configurable
