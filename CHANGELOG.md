@@ -1,16 +1,18 @@
 # Changelog
 
-## [Unreleased](https://github.com/st0012/tapping_device/tree/HEAD)
+## [v0.5.3](https://github.com/st0012/tapping_device/tree/v0.5.3) (2020-06-21)
 
-[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.2...HEAD)
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.2...v0.5.3)
 
 **Closed issues:**
 
+- Global Configuration [\#46](https://github.com/st0012/tapping_device/issues/46)
 - Support write\_\* helpers [\#44](https://github.com/st0012/tapping_device/issues/44)
 - Use Method\#source to replace Payload\#method\_head’s implementation  [\#19](https://github.com/st0012/tapping_device/issues/19)
 
 **Merged pull requests:**
 
+- Support Global Configuration [\#48](https://github.com/st0012/tapping_device/pull/48) ([st0012](https://github.com/st0012))
 - Support write\_\* helpers [\#47](https://github.com/st0012/tapping_device/pull/47) ([st0012](https://github.com/st0012))
 - Hijack attr methods with `hijack\_attr\_methods` option [\#45](https://github.com/st0012/tapping_device/pull/45) ([st0012](https://github.com/st0012))
 
