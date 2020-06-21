@@ -76,7 +76,11 @@ class TappingDevice
     end
 
     def separate_options(options)
-      output_options = {inspect: options.delete(:inspect), colorize: options.fetch(:colorize, true), filepath: options[:filepath]}
+      output_options = Output::DEFAULT_OPTIONS.keys.each_with_object({}) do |key, hash|
+        hash[key] = options.fetch(key, TappingDevice.config[key])
+        options.delete(key)
+      end
+
       [options, output_options]
     end
 

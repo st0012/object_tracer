@@ -5,6 +5,12 @@ require "tapping_device/output/file_writer"
 
 class TappingDevice
   module Output
+    DEFAULT_OPTIONS = {
+      inspect: false,
+      colorize: true,
+      log_file: "/tmp/tapping_device.log"
+    }
+
     module Helpers
       def and_write(payload_method = nil, options: {}, &block)
         and_output(payload_method, options: options, writer_klass: FileWriter, &block)
