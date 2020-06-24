@@ -94,7 +94,7 @@ class TappingDevice
   private
 
   def build_minimum_trace_point(event_type:)
-    TracePoint.new(event_type) do |tp|
+    TracePoint.new(*event_type) do |tp|
       next unless filter_condition_satisfied?(tp)
       next if is_tapping_device_call?(tp)
 
