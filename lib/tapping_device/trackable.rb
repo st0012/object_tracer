@@ -32,6 +32,16 @@ class TappingDevice
           send(helper_method_name, self, options)
           self
         end
+
+        define_method "#{output_action}_instance_#{subject}" do |target_klass, options = {}|
+          collection_proxy = AsyncCollectionProxy.new
+
+          tap_init!(target_klass, options) do |payload|
+            collection_proxy << send(helper_method_name, payload.return_value, options)
+          end
+
+          collection_proxy
+        end
       end
     end
 
@@ -75,16 +85,45 @@ class TappingDevice
       [options, output_options]
     end
 
+    # CollectionProxy delegates chained actions to multiple devices
     class CollectionProxy
+      CHAINABLE_ACTIONS = [:stop!, :stop_when, :with]
+
       def initialize(devices)
         @devices = devices
       end
 
-      [:stop!, :stop_when, :with].each do |method|
+      CHAINABLE_ACTIONS.each do |method|
         define_method method do |&block|
           @devices.each do |device|
             device.send(method, &block)
           end
+        end
+      end
+    end
+
+    # AsyncCollectionProxy delegates chained actions to multiple device "asyncronously"
+    # when we use tapping methods like `tap_init!` to create sub-devices
+    # we need to find a way to pass the chained actions to every sub-device that's created
+    # and this can only happen asyncronously as we won't know when'll that happen
+    class AsyncCollectionProxy < CollectionProxy
+      def initialize(devices = [])
+        super
+        @blocks = {}
+      end
+
+      CHAINABLE_ACTIONS.each do |method|
+        define_method method do |&block|
+          super(&block)
+          @blocks[method] = block
+        end
+      end
+
+      def <<(device)
+        @devices << device
+
+        @blocks.each do |method, block|
+          device.send(method, &block)
         end
       end
     end
