@@ -5,9 +5,7 @@ RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
   let(:service) { CartOperationService.new }
 
-  shared_examples "output calls examples" do |action:|
-    let(:helper_method) { "#{action}_calls" }
-    let(:tap_action) { send(helper_method, service, colorize: false) }
+  shared_examples "output calls examples" do
     let(:expected_output) do
 /:validate_cart # CartOperationService
     from: .*:.*
@@ -53,10 +51,7 @@ RSpec.describe TappingDevice::Trackable do
     end
   end
 
-  shared_examples "output traces examples" do |action:|
-    let(:helper_method) { "#{action}_traces" }
-    let(:tap_action) { send(helper_method, cart, colorize: false) }
-
+  shared_examples "output traces examples" do
     let(:expected_output) do
 /Passed as :cart in 'CartOperationService#:perform' at .*:\d+
 Passed as :cart in 'CartOperationService#:validate_cart' at .*:\d+
@@ -90,11 +85,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
   end
 
-  shared_examples "output mutations examples" do |action:|
-    let(:student) { Student.new("Stan", 26) }
-    let(:helper_method) { "#{action}_mutations" }
-    let(:tap_action) { send(helper_method, student, colorize: false) }
-
+  shared_examples "output mutations examples" do
     class Student
       def remove_id
         remove_instance_variable(:@id)
@@ -185,17 +176,27 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#print_calls" do
+      let(:helper_method) { "print_calls" }
+      let(:tap_action) { send(helper_method, service, colorize: false) }
+
       include_context "order creation"
-      it_behaves_like "output calls examples", action: "print"
+      it_behaves_like "output calls examples"
     end
 
     describe "#print_traces" do
+      let(:helper_method) { "print_traces" }
+      let(:tap_action) { send(helper_method, cart, colorize: false) }
+
       include_context "order creation"
-      it_behaves_like "output traces examples", action: "print"
+      it_behaves_like "output traces examples"
     end
 
     describe "#print_mutations" do
-      it_behaves_like "output mutations examples", action: "print"
+      let(:student) { Student.new("Stan", 26) }
+      let(:helper_method) { "print_mutations" }
+      let(:tap_action) { send(helper_method, student, colorize: false) }
+
+      it_behaves_like "output mutations examples"
     end
   end
 
@@ -205,17 +206,27 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#write_calls" do
+      let(:helper_method) { "write_calls" }
+      let(:tap_action) { send(helper_method, service, colorize: false) }
+
       include_context "order creation"
-      it_behaves_like "output calls examples", action: "write"
+      it_behaves_like "output calls examples"
     end
 
     describe "#write_traces" do
+      let(:helper_method) { "write_traces" }
+      let(:tap_action) { send(helper_method, cart, colorize: false) }
+
       include_context "order creation"
-      it_behaves_like "output traces examples", action: "write"
+      it_behaves_like "output traces examples"
     end
 
     describe "#write_mutations" do
-      it_behaves_like "output mutations examples", action: "write"
+      let(:student) { Student.new("Stan", 26) }
+      let(:helper_method) { "write_mutations" }
+      let(:tap_action) { send(helper_method, student, colorize: false) }
+
+      it_behaves_like "output mutations examples"
     end
 
     let(:output_log_file) { "/tmp/tapping_device.log" }
