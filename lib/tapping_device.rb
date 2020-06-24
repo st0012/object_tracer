@@ -34,7 +34,7 @@ class TappingDevice
   def initialize(options = {}, &block)
     @block = block
     @output_block = nil
-    @options = process_options(options)
+    @options = process_options(options.dup)
     @calls = []
     @disabled = false
     @with_condition = nil
