@@ -1,6 +1,14 @@
 class TappingDevice
   module Trackers
     class InitializationTracker < TappingDevice
+      def initialize(options = {}, &block)
+        super
+        event_type = @options[:event_type]
+        # if a class doesn't override the 'initialize' method
+        # Class.new will only trigger c_return or c_call
+        @options[:event_type] = [event_type, "c_#{event_type}"]
+      end
+
       def build_payload(tp:, filepath:, line_number:)
         payload = super
         payload[:return_value] = payload[:receiver]

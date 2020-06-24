@@ -16,6 +16,16 @@ RSpec.describe "tap_init!" do
     expect { tap_init!(1) }.to raise_error(TappingDevice::NotAClassError)
   end
 
+  it "tracks class that doesn't define the initialize method (c_call or c_return)" do
+    class Foo; end
+
+    device = tap_init!(Foo)
+
+    Foo.new
+
+    expect(device.calls.count).to eq(1)
+  end
+
   it "tracks Student's initialization" do
     device = tap_init!(Student)
 
