@@ -20,28 +20,12 @@ class TappingDevice
       TappingDevice::Trackers::MutationTracker.new(options, &block).track(object)
     end
 
-    def print_traces(target, options = {})
-      output_traces(target, options, output_action: :and_print)
-    end
-
-    def write_traces(target, options = {})
-      output_traces(target, options, output_action: :and_write)
-    end
-
-    def print_calls(target, options = {})
-      output_calls(target, options, output_action: :and_print)
-    end
-
-    def write_calls(target, options = {})
-      output_calls(target, options, output_action: :and_write)
-    end
-
-    def print_mutations(target, options = {})
-      output_mutations(target, options, output_action: :and_print)
-    end
-
-    def write_mutations(target, options = {})
-      output_mutations(target, options, output_action: :and_write)
+    [:calls, :traces, :mutations].each do |subject|
+      [:print, :write].each do |output_action|
+        define_method "#{output_action}_#{subject}" do |target, options = {}|
+          send("output_#{subject}", target, options, output_action: "and_#{output_action}")
+        end
+      end
     end
 
     private
