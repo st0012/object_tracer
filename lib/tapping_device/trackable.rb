@@ -22,8 +22,15 @@ class TappingDevice
 
     [:calls, :traces, :mutations].each do |subject|
       [:print, :write].each do |output_action|
-        define_method "#{output_action}_#{subject}" do |target, options = {}|
+        helper_method_name = "#{output_action}_#{subject}"
+
+        define_method helper_method_name do |target, options = {}|
           send("output_#{subject}", target, options, output_action: "and_#{output_action}")
+        end
+
+        define_method "with_#{helper_method_name}" do |options = {}|
+          send(helper_method_name, self, options)
+          self
         end
       end
     end

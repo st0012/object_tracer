@@ -189,6 +189,30 @@ write_calls(object, log_file: "/tmp/another_file")
 ```
 
 
+### Use `with_HELPER` for chained method calls
+
+One thing that really bothers me when debugging is to break method chains from time to time. Let's say I call a service object like this:
+
+```ruby
+SomeService.new(params).perform
+```
+
+In order to debug it, I'll need to break the method chain into
+
+```ruby
+service = SomeService.new(params)
+print_calls(service, options)
+service.perform
+```
+
+That's a 3-line change! Which obviously violates the goal of `tapping_device` - making debugging easier with 1 line of code.
+
+So here's another option, just insert a `with_HELPER_NAME` call in between:
+
+```ruby
+SomeService.new(params).with_print_calls(options).perform
+```
+
 ## Installation
 Add this line to your application's Gemfile:
 

@@ -180,7 +180,15 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       let(:tap_action) { send(helper_method, service, colorize: false) }
 
       include_context "order creation"
-      it_behaves_like "output calls examples"
+      it_behaves_like "output calls examples" do
+        describe "with_print_calls" do
+          it "prints out calls" do
+            expect do
+              service.with_print_calls(colorize: false).perform(cart)
+            end.to produce_expected_output(expected_output)
+          end
+        end
+      end
     end
 
     describe "#print_traces" do
@@ -188,7 +196,15 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       let(:tap_action) { send(helper_method, cart, colorize: false) }
 
       include_context "order creation"
-      it_behaves_like "output traces examples"
+      it_behaves_like "output traces examples" do
+        describe "with_print_traces" do
+          it "prints out traces" do
+            expect do
+              service.perform(cart.with_print_traces(colorize: false))
+            end.to produce_expected_output(expected_output)
+          end
+        end
+      end
     end
 
     describe "#print_mutations" do
@@ -210,7 +226,15 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       let(:tap_action) { send(helper_method, service, colorize: false) }
 
       include_context "order creation"
-      it_behaves_like "output calls examples"
+      it_behaves_like "output calls examples" do
+        describe "with_write_calls" do
+          it "prints out calls" do
+            expect do
+              service.with_write_calls(colorize: false).perform(cart)
+            end.to produce_expected_output(expected_output)
+          end
+        end
+      end
     end
 
     describe "#write_traces" do
@@ -218,7 +242,15 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       let(:tap_action) { send(helper_method, cart, colorize: false) }
 
       include_context "order creation"
-      it_behaves_like "output traces examples"
+      it_behaves_like "output traces examples" do
+        describe "with_write_traces" do
+          it "prints out traces" do
+            expect do
+              service.perform(cart.with_write_traces(colorize: false))
+            end.to produce_expected_output(expected_output)
+          end
+        end
+      end
     end
 
     describe "#write_mutations" do
