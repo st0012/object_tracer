@@ -32,4 +32,13 @@ RSpec.shared_examples "optionable" do
       expect(count).to eq(1)
     end
   end
+  context "with options - force_recording: true" do
+    it "skips all other filtering options" do
+      device = send(subject, target, filter_by_paths: [/lib/], force_recording: true)
+
+      trigger_action.call(target)
+
+      expect(device.calls.count).to be >= 1
+    end
+  end
 end

@@ -96,13 +96,15 @@ class TappingDevice
   def build_minimum_trace_point(event_type:)
     TracePoint.new(*event_type) do |tp|
       next unless filter_condition_satisfied?(tp)
-      next if is_tapping_device_call?(tp)
 
       filepath, line_number = get_call_location(tp)
       payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
-      next if should_be_skipped_by_paths?(filepath)
-      next unless with_condition_satisfied?(payload)
+      unless @options[:force_recording]
+        next if is_tapping_device_call?(tp)
+        next if should_be_skipped_by_paths?(filepath)
+        next unless with_condition_satisfied?(payload)
+      end
 
       yield(payload)
     end
@@ -204,6 +206,8 @@ class TappingDevice
     options[:event_type] ||= config[:event_type]
     options[:hijack_attr_methods] ||= config[:hijack_attr_methods]
     options[:track_as_records] ||= config[:track_as_records]
+    # for debugging the gem more easily
+    options[:force_recording] ||= false
 
     options[:descendants] ||= []
     options[:root_device] ||= self
