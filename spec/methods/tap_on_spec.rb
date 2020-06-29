@@ -88,7 +88,7 @@ RSpec.describe "tap_on!" do
     end
   end
 
-  context "with options[:ignore_private]" do
+  describe "private method options" do
     let(:c) do
       c = Class.new(Student)
       c.class_eval do
@@ -104,29 +104,54 @@ RSpec.describe "tap_on!" do
       end
       c
     end
-    context "when true" do
-      it "ignores private method calls" do
-        s = c.new("Stan", 18)
+    let(:stan) do
+      c.new("Stan", 18)
+    end
 
-        device = tap_on!(s, ignore_private: true)
+    context "with options[:ignore_private]" do
+      context "when true" do
+        it "ignores private method calls" do
+          device = tap_on!(stan, ignore_private: true)
 
-        s.number
+          stan.number
 
-        expect(device.calls.count).to eq(1)
-        expect(device.calls.first.method_name).to eq(:number)
+          expect(device.calls.count).to eq(1)
+          expect(device.calls.first.method_name).to eq(:number)
+        end
+      end
+      context "when false (default)" do
+        it "records private method calls" do
+          device = tap_on!(stan)
+
+          stan.number
+
+          expect(device.calls.count).to eq(2)
+          expect(device.calls.first.method_name).to eq(:private_number)
+          expect(device.calls.last.method_name).to eq(:number)
+        end
       end
     end
-    context "when false (default)" do
-      it "records private method calls" do
-        s = c.new("Stan", 18)
+    context "with options[:only_private]" do
+      context "when true" do
+        it "ignores private method calls" do
+          device = tap_on!(stan, only_private: true)
 
-        device = tap_on!(s)
+          stan.number
 
-        s.number
+          expect(device.calls.count).to eq(1)
+          expect(device.calls.first.method_name).to eq(:private_number)
+        end
+      end
+      context "when false (default)" do
+        it "records private method calls" do
+          device = tap_on!(stan)
 
-        expect(device.calls.count).to eq(2)
-        expect(device.calls.first.method_name).to eq(:private_number)
-        expect(device.calls.last.method_name).to eq(:number)
+          stan.number
+
+          expect(device.calls.count).to eq(2)
+          expect(device.calls.first.method_name).to eq(:private_number)
+          expect(device.calls.last.method_name).to eq(:number)
+        end
       end
     end
   end
