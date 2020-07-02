@@ -76,7 +76,8 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       end
 
       it "filters output according to the condition" do
-        tap_action.with do |trace|
+        proxy = tap_action
+        proxy.with do |trace|
           trace.arguments.keys.include?(:cart)
         end
 
@@ -176,8 +177,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#print_calls" do
-      let(:helper_method) { "print_calls" }
-      let(:tap_action) { send(helper_method, service, colorize: false) }
+      let(:tap_action) { print_calls(service, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output calls examples" do
@@ -192,8 +192,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#print_traces" do
-      let(:helper_method) { "print_traces" }
-      let(:tap_action) { send(helper_method, cart, colorize: false) }
+      let(:tap_action) { print_traces(cart, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output traces examples" do
@@ -209,8 +208,34 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
 
     describe "#print_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:helper_method) { "print_mutations" }
-      let(:tap_action) { send(helper_method, student, colorize: false) }
+      let(:tap_action) { print_mutations(student, colorize: false) }
+
+      it_behaves_like "output mutations examples"
+    end
+  end
+
+  describe "print_instance_* helpers" do
+    def produce_expected_output(expected_output)
+      output(expected_output).to_stdout
+    end
+
+    describe "#print_instance_calls" do
+      let(:tap_action) { print_instance_calls(CartOperationService, colorize: false) }
+
+      include_context "order creation"
+      it_behaves_like "output calls examples"
+    end
+
+    describe "#print_instance_traces" do
+      let(:tap_action) { print_instance_traces(Cart, colorize: false) }
+
+      include_context "order creation"
+      it_behaves_like "output traces examples"
+    end
+
+    describe "#print_instance_mutations" do
+      let(:student) { Student.new("Stan", 26) }
+      let(:tap_action) { print_instance_mutations(Student, colorize: false) }
 
       it_behaves_like "output mutations examples"
     end
@@ -222,8 +247,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#write_calls" do
-      let(:helper_method) { "write_calls" }
-      let(:tap_action) { send(helper_method, service, colorize: false) }
+      let(:tap_action) { write_calls(service, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output calls examples" do
@@ -238,8 +262,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#write_traces" do
-      let(:helper_method) { "write_traces" }
-      let(:tap_action) { send(helper_method, cart, colorize: false) }
+      let(:tap_action) { write_traces(cart, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output traces examples" do
@@ -255,8 +278,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
 
     describe "#write_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:helper_method) { "write_mutations" }
-      let(:tap_action) { send(helper_method, student, colorize: false) }
+      let(:tap_action) { write_mutations(student, colorize: false) }
 
       it_behaves_like "output mutations examples"
     end
@@ -277,6 +299,35 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
       expect { student.name = "Sean" }.to produce_expected_output(log_file, expected_output)
 
       File.delete(log_file)
+    end
+  end
+
+  describe "write_instance_* helpers" do
+    let(:output_log_file) { "/tmp/tapping_device.log" }
+
+    def produce_expected_output(log_file = output_log_file, expected_output)
+      write_to_file(log_file, expected_output)
+    end
+
+    describe "#write_instance_calls" do
+      let(:tap_action) { write_instance_calls(CartOperationService, colorize: false) }
+
+      include_context "order creation"
+      it_behaves_like "output calls examples"
+    end
+
+    describe "#write_instance_traces" do
+      let(:tap_action) { write_instance_traces(Cart, colorize: false) }
+
+      include_context "order creation"
+      it_behaves_like "output traces examples"
+    end
+
+    describe "#write_instance_mutations" do
+      let(:student) { Student.new("Stan", 26) }
+      let(:tap_action) { write_instance_mutations(Student, colorize: false) }
+
+      it_behaves_like "output mutations examples"
     end
   end
 end
