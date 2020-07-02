@@ -8,196 +8,85 @@
 
 
 ## Introduction
-`TappingDevice` makes the objects tell you what they do, so you don't need to track them yourself.
+As the name states, `TappingDevice` allows you to secretly listen to different events of an object:
 
-#### Contact Tracing For Objects
+- `Method Calls` - what does the object do
+- `Traces` - how is the object used by the application
+- `State Mutations` - what happens inside the object
 
-The concept is very simple. It's basically like [contact tracing](https://en.wikipedia.org/wiki/Contact_tracing) for your Ruby objects. You can use 
+After collecting the events, `TappingDevice` will output them in a nice, readable format to either stdout or a file. 
 
-- `print_calls(object)` to see what the object does
-- `print_traces(object)` to see how the object interacts with other objects (like used as an argument)
-- `print_mutations(object)` to see what actions changed the object's state (instance variables)
+**Ultimately, its goal is to let you know all the information you need for debugging with just 1 line of code.**
 
-Still sounds vague? Let's see some examples:
+## Usages
 
-### `print_calls` - Track Method Calls
+### Track Method Calls
 
-In [Discourse](https://github.com/discourse/discourse), it uses the `Guardian` class for authorization (like policy objects). It's barely visible in controller actions, but it does many checks under the hood. Now, let's say we want to know what the `Guardian` would do when a user creates a post; here's the controller action:
-
-```ruby
-  def create
-    @manager_params = create_params
-    @manager_params[:first_post_checks] = !is_api?
-
-    manager = NewPostManager.new(current_user, @manager_params)
-
-    if is_api?
-      memoized_payload = DistributedMemoizer.memoize(signature_for(@manager_params), 120) do
-        result = manager.perform
-        MultiJson.dump(serialize_data(result, NewPostResultSerializer, root: false))
-      end
-
-      parsed_payload = JSON.parse(memoized_payload)
-      backwards_compatible_json(parsed_payload, parsed_payload['success'])
-    else
-      result = manager.perform
-      json = serialize_data(result, NewPostResultSerializer, root: false)
-      backwards_compatible_json(json, result.success?)
-    end
-  end
-```
-
-As you can see, it doesn't even exist in the controller action, which makes tracking it by reading code very hard to do.
-
-But with `TappingDevice`. You can use `print_calls` to show what method calls the object performs
-
-```ruby
-  def create
-    # you can retrieve the current guardian object by calling guardian in the controller
-    print_calls(guardian)
-    @manager_params = create_params
-   
-    # .....
-```
-
-Now, if you execute the code, like via tests:
-
-```shell
-$ rspec spec/requests/posts_controller_spec.rb:603
-```
-
-You can get all the method calls it performs with basically everything you need to know
+By tracking an object's method calls, you'll be able to observe the object's behavior very easily
 
 <img src="https://github.com/st0012/tapping_device/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
 
-Let's take a closer look at each entry. Everyone of them contains the method call's
-- method name 
-- method source class/module
+Each entry consists of 5 pieces of information:
+- method name
+- source of the method
 - call site
 - arguments
 - return value
 
 ![explanation of individual entry](https://github.com/st0012/tapping_device/blob/master/images/print_calls%20-%20single%20entry.png)
 
-These are the information you'd have to look up one by one manually (probably with many debug code writing). Now you can get all of them in just one line of code.
+#### Helpers
 
+- `print_calls(object)` - prints the result to stdout
+- `write_calls(object, log_file: "file_name")` - writes the result to a file
+	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
 
-### `print_traces` - See The Object's Traces
+#### Use Cases
+- Understand a service object/form object's behavior
+- Debug a messy controller
 
-If you're not interested in what an object does, but what it interacts with other parts of the program, e.g., used as arguments. You can use the `print_traces` helper. Let's see how `Discourse` uses the `manager` object when creating a post
+### Track Traces
 
-```ruby
-  def create
-    @manager_params = create_params
-    @manager_params[:first_post_checks] = !is_api?
-   
-    manager = NewPostManager.new(current_user, @manager_params)
-
-    print_traces(manager)
-    # .....
-```
-
-And after running the test case
-
-```shell
-$ rspec spec/requests/posts_controller_spec.rb:603
-```
-
-You will see that it performs 2 calls: `perform` and `perform_create_post`. And it's also used as `manager` argument in various of calls of the `NewPostManager` class.
+By tracking an object's traces, you'll be able to observe the object's journey in your application
 
 ![image of print_traces output](https://github.com/st0012/tapping_device/blob/master/images/print_traces.png)
 
-### `print_mutations` - Display All State Changes At Once
+#### Helpers
 
-Another thing that often bothers developers in debugging is to track an object's internal state changes. And `tapping_device` allows you to see all state changes with just one line of code. Let me keep using [Discourse](https://github.com/discourse/discourse) to demonstrate it. 
+- `print_traces(object)` - prints the result to stdout
+- `write_traces(object, log_file: "file_name")` - writes the result to a file
+	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
 
-When updating a post, it uses an object called `PostRevisor` to revise it:
+#### Use Cases
+- Debug argument related issues
+- Understand how a library uses your objects
 
-```ruby
-# app/controllers/posts_controller.rb
-class PostsController
-  def update
-    # ......
-    revisor = PostRevisor.new(post, topic)
-    revisor.revise!(current_user, changes, opts)
-    # ......
-  end
-end
-```
+### Track State Mutations
 
-In the `PostReviser#revise!`, it uses many instance variables to track different information:
-
-```ruby
-  # lib/post_revisor.rb
-  def revise!(editor, fields, opts = {})
-    @editor = editor
-    @fields = fields.with_indifferent_access
-    @opts = opts
-
-    @topic_changes = TopicChanges.new(@topic, editor)
-    
-    # ......
-
-    @revised_at = @opts[:revised_at] || Time.now
-    @last_version_at = @post.last_version_at || Time.now
-
-    @version_changed = false
-    @post_successfully_saved = true
-
-    @validate_post = true
-    # ......
-  end
-```
-
-Tracking the changes of that many instance variables can be a painful task, especially when we want to know the values before and after certain method call. This is why I created `print_mutations` to save us from this. 
-
-Like other helpers, you only need 1 line of code
-
-```ruby
-# app/controllers/posts_controller.rb
-class PostsController
-  def update
-    # ......
-    revisor = PostRevisor.new(post, topic)
-    print_mutations(revisor)
-    revisor.revise!(current_user, changes, opts)
-    # ......
-  end
-end
-```
-
-And then you'll see all the state changes:
+By tracking an object's traces, you'll be able to observe the state changes happen inside the object between each method call
 
 <img src="https://github.com/st0012/tapping_device/blob/master/images/print_mutations.png" alt="image of print_mutations output" width="50%">
 
-Now you can see what method changes which states. And more importantly, you get to see all the sate changes at once!
+#### Helpers
 
-**You can try these examples on [my fork of discourse](https://github.com/st0012/discourse/tree/demo-for-tapping-device)**
+- `print_mutations(object)` - prints the result to stdout
+- `write_mutations(object, log_file: "file_name")` - writes the result to a file
+	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
 
-### `write_*` helpers
-
-`tapping_device` also provides helpers that write the events into files:
-
-- `write_calls(object)`
-- `write_traces(object)`
-- `write_mutations(object)`
-
-The default destination is `/tmp/tapping_device.log`. You can change it with the `log_file`  option:
-
-```ruby
-write_calls(object, log_file: "/tmp/another_file")
-```
+#### Use Cases
+- Debug state related issues
+- Debug memoization issues
 
 
-### Use `with_HELPER` for chained method calls
+### Use `with_HELPER_NAME` for chained method calls
 
-One thing that really bothers me when debugging is to break method chains from time to time. Let's say I call a service object like this:
+In Ruby programs, we often chain multiple methods together like this:
 
 ```ruby
 SomeService.new(params).perform
 ```
 
-In order to debug it, I'll need to break the method chain into
+And to debug it, we'll need to break the method chain into
 
 ```ruby
 service = SomeService.new(params)
@@ -205,12 +94,20 @@ print_calls(service, options)
 service.perform
 ```
 
-That's a 3-line change! Which obviously violates the goal of `tapping_device` - making debugging easier with 1 line of code.
+This kind of code changes are usually annoying, and that's one of the problems I want to solve with `TappingDevice`.
 
 So here's another option, just insert a `with_HELPER_NAME` call in between:
 
 ```ruby
 SomeService.new(params).with_print_calls(options).perform
+```
+
+And it'll behave exactly like
+
+```ruby
+service = SomeService.new(params)
+print_calls(service, options)
+service.perform
 ```
 
 ## Installation
