@@ -77,6 +77,17 @@ By tracking an object's traces, you'll be able to observe the state changes happ
 - Debug state related issues
 - Debug memoization issues
 
+### Track All Instances Of A Class
+
+It's not always easy to directly access the objects we want to track, especially when they're managed by a library (e.g. `ActiveRecord::Relation`). In such cases, you can use these helpers to track the class's instances:
+
+- `print_instance_calls(ObjectKlass)`
+- `print_instance_traces(ObjectKlass)`
+- `print_instance_mutations(ObjectKlass)`
+- `write_instance_calls(ObjectKlass)`
+- `write_instance_traces(ObjectKlass)`
+- `write_instance_mutations(ObjectKlass)`
+
 
 ### Use `with_HELPER_NAME` for chained method calls
 
