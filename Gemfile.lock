@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.5.3)
+    tapping_device (0.5.4)
       activerecord (>= 5.2)
       activesupport
       pry
@@ -56,7 +56,7 @@ GEM
     thread_safe (0.3.6)
     tzinfo (1.2.7)
       thread_safe (~> 0.1)
-    zeitwerk (2.3.0)
+    zeitwerk (2.3.1)
 
 PLATFORMS
   ruby
