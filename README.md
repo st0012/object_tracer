@@ -228,6 +228,40 @@ The default is `false` because
 2. It's still unclear if this hack safe enough for most applications.
 
 
+#### `ignore_private`
+
+Sometimes we use many private methods to perform trivial operations, like
+
+```ruby
+class Operation
+  def extras
+    dig_attribute("extras")
+  end
+
+  private
+
+  def data
+    @data
+  end
+
+  def dig_attribute(attr)
+    data.dig("attributes", attr) 
+  end
+end
+```
+
+And we may not be interested in those method calls. If that's the case, you can use the `ignore_private` option
+
+```ruby
+operation = Operation.new(params)
+print_calls(operation, ignore_private: true) #=> only prints the `extras` call
+```
+
+#### `only_private`
+
+This option does the opposite of the `ignore_private` option does.
+
+
 ### Global Configuration
 
 If you don't want to pass options every time you use a helper, you can use global configuration to change the default values:
@@ -273,3 +307,4 @@ The gem is available as open-source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the TappingDevice project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/tapping_device/blob/master/CODE_OF_CONDUCT.md).
+

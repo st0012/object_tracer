@@ -104,6 +104,8 @@ class TappingDevice
         next if is_tapping_device_call?(tp)
         next if should_be_skipped_by_paths?(filepath)
         next unless with_condition_satisfied?(payload)
+        next if payload.is_private_call? && @options[:ignore_private]
+        next if !payload.is_private_call? && @options[:only_private]
       end
 
       yield(payload)
@@ -150,6 +152,7 @@ class TappingDevice
       line_number: line_number,
       defined_class: tp.defined_class,
       trace: get_traces(tp),
+      is_private_call?: tp.defined_class.private_method_defined?(tp.callee_id),
       tp: tp
     })
   end
@@ -206,6 +209,8 @@ class TappingDevice
     options[:event_type] ||= config[:event_type]
     options[:hijack_attr_methods] ||= config[:hijack_attr_methods]
     options[:track_as_records] ||= config[:track_as_records]
+    options[:ignore_private] ||= config[:ignore_private]
+    options[:only_private] ||= config[:only_private]
     # for debugging the gem more easily
     options[:force_recording] ||= false
 

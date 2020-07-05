@@ -88,6 +88,74 @@ RSpec.describe "tap_on!" do
     end
   end
 
+  describe "private method options" do
+    let(:c) do
+      c = Class.new(Student)
+      c.class_eval do
+        def number
+          private_number + 10
+        end
+
+        private
+
+        def private_number
+          10
+        end
+      end
+      c
+    end
+    let(:stan) do
+      c.new("Stan", 18)
+    end
+
+    context "with options[:ignore_private]" do
+      context "when true" do
+        it "ignores private method calls" do
+          device = tap_on!(stan, ignore_private: true)
+
+          stan.number
+
+          expect(device.calls.count).to eq(1)
+          expect(device.calls.first.method_name).to eq(:number)
+        end
+      end
+      context "when false (default)" do
+        it "records private method calls" do
+          device = tap_on!(stan)
+
+          stan.number
+
+          expect(device.calls.count).to eq(2)
+          expect(device.calls.first.method_name).to eq(:private_number)
+          expect(device.calls.last.method_name).to eq(:number)
+        end
+      end
+    end
+    context "with options[:only_private]" do
+      context "when true" do
+        it "ignores private method calls" do
+          device = tap_on!(stan, only_private: true)
+
+          stan.number
+
+          expect(device.calls.count).to eq(1)
+          expect(device.calls.first.method_name).to eq(:private_number)
+        end
+      end
+      context "when false (default)" do
+        it "records private method calls" do
+          device = tap_on!(stan)
+
+          stan.number
+
+          expect(device.calls.count).to eq(2)
+          expect(device.calls.first.method_name).to eq(:private_number)
+          expect(device.calls.last.method_name).to eq(:number)
+        end
+      end
+    end
+  end
+
   context "when targets are ActiveRecord::Base instances" do
     context "with track_as_records: true" do
       it "tracks ActiveRecord::Base instances with their ids" do

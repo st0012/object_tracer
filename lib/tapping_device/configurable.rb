@@ -12,6 +12,8 @@ class TappingDevice
       event_type: :return,
       hijack_attr_methods: false,
       track_as_records: false,
+      ignore_private: false,
+      only_private: false
     }.merge(TappingDevice::Output::DEFAULT_OPTIONS)
 
     included do

@@ -7,7 +7,11 @@ class TappingDevice
       alias :raw_return_value :return_value
 
       def method_name(options = {})
-        ":#{super(options)}"
+        if is_private_call?
+          ":#{super(options)} (private)"
+        else
+          ":#{super(options)}"
+        end
       end
 
       def arguments(options = {})

@@ -13,7 +13,7 @@ RSpec.describe TappingDevice::Payload do
   it "supports payload attributes as methods" do
     expect(subject.receiver).to eq(Student)
     expect(subject.arguments).to eq({ name: "Stan", age: 25 })
-    expect(subject.keys).to eq(
+    expect(subject.keys).to match_array(
       [
         :target,
         :receiver,
@@ -25,7 +25,8 @@ RSpec.describe TappingDevice::Payload do
         :line_number,
         :defined_class,
         :trace,
-        :tp
+        :tp,
+        :is_private_call?
       ]
     )
   end
