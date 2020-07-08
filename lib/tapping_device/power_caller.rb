@@ -28,9 +28,8 @@ class TappingDevice
     attr_reader :method_name, :method, :receiver, :arguments
 
     def initialize(method_binding)
-      iseq = method_binding.instance_variable_get(:@iseq)
-      @filepath = iseq.path
-      @line_number = iseq.first_lineno
+      @filepath = method_binding.eval("__FILE__")
+      @line_number = method_binding.eval("__LINE__")
       @method_name = method_binding.frame_description
       @receiver = method_binding.receiver
       @method = Object.instance_method(:method).bind(@receiver).call(method_name)
@@ -58,7 +57,7 @@ class TappingDevice
     end
 
     def to_s
-      to_payload.detail_call_info
+      to_payload.caller_entry
     end
   end
 end

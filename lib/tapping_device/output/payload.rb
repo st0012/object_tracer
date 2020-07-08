@@ -103,6 +103,13 @@ class TappingDevice
         MSG
       end
 
+      def caller_entry(options = {})
+        <<~MSG
+        #{location(options)}
+        MSG
+        location(options)
+      end
+
       def ivar_changes(options = {})
         super.map do |ivar, value_changes|
           before = generate_string_result(value_changes[:before], options[:inspect])
