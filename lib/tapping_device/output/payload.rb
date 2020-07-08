@@ -108,7 +108,10 @@ class TappingDevice
       end
 
       def caller_entry(options = {})
-        "#{location(options)}:in `#{raw_method_name(options)}'"
+        <<~MSG.chomp
+          #{location(options)}:in `#{raw_method_name(options)}'
+            <= #{arguments(options)}
+        MSG
       end
 
       def ivar_changes(options = {})

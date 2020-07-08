@@ -9,8 +9,16 @@ RSpec.describe TappingDevice do
   class CartOperationServiceForCaller < CartOperationService
     def create_order(cart)
       super
-      puts(caller)
-      puts("============")
+      a_method_with_block do |one|
+        inspect_method
+      end
+    end
+
+    def a_method_with_block
+      yield
+    end
+
+    def inspect_method
       puts(power_caller)
     end
   end
