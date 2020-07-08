@@ -158,10 +158,7 @@ class TappingDevice
   end
 
   def get_method_object_from(target, method_name)
-    target.method(method_name)
-  rescue ArgumentError
-    method_method = Object.method(:method).unbind
-    method_method.bind(target).call(method_name)
+    Object.instance_method(:method).bind(target).call(method_name)
   rescue NameError
     # if any part of the program uses Refinement to extend its methods
     # we might still get NoMethodError when trying to get that method outside the scope
