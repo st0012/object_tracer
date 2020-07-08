@@ -1,3 +1,5 @@
+require "tapping_device/power_caller"
+
 class TappingDevice
   module Trackable
     def tap_init!(object, options = {}, &block)
@@ -18,6 +20,10 @@ class TappingDevice
 
     def tap_mutation!(object, options = {}, &block)
       TappingDevice::Trackers::MutationTracker.new(options, &block).track(object)
+    end
+
+    def power_caller
+      puts(PowerCallerStack.new.to_s)
     end
 
     [:calls, :traces, :mutations].each do |subject|
