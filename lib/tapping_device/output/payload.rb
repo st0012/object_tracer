@@ -6,6 +6,10 @@ class TappingDevice
       alias :raw_arguments :arguments
       alias :raw_return_value :return_value
 
+      def raw_method_name(options = {})
+        method(:method_name).super_method.call(options)
+      end
+
       def method_name(options = {})
         if is_private_call?
           ":#{super(options)} (private)"
@@ -104,10 +108,7 @@ class TappingDevice
       end
 
       def caller_entry(options = {})
-        <<~MSG
-        #{location(options)}
-        MSG
-        location(options)
+        "#{location(options)}:in `#{raw_method_name(options)}'"
       end
 
       def ivar_changes(options = {})
