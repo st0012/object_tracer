@@ -25,7 +25,7 @@ class TappingDevice
         method_name = tp.callee_id
 
         if target.ancestors.include?(ActiveRecord::Base)
-          method_name == :new && receiver.ancestors.include?(target)
+          method_name == :new && receiver.is_a?(Class) && receiver.ancestors.include?(target)
         else
           method_name == :initialize && receiver.is_a?(target)
         end
