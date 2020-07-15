@@ -9,6 +9,12 @@ class TappingDevice
         @options[:event_type] = [event_type, "c_#{event_type}"]
       end
 
+      def track(object)
+        super
+        @options[:is_active_record_model] = target.ancestors.include?(ActiveRecord::Base)
+        self
+      end
+
       def build_payload(tp:, filepath:, line_number:)
         payload = super
         payload[:return_value] = payload[:receiver]
@@ -24,7 +30,7 @@ class TappingDevice
         receiver = tp.self
         method_name = tp.callee_id
 
-        if target.ancestors.include?(ActiveRecord::Base)
+        if @options[:is_active_record_model]
           method_name == :new && receiver.is_a?(Class) && receiver.ancestors.include?(target)
         else
           method_name == :initialize && receiver.is_a?(target)
