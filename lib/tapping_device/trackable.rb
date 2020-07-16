@@ -36,7 +36,7 @@ class TappingDevice
         define_method "#{output_action}_instance_#{subject}" do |target_klass, options = {}|
           collection_proxy = AsyncCollectionProxy.new
 
-          tap_init!(target_klass, options) do |payload|
+          tap_init!(target_klass, options.merge(force_recording: true)) do |payload|
             collection_proxy << send(helper_method_name, payload.return_value, options)
           end
 
