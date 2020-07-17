@@ -17,6 +17,9 @@ class TappingDevice
 
       def build_payload(tp:, filepath:, line_number:)
         payload = super
+
+        return payload if @options[:is_active_record_model]
+
         payload[:return_value] = payload[:receiver]
         payload[:receiver] = target
         payload
