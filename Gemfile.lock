@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.5.5)
+    tapping_device (0.5.6)
       activerecord (>= 5.2)
       activesupport
       pry
