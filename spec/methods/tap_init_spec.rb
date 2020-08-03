@@ -49,6 +49,7 @@ RSpec.describe "tap_init!" do
 
    post = Post.new
 
+   expect(device.calls.count).to eq(1)
    expect(device.calls.first.return_value).to eq(post)
    expect(device.calls.first.receiver).to eq(Post)
   end
