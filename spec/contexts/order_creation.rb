@@ -9,7 +9,7 @@ RSpec.shared_context "order creation" do
       Promotion.new
     end
   end
-  class CartOperationService
+  class OrderCreationService
     def perform(cart)
       validate_cart(cart)
       apply_discount(cart)

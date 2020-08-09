@@ -3,26 +3,26 @@ require "contexts/order_creation"
 
 RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
-  let(:service) { CartOperationService.new }
+  let(:service) { OrderCreationService.new }
 
   shared_examples "output calls examples" do
     let(:expected_output) do
-/:validate_cart # CartOperationService
+/:validate_cart # OrderCreationService
     from: .*:.*
     <= {cart: #<Cart:.*>}
     => #<Cart:.*>
 
-:apply_discount # CartOperationService
+:apply_discount # OrderCreationService
     from: .*:.*
     <= {cart: #<Cart:.*>}
     => #<Cart:.*>
 
-:create_order # CartOperationService
+:create_order # OrderCreationService
     from: .*:.*
     <= {cart: #<Cart:.*>}
     => #<Order:.*>
 
-:perform # CartOperationService
+:perform # OrderCreationService
     from: .*:.*
     <= {cart: #<Cart:.*>}
     => #<Order:.*>/
@@ -36,7 +36,7 @@ RSpec.describe TappingDevice::Trackable do
 
     context "with '.with' chained" do
       let(:expected_output) do
-/:create_order # CartOperationService
+/:create_order # OrderCreationService
     from: .*:.*
     <= {cart: #<Cart:.*>}
     => #<Order:.*>/
@@ -53,12 +53,12 @@ RSpec.describe TappingDevice::Trackable do
 
   shared_examples "output traces examples" do
     let(:expected_output) do
-/Passed as :cart in 'CartOperationService#:perform' at .*:\d+
-Passed as :cart in 'CartOperationService#:validate_cart' at .*:\d+
+/Passed as :cart in 'OrderCreationService#:perform' at .*:\d+
+Passed as :cart in 'OrderCreationService#:validate_cart' at .*:\d+
 Called :total from: .*:\d+
-Passed as :cart in 'CartOperationService#:apply_discount' at .*:\d+
+Passed as :cart in 'OrderCreationService#:apply_discount' at .*:\d+
 Called :promotion from: .*:\d+
-Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
+Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     it "prints out what the target sees" do
@@ -69,10 +69,10 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
 
     context "when chained with .with" do
       let(:expected_output) do
-/Passed as :cart in 'CartOperationService#:perform' at .*:\d+
-Passed as :cart in 'CartOperationService#:validate_cart' at .*:\d+
-Passed as :cart in 'CartOperationService#:apply_discount' at .*:\d+
-Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
+/Passed as :cart in 'OrderCreationService#:perform' at .*:\d+
+Passed as :cart in 'OrderCreationService#:validate_cart' at .*:\d+
+Passed as :cart in 'OrderCreationService#:apply_discount' at .*:\d+
+Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
       end
 
       it "filters output according to the condition" do
@@ -220,7 +220,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#print_instance_calls" do
-      let(:tap_action) { print_instance_calls(CartOperationService, colorize: false) }
+      let(:tap_action) { print_instance_calls(OrderCreationService, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output calls examples"
@@ -310,7 +310,7 @@ Passed as :cart in 'CartOperationService#:create_order' at .*:\d+/
     end
 
     describe "#write_instance_calls" do
-      let(:tap_action) { write_instance_calls(CartOperationService, colorize: false) }
+      let(:tap_action) { write_instance_calls(OrderCreationService, colorize: false) }
 
       include_context "order creation"
       it_behaves_like "output calls examples"
