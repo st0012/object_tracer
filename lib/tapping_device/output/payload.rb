@@ -1,8 +1,13 @@
+require "pastel"
+
 class TappingDevice
   module Output
     class Payload < Payload
       UNDEFINED = "[undefined]"
       PRIVATE_MARK = " (private)"
+
+      PASTEL = Pastel.new
+      PASTEL.alias_color(:orange, :bright_red, :bright_yellow)
 
       alias :raw_arguments :arguments
       alias :raw_return_value :return_value
@@ -24,29 +29,13 @@ class TappingDevice
         generate_string_result(raw_return_value, options[:inspect])
       end
 
-      COLOR_CODES = {
-        green: 10,
-        yellow: 11,
-        blue: 12,
-        megenta: 13,
-        cyan: 14,
-        orange: 214
-      }
-
-      COLORS = COLOR_CODES.each_with_object({}) do |(name, code), hash|
-        hash[name] = "\u001b[38;5;#{code}m"
-      end.merge(
-        reset: "\u001b[0m",
-        nocolor: ""
-      )
-
       PAYLOAD_ATTRIBUTES = {
-        method_name: {symbol: "", color: COLORS[:blue]},
-        location: {symbol: "from:", color: COLORS[:green]},
-        return_value: {symbol: "=>", color: COLORS[:megenta]},
-        arguments: {symbol: "<=", color: COLORS[:orange]},
-        ivar_changes: {symbol: "changes:\n", color: COLORS[:blue]},
-        defined_class: {symbol: "#", color: COLORS[:yellow]}
+        method_name: {symbol: "", color: :bright_blue},
+        location: {symbol: "from:", color: :green},
+        return_value: {symbol: "=>", color: :magenta},
+        arguments: {symbol: "<=", color: :orange},
+        ivar_changes: {symbol: "changes:\n", color: :blue},
+        defined_class: {symbol: "#", color: :yellow}
       }
 
       PAYLOAD_ATTRIBUTES.each do |attribute, attribute_options|
@@ -59,7 +48,7 @@ class TappingDevice
           call_result = send("original_#{attribute}", options)
 
           if options[:colorize]
-            "#{color}#{call_result}#{COLORS[:reset]}"
+            PASTEL.send(color, call_result)
           else
             call_result
           end
@@ -89,7 +78,7 @@ class TappingDevice
         return unless arg_name
 
         arg_name = ":#{arg_name}"
-        arg_name = value_with_color(arg_name, :orange) if options[:colorize]
+        arg_name = PASTEL.orange(arg_name) if options[:colorize]
         msg = "Passed as #{arg_name} in '#{defined_class(options)}##{method_name(options)}' at #{location(options)}\n"
         msg += "  > #{method_head}\n" if with_method_head
         msg
@@ -111,12 +100,12 @@ class TappingDevice
           after = generate_string_result(value_changes[:after], options[:inspect])
 
           if options[:colorize]
-            ivar = "#{COLORS[:orange]}#{ivar}#{COLORS[:reset]}"
-            before = "#{COLORS[:blue]}#{before.to_s}#{COLORS[:reset]}"
-            after = "#{COLORS[:blue]}#{after.to_s}#{COLORS[:reset]}"
+            ivar = PASTEL.orange(ivar)
+            before = PASTEL.bright_blue(before.to_s)
+            after = PASTEL.bright_blue(after.to_s)
           end
 
-          "      #{ivar}: #{before.to_s} => #{after.to_s}"
+          "      #{ivar}: #{before} => #{after}"
         end.join("\n")
       end
 
@@ -131,10 +120,6 @@ class TappingDevice
       end
 
       private
-
-      def value_with_color(value, color)
-        "#{COLORS[color]}#{value}#{COLORS[:reset]}"
-      end
 
       def generate_string_result(obj, inspect)
         case obj
