@@ -67,12 +67,12 @@ class TappingDevice
 
         additional_keys = @latest_instance_variables.keys - @instance_variables_snapshot.keys
         additional_keys.each do |key|
-          changes[key] = {before: Output::Payload::UNDEFINED, after: @latest_instance_variables[key]}
+          changes[key] = {before: Output::Payload::UNDEFINED_MARK, after: @latest_instance_variables[key]}
         end
 
         removed_keys = @instance_variables_snapshot.keys - @latest_instance_variables.keys
         removed_keys.each do |key|
-          changes[key] = {before: @instance_variables_snapshot[key], after: Output::Payload::UNDEFINED}
+          changes[key] = {before: @instance_variables_snapshot[key], after: Output::Payload::UNDEFINED_MARK}
         end
 
         remained_keys = @latest_instance_variables.keys - additional_keys
