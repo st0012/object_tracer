@@ -1,19 +1,27 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::Output::Payload do
+RSpec.describe TappingDevice::Output::PayloadWrapper do
   include TappingDevice::Trackable
 
   let(:stan) { Student.new("Stan", 25) }
   let(:options) { {colorize: false} }
   subject do
-    TappingDevice::Output::Payload.init({
+    payload = TappingDevice::Payload.new(
       method_name: :foo,
       defined_class: Student,
       arguments: [stan],
       return_value: {arg: stan},
       filepath: "location",
-      line_number: 5
-    })
+      line_number: 5,
+      target: stan,
+      receiver: stan,
+      method_object: nil,
+      trace: [],
+      tag: nil,
+      tp: nil,
+      is_private_call: false
+    )
+    described_class.new(payload)
   end
 
   describe "#detail_call_info" do
@@ -66,14 +74,14 @@ RSpec.describe TappingDevice::Output::Payload do
       name = "Stan"
       device = tap_passed!(name)
       Student.new(name, 25)
-      described_class.init(device.calls.first)
+      described_class.new(device.calls.first)
     end
 
     it "returns nil if the payload is not from `tap_passed!`" do
       new_device = tap_init!(Student)
       Student.new("Stan", 25)
 
-      subject = described_class.init(new_device.calls.first)
+      subject = described_class.new(new_device.calls.first)
       expect(subject.passed_at).to eq(nil)
     end
 

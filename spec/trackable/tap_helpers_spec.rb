@@ -77,7 +77,7 @@ RSpec.describe TappingDevice::Trackable do
 
       calls = []
       tap_on!(stan) do |payload|
-        calls << [payload[:receiver].object_id, payload[:method_name], payload[:return_value]]
+        calls << [payload.receiver.object_id, payload.method_name, payload.return_value]
       end
 
       stan.name
@@ -115,7 +115,7 @@ RSpec.describe TappingDevice::Trackable do
 
       names = []
       tap_on!(stan) do |payload|
-        names << payload[:method_name]
+        names << payload.method_name
       end
 
       stan.alias_name
@@ -130,7 +130,7 @@ RSpec.describe TappingDevice::Trackable do
         arguments = []
 
         tap_on!(stan) do |payload|
-          arguments = payload[:arguments]
+          arguments = payload.arguments
         end
 
         stan.age = (25)
@@ -144,8 +144,8 @@ RSpec.describe TappingDevice::Trackable do
         line_number = 0
 
         tap_on!(stan) do |payload|
-          filepath = payload[:filepath]
-          line_number = payload[:line_number]
+          filepath = payload.filepath
+          line_number = payload.line_number
         end
 
         line_mark = __LINE__
@@ -195,7 +195,7 @@ RSpec.describe TappingDevice::Trackable do
 
     before do
       tap_init!(Post) do |payload|
-        locations << {path: payload[:filepath], line_number: payload[:line_number]}
+        locations << {path: payload.filepath, line_number: payload.line_number}
       end
     end
 
@@ -214,7 +214,7 @@ RSpec.describe TappingDevice::Trackable do
 
     it "tracks every association calls" do
       tap_assoc!(post) do |payload|
-        locations << {path: payload[:filepath], line_number: payload[:line_number]}
+        locations << {path: payload.filepath, line_number: payload.line_number}
       end
 
       post.user; line_1 = __LINE__

@@ -40,8 +40,8 @@ RSpec.configure do |config|
     queries = []
 
     ActiveSupport::Notifications.subscribe('sql.active_record') do |_1, _2, _3, _4, payload|
-      if !["SCHEMA", "TRANSACTION"].include? payload[:name]
-        queries << payload[:sql]
+      if !["SCHEMA", "TRANSACTION"].include? payload.name
+        queries << payload.sql
       end
     end
 

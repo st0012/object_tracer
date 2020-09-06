@@ -1,22 +1,32 @@
 class TappingDevice
-  class Payload < Hash
+  class Payload
     ATTRS = [
       :target, :receiver, :method_name, :method_object, :arguments, :return_value, :filepath, :line_number,
-      :defined_class, :trace, :tag, :tp, :ivar_changes, :is_private_call?
+      :defined_class, :trace, :tag, :tp, :ivar_changes, :is_private_call
     ]
 
-    ATTRS.each do |attr|
-      define_method attr do |options = {}|
-        self[attr]
-      end
-    end
+    attr_accessor(*ATTRS)
 
-    def self.init(hash)
-      h = new
-      hash.each do |k, v|
-        h[k] = v
-      end
-      h
+    alias :is_private_call? :is_private_call
+
+    def initialize(
+      target:, receiver:, method_name:, method_object:, arguments:, return_value:, filepath:, line_number:,
+      defined_class:, trace:, tag:, tp:, is_private_call:
+    )
+      @target = target
+      @receiver = receiver
+      @method_name = method_name
+      @method_object = method_object
+      @arguments = arguments
+      @return_value = return_value
+      @filepath = filepath
+      @line_number = line_number
+      @defined_class = defined_class
+      @trace = trace
+      @tag = tag
+      @tp = tp
+      @ivar_changes = {}
+      @is_private_call = is_private_call
     end
 
     def method_head

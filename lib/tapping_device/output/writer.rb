@@ -13,7 +13,7 @@ class TappingDevice
       private
 
       def generate_output(payload)
-        @output_block.call(Output::Payload.init(payload), @options)
+        @output_block.call(PayloadWrapper.new(payload), @options)
       end
     end
   end

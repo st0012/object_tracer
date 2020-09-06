@@ -20,8 +20,8 @@ class TappingDevice
 
         return payload if @is_active_record_model
 
-        payload[:return_value] = payload[:receiver]
-        payload[:receiver] = target
+        payload.return_value = payload.receiver
+        payload.receiver = target
         payload
       end
 

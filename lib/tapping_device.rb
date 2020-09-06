@@ -141,7 +141,7 @@ class TappingDevice
   end
 
   def build_payload(tp:, filepath:, line_number:)
-    Payload.init({
+    Payload.new(
       target: @target,
       receiver: tp.self,
       method_name: tp.callee_id,
@@ -152,10 +152,10 @@ class TappingDevice
       line_number: line_number,
       defined_class: tp.defined_class,
       trace: get_traces(tp),
-      is_private_call?: tp.defined_class.private_method_defined?(tp.callee_id),
+      is_private_call: tp.defined_class.private_method_defined?(tp.callee_id),
       tag: options[:tag],
       tp: tp
-    })
+    )
   end
 
   def get_method_object_from(target, method_name)

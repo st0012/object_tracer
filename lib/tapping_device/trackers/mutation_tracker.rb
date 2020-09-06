@@ -47,7 +47,7 @@ class TappingDevice
         payload = super
 
         if change_capturing_event?(tp)
-          payload[:ivar_changes] = capture_ivar_changes
+          payload.ivar_changes = capture_ivar_changes
         end
 
         payload
@@ -55,15 +55,14 @@ class TappingDevice
 
       def capture_ivar_changes
         changes = {}
-
         additional_keys = @latest_instance_variables.keys - @instance_variables_snapshot.keys
         additional_keys.each do |key|
-          changes[key] = {before: Output::Payload::UNDEFINED, after: @latest_instance_variables[key]}
+          changes[key] = {before: Output::PayloadWrapper::UNDEFINED, after: @latest_instance_variables[key]}
         end
 
         removed_keys = @instance_variables_snapshot.keys - @latest_instance_variables.keys
         removed_keys.each do |key|
-          changes[key] = {before: @instance_variables_snapshot[key], after: Output::Payload::UNDEFINED}
+          changes[key] = {before: @instance_variables_snapshot[key], after: Output::PayloadWrapper::UNDEFINED}
         end
 
         remained_keys = @latest_instance_variables.keys - additional_keys
