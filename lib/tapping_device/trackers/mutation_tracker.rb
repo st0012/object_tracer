@@ -44,7 +44,7 @@ class TappingDevice
         end
       end
 
-      def build_payload(tp:, filepath:, line_number:)
+      def build_payload(tp:, call_site:)
         payload = super
 
         if change_capturing_event?(tp)

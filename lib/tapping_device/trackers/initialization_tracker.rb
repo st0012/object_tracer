@@ -16,7 +16,7 @@ class TappingDevice
         self
       end
 
-      def build_payload(tp:, filepath:, line_number:)
+      def build_payload(tp:, call_site:)
         payload = super
 
         return payload if @is_active_record_model

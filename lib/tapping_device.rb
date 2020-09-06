@@ -1,9 +1,10 @@
 # typed: true
+require 'sorbet-runtime'
 require "active_record"
 require "active_support/core_ext/module/introspection"
 require "pry" # for using Method#source
-require 'sorbet-runtime'
 
+require "tapping_device/types/call_site"
 require "tapping_device/version"
 require "tapping_device/manageable"
 require "tapping_device/payload"
@@ -100,12 +101,12 @@ class TappingDevice
     TracePoint.new(*event_type) do |tp|
       next unless filter_condition_satisfied?(tp)
 
-      filepath, line_number = get_call_location(tp)
-      payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
+      call_site = get_call_location(tp)
+      payload = build_payload(tp: tp, call_site: call_site)
 
       unless @options[:force_recording]
         next if is_tapping_device_call?(tp)
-        next if should_be_skipped_by_paths?(filepath)
+        next if should_be_skipped_by_paths?(call_site.filepath)
         next unless with_condition_satisfied?(payload)
         next if payload.is_private_call? && @options[:ignore_private]
         next if !payload.is_private_call? && @options[:only_private]
@@ -122,6 +123,7 @@ class TappingDevice
   end
 
   # this needs to be placed upfront so we can exclude noise before doing more work
+  sig {params(filepath: String).returns(T::Boolean)}
   def should_be_skipped_by_paths?(filepath)
     options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
@@ -145,8 +147,8 @@ class TappingDevice
     @with_condition.blank? || @with_condition.call(payload)
   end
 
-  sig {params(tp: TracePoint, filepath: T.nilable(String), line_number: T.nilable(String)).returns(Payload)}
-  def build_payload(tp:, filepath:, line_number:)
+  sig {params(tp: TracePoint, call_site: Types::CallSite).returns(Payload)}
+  def build_payload(tp:, call_site:)
     Payload.init({
       target: @target,
       receiver: tp.self,
@@ -154,8 +156,8 @@ class TappingDevice
       method_object: get_method_object_from(tp.self, tp.callee_id),
       arguments: collect_arguments(tp),
       return_value: (tp.return_value rescue nil),
-      filepath: filepath,
-      line_number: line_number,
+      filepath: call_site.filepath,
+      line_number: call_site.line_number,
       defined_class: tp.defined_class,
       trace: get_traces(tp),
       is_private_call?: tp.defined_class.private_method_defined?(tp.callee_id),
@@ -173,11 +175,12 @@ class TappingDevice
     nil
   end
 
-  sig {params(tp: TracePoint, padding: Integer).returns(T::Array[String])}
+  sig {params(tp: TracePoint, padding: Integer).returns(Types::CallSite)}
   def get_call_location(tp, padding: 0)
     traces = caller(get_trace_index(tp) + padding) || []
     target_trace = traces.first || ""
-    target_trace.split(":")[0..1]
+    filepath, line_number = target_trace.split(":")
+    Types::CallSite.new(filepath: filepath || "", line_number: line_number || "")
   end
 
   sig {params(tp: TracePoint).returns(Integer)}
