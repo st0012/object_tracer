@@ -127,6 +127,7 @@ class TappingDevice
       (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
   end
 
+  sig {params(tp: TracePoint).returns(T::Boolean)}
   def is_tapping_device_call?(tp)
     if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
       return true
@@ -139,6 +140,7 @@ class TappingDevice
     end
   end
 
+  sig {params(payload: Payload).returns(T::Boolean)}
   def with_condition_satisfied?(payload)
     @with_condition.blank? || @with_condition.call(payload)
   end
@@ -187,10 +189,11 @@ class TappingDevice
     end
   end
 
+  sig {params(tp: TracePoint).returns(T::Array[String])}
   def get_traces(tp)
     if with_trace_to = options[:with_trace_to]
       trace_index = get_trace_index(tp)
-      caller[trace_index..(trace_index + with_trace_to)]
+      Array(caller[trace_index..(trace_index + with_trace_to)])
     else
       []
     end
@@ -228,19 +231,25 @@ class TappingDevice
     options
   end
 
+  sig {params(tp: TracePoint).returns(T::Boolean)}
   def is_from_target?(tp)
     comparsion = tp.self
     is_the_same_record?(comparsion) || target.__id__ == comparsion.__id__
   end
 
+  sig {params(comparsion: T.untyped).returns(T::Boolean)}
   def is_the_same_record?(comparsion)
     return false unless options[:track_as_records]
+
     if target.is_a?(ActiveRecord::Base) && comparsion.is_a?(target.class)
       primary_key = target.class.primary_key
       target.send(primary_key) && target.send(primary_key) == comparsion.send(primary_key)
+    else
+      false
     end
   end
 
+  sig {params(payload: Payload).void}
   def record_call!(payload)
     return if @disabled
 
@@ -253,10 +262,12 @@ class TappingDevice
     end
   end
 
+  sig {params(payload: Payload).void}
   def write_output!(payload)
     @output_writer.write!(payload)
   end
 
+  sig {params(payload: Payload).void}
   def stop_if_condition_fulfilled!(payload)
     if @stop_when&.call(payload)
       stop!
@@ -264,6 +275,7 @@ class TappingDevice
     end
   end
 
+  sig {returns(T::Hash[Symbol, T.untyped])}
   def config
     TappingDevice.config
   end
