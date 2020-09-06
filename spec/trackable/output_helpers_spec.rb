@@ -35,6 +35,22 @@ RSpec.describe TappingDevice::Trackable do
       expect { service.perform(cart) }.to produce_expected_output(expected_output)
     end
 
+    it "prints out target's calls in detail" do
+      tap_action
+
+      expect { service.perform(cart) }.to produce_expected_output(expected_output)
+    end
+
+    context "visual test" do
+      let(:options) { {} }
+
+      it "prints out target's calls in colorized detail" do
+        tap_action
+
+        service.perform(cart)
+      end
+    end
+
     context "with tag: option" do
       let(:options) { { colorize: false, tag: "service" } }
       let(:expected_output) do
@@ -114,6 +130,16 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
         end
 
         expect { service.perform(cart) }.to produce_expected_output(expected_output)
+      end
+    end
+
+    context "visual test" do
+      let(:options) { {} }
+
+      it "prints out target's calls in colorized detail" do
+        tap_action
+
+        service.perform(cart)
       end
     end
   end
@@ -200,6 +226,18 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
       student.id = 1
 
       expect { student.reset_data! }.to produce_expected_output(expected_output)
+    end
+
+    context "visual test" do
+      let(:options) { {} }
+
+      it "prints out target's calls in colorized detail" do
+        tap_action
+
+        student.id = 1
+        student.id = 1
+        student.id = nil
+      end
     end
   end
 
