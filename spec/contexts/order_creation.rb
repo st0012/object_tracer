@@ -1,3 +1,4 @@
+# typed: true
 RSpec.shared_context "order creation" do
   class Promotion; end
   class Order;end

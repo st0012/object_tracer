@@ -1,3 +1,4 @@
+# typed: false
 RSpec.shared_examples "optionable" do
   context "with options - with_trace_to: 5" do
     it "stores trace until given index" do

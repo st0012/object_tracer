@@ -1,3 +1,4 @@
+# typed: false
 require "spec_helper"
 require "shared_examples/stoppable_examples"
 require "shared_examples/optionable_examples"

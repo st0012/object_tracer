@@ -1,18 +1,23 @@
+# typed: true
 class TappingDevice
   module Trackers
     class MutationTracker < TappingDevice
+      extend T::Sig
+
       def initialize(options, &block)
         options[:hijack_attr_methods] = true
         super
         @snapshot_stack = []
       end
 
+      sig{params(object: T.untyped).returns(TappingDevice)}
       def track(object)
         super
         insert_snapshot_taking_trace_point
         self
       end
 
+      sig{void}
       def stop!
         super
         @ivar_snapshot_trace_point.disable
@@ -22,14 +27,16 @@ class TappingDevice
 
       # we need to snapshot instance variables at the beginning of every method call
       # so we can get a correct state for the later comparison
+      sig{void}
       def insert_snapshot_taking_trace_point
-        @ivar_snapshot_trace_point = build_minimum_trace_point(event_type: :call) do
+        @ivar_snapshot_trace_point = build_minimum_trace_point([:call]) do
           snapshot_instance_variables
         end
 
         @ivar_snapshot_trace_point.enable unless TappingDevice.suspend_new
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def filter_condition_satisfied?(tp)
         return false unless is_from_target?(tp)
 
@@ -43,7 +50,8 @@ class TappingDevice
         end
       end
 
-      def build_payload(tp:, filepath:, line_number:)
+      sig {params(tp: TracePoint, call_site: Types::CallSite).returns(Payload)}
+      def build_payload(tp:, call_site:)
         payload = super
 
         if change_capturing_event?(tp)
@@ -53,17 +61,18 @@ class TappingDevice
         payload
       end
 
+      sig{returns(Hash)}
       def capture_ivar_changes
         changes = {}
 
         additional_keys = @latest_instance_variables.keys - @instance_variables_snapshot.keys
         additional_keys.each do |key|
-          changes[key] = {before: Output::Payload::UNDEFINED, after: @latest_instance_variables[key]}
+          changes[key] = {before: Output::Payload::UNDEFINED_MARK, after: @latest_instance_variables[key]}
         end
 
         removed_keys = @instance_variables_snapshot.keys - @latest_instance_variables.keys
         removed_keys.each do |key|
-          changes[key] = {before: @instance_variables_snapshot[key], after: Output::Payload::UNDEFINED}
+          changes[key] = {before: @instance_variables_snapshot[key], after: Output::Payload::UNDEFINED_MARK}
         end
 
         remained_keys = @latest_instance_variables.keys - additional_keys
@@ -85,10 +94,12 @@ class TappingDevice
         end
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def snapshot_capturing_event?(tp)
         tp.event == :call
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def change_capturing_event?(tp)
         !snapshot_capturing_event?(tp)
       end

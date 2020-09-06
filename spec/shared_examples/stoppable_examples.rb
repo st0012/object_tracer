@@ -1,3 +1,4 @@
+# typed: false
 RSpec.shared_examples "stoppable" do
   it "stopps tapping when stop! is called" do
     device = send(subject, target)

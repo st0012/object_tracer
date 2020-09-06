@@ -1,3 +1,4 @@
+# typed: false
 require "tapping_device"
 require "tapping_device/trackable"
 require "bundler/setup"

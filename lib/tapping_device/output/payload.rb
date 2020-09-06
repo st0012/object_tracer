@@ -1,9 +1,10 @@
+# typed: true
 require "pastel"
 
 class TappingDevice
   module Output
-    class Payload < Payload
-      UNDEFINED = "[undefined]"
+    class Payload < TappingDevice::Payload
+      UNDEFINED_MARK = "[undefined]"
       PRIVATE_MARK = " (private)"
 
       PASTEL = Pastel.new
@@ -127,8 +128,8 @@ class TappingDevice
           array_to_string(obj, inspect)
         when Hash
           hash_to_string(obj, inspect)
-        when UNDEFINED
-          UNDEFINED
+        when UNDEFINED_MARK
+          UNDEFINED_MARK
         when String
           "\"#{obj}\""
         when nil
