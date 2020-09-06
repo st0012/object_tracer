@@ -1,3 +1,4 @@
+# typed: true
 require 'active_record'
 
 # This connection will do for database-independent bug reports.

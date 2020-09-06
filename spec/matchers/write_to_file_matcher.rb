@@ -1,3 +1,4 @@
+# typed: false
 require 'rspec/expectations'
 
 RSpec::Matchers.define :write_to_file do |filepath, expected_content|

@@ -1,3 +1,4 @@
+# typed: false
 require "tapping_device/output/payload"
 require "tapping_device/output/writer"
 require "tapping_device/output/stdout_writer"

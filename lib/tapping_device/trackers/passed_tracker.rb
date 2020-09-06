@@ -1,3 +1,4 @@
+# typed: true
 class TappingDevice
   module Trackers
     # PassedTracker tracks calls that use the target object as an argument

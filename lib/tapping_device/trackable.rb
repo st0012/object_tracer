@@ -1,3 +1,4 @@
+# typed: true
 class TappingDevice
   module Trackable
     def tap_init!(object, options = {}, &block)

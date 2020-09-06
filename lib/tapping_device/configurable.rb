@@ -1,3 +1,4 @@
+# typed: false
 require "active_support/configurable"
 require "active_support/concern"
 

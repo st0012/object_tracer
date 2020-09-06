@@ -1,3 +1,4 @@
+# typed: true
 class TappingDevice
   module Output
     class StdoutWriter < Writer

@@ -1,3 +1,4 @@
+# typed: false
 class TappingDevice
   module Output
     class Writer

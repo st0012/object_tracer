@@ -1,3 +1,4 @@
+# typed: true
 class TappingDevice
   class MethodHijacker
     attr_reader :target
