@@ -1,7 +1,8 @@
-# typed: false
+# typed: true
 require "active_record"
 require "active_support/core_ext/module/introspection"
 require "pry" # for using Method#source
+require 'sorbet-runtime'
 
 require "tapping_device/version"
 require "tapping_device/manageable"
@@ -18,9 +19,10 @@ require "tapping_device/trackers/method_call_tracker"
 require "tapping_device/trackers/mutation_tracker"
 
 class TappingDevice
+  extend T::Sig
 
-  CALLER_START_POINT = 3
-  C_CALLER_START_POINT = 2
+  CALLER_START_POINT = 6
+  C_CALLER_START_POINT = 5
 
   attr_reader :options, :calls, :trace_point, :target
 
@@ -141,6 +143,7 @@ class TappingDevice
     @with_condition.blank? || @with_condition.call(payload)
   end
 
+  sig {params(tp: TracePoint, filepath: T.nilable(String), line_number: T.nilable(String)).returns(Payload)}
   def build_payload(tp:, filepath:, line_number:)
     Payload.init({
       target: @target,
@@ -159,6 +162,7 @@ class TappingDevice
     })
   end
 
+  sig {params(target: T.untyped, method_name: Symbol).returns(T.nilable(Method))}
   def get_method_object_from(target, method_name)
     Object.instance_method(:method).bind(target).call(method_name)
   rescue NameError
@@ -167,10 +171,14 @@ class TappingDevice
     nil
   end
 
+  sig {params(tp: TracePoint, padding: Integer).returns(T::Array[String])}
   def get_call_location(tp, padding: 0)
-    caller(get_trace_index(tp) + padding).first.split(":")[0..1]
+    traces = caller(get_trace_index(tp) + padding) || []
+    target_trace = traces.first || ""
+    target_trace.split(":")[0..1]
   end
 
+  sig {params(tp: TracePoint).returns(Integer)}
   def get_trace_index(tp)
     if tp.event == :c_call
       C_CALLER_START_POINT
@@ -215,6 +223,8 @@ class TappingDevice
 
     options[:descendants] ||= []
     options[:root_device] ||= self
+
+    options[:exclude_by_paths] << /sorbet-runtime/
     options
   end
 
