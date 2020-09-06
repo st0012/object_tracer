@@ -2,16 +2,18 @@ class TappingDevice
   module Output
     class Payload < Payload
       UNDEFINED = "[undefined]"
+      PRIVATE_MARK = " (private)"
 
       alias :raw_arguments :arguments
       alias :raw_return_value :return_value
 
       def method_name(options = {})
-        if is_private_call?
-          ":#{super(options)} (private)"
-        else
-          ":#{super(options)}"
-        end
+        name = ":#{super(options)}"
+
+        name += " [#{tag}]" if tag
+        name += PRIVATE_MARK if is_private_call?
+
+        name
       end
 
       def arguments(options = {})

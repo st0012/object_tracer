@@ -25,6 +25,7 @@ RSpec.describe TappingDevice::Payload do
         :line_number,
         :defined_class,
         :trace,
+        :tag,
         :tp,
         :is_private_call?
       ]
