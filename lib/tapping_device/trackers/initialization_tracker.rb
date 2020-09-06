@@ -2,6 +2,8 @@
 class TappingDevice
   module Trackers
     class InitializationTracker < TappingDevice
+      extend T::Sig
+
       def initialize(options = {}, &block)
         super
         event_type = @options[:event_type]
@@ -10,12 +12,14 @@ class TappingDevice
         @options[:event_type] = [event_type, "c_#{event_type}"]
       end
 
+      sig{params(object: T.untyped).returns(TappingDevice)}
       def track(object)
         super
         @is_active_record_model = target.ancestors.include?(ActiveRecord::Base)
         self
       end
 
+      sig {params(tp: TracePoint, call_site: Types::CallSite).returns(Payload)}
       def build_payload(tp:, call_site:)
         payload = super
 
@@ -26,10 +30,12 @@ class TappingDevice
         payload
       end
 
+      sig{void}
       def validate_target!
         raise NotAClassError.new(target) unless target.is_a?(Class)
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def filter_condition_satisfied?(tp)
         receiver = tp.self
         method_name = tp.callee_id

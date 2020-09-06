@@ -2,18 +2,22 @@
 class TappingDevice
   module Trackers
     class MutationTracker < TappingDevice
+      extend T::Sig
+
       def initialize(options, &block)
         options[:hijack_attr_methods] = true
         super
         @snapshot_stack = []
       end
 
+      sig{params(object: T.untyped).returns(TappingDevice)}
       def track(object)
         super
         insert_snapshot_taking_trace_point
         self
       end
 
+      sig{void}
       def stop!
         super
         @ivar_snapshot_trace_point.disable
@@ -23,6 +27,7 @@ class TappingDevice
 
       # we need to snapshot instance variables at the beginning of every method call
       # so we can get a correct state for the later comparison
+      sig{void}
       def insert_snapshot_taking_trace_point
         @ivar_snapshot_trace_point = build_minimum_trace_point(event_type: :call) do
           snapshot_instance_variables
@@ -31,6 +36,7 @@ class TappingDevice
         @ivar_snapshot_trace_point.enable unless TappingDevice.suspend_new
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def filter_condition_satisfied?(tp)
         return false unless is_from_target?(tp)
 
@@ -44,6 +50,7 @@ class TappingDevice
         end
       end
 
+      sig {params(tp: TracePoint, call_site: Types::CallSite).returns(Payload)}
       def build_payload(tp:, call_site:)
         payload = super
 
@@ -54,6 +61,7 @@ class TappingDevice
         payload
       end
 
+      sig{returns(Hash)}
       def capture_ivar_changes
         changes = {}
 
@@ -86,10 +94,12 @@ class TappingDevice
         end
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def snapshot_capturing_event?(tp)
         tp.event == :call
       end
 
+      sig {params(tp: TracePoint).returns(T::Boolean)}
       def change_capturing_event?(tp)
         !snapshot_capturing_event?(tp)
       end

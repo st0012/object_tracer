@@ -78,6 +78,7 @@ class TappingDevice
     options[:descendants]
   end
 
+  sig{params(object: T.untyped).returns(TappingDevice)}
   def track(object)
     @target = object
     validate_target!
