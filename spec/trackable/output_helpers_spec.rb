@@ -4,6 +4,7 @@ require "contexts/order_creation"
 RSpec.describe TappingDevice::Trackable do
   let(:cart) { Cart.new }
   let(:service) { OrderCreationService.new }
+  let(:options) { { colorize: false } }
 
   shared_examples "output calls examples" do
     let(:expected_output) do
@@ -32,6 +33,37 @@ RSpec.describe TappingDevice::Trackable do
       tap_action
 
       expect { service.perform(cart) }.to produce_expected_output(expected_output)
+    end
+
+    context "with tag: option" do
+      let(:options) { { colorize: false, tag: "service" } }
+      let(:expected_output) do
+/:validate_cart \[service\] # OrderCreationService
+    from: .*:.*
+    <= {cart: #<Cart:.*>}
+    => #<Cart:.*>
+
+:apply_discount \[service\] # OrderCreationService
+    from: .*:.*
+    <= {cart: #<Cart:.*>}
+    => #<Cart:.*>
+
+:create_order \[service\] # OrderCreationService
+    from: .*:.*
+    <= {cart: #<Cart:.*>}
+    => #<Order:.*>
+
+:perform \[service\] # OrderCreationService
+    from: .*:.*
+    <= {cart: #<Cart:.*>}
+    => #<Order:.*>/
+      end
+
+      it "prints out target's calls in detail" do
+        tap_action
+
+        expect { service.perform(cart) }.to produce_expected_output(expected_output)
+      end
     end
 
     context "with '.with' chained" do
@@ -177,7 +209,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#print_calls" do
-      let(:tap_action) { print_calls(service, colorize: false) }
+      let(:tap_action) { print_calls(service, options) }
 
       include_context "order creation"
       it_behaves_like "output calls examples" do
@@ -192,7 +224,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#print_traces" do
-      let(:tap_action) { print_traces(cart, colorize: false) }
+      let(:tap_action) { print_traces(cart, options) }
 
       include_context "order creation"
       it_behaves_like "output traces examples" do
@@ -208,7 +240,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
 
     describe "#print_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:tap_action) { print_mutations(student, colorize: false) }
+      let(:tap_action) { print_mutations(student, options) }
 
       it_behaves_like "output mutations examples"
     end
@@ -220,14 +252,14 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#print_instance_calls" do
-      let(:tap_action) { print_instance_calls(OrderCreationService, colorize: false) }
+      let(:tap_action) { print_instance_calls(OrderCreationService, options) }
 
       include_context "order creation"
       it_behaves_like "output calls examples"
     end
 
     describe "#print_instance_traces" do
-      let(:tap_action) { print_instance_traces(Cart, colorize: false) }
+      let(:tap_action) { print_instance_traces(Cart, options) }
 
       include_context "order creation"
       it_behaves_like "output traces examples"
@@ -235,7 +267,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
 
     describe "#print_instance_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:tap_action) { print_instance_mutations(Student, colorize: false) }
+      let(:tap_action) { print_instance_mutations(Student, options) }
 
       it_behaves_like "output mutations examples"
     end
@@ -247,7 +279,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#write_calls" do
-      let(:tap_action) { write_calls(service, colorize: false) }
+      let(:tap_action) { write_calls(service, options) }
 
       include_context "order creation"
       it_behaves_like "output calls examples" do
@@ -262,7 +294,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#write_traces" do
-      let(:tap_action) { write_traces(cart, colorize: false) }
+      let(:tap_action) { write_traces(cart, options) }
 
       include_context "order creation"
       it_behaves_like "output traces examples" do
@@ -278,7 +310,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
 
     describe "#write_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:tap_action) { write_mutations(student, colorize: false) }
+      let(:tap_action) { write_mutations(student, options) }
 
       it_behaves_like "output mutations examples"
     end
@@ -294,7 +326,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     changes:
       @name: "Stan" => "Sean"/
 
-      write_mutations(student, log_file: log_file, colorize: false)
+      write_mutations(student, options.merge(log_file: log_file))
 
       expect { student.name = "Sean" }.to produce_expected_output(log_file, expected_output)
 
@@ -310,14 +342,14 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     describe "#write_instance_calls" do
-      let(:tap_action) { write_instance_calls(OrderCreationService, colorize: false) }
+      let(:tap_action) { write_instance_calls(OrderCreationService, options) }
 
       include_context "order creation"
       it_behaves_like "output calls examples"
     end
 
     describe "#write_instance_traces" do
-      let(:tap_action) { write_instance_traces(Cart, colorize: false) }
+      let(:tap_action) { write_instance_traces(Cart, options) }
 
       include_context "order creation"
       it_behaves_like "output traces examples"
@@ -325,7 +357,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
 
     describe "#write_instance_mutations" do
       let(:student) { Student.new("Stan", 26) }
-      let(:tap_action) { write_instance_mutations(Student, colorize: false) }
+      let(:tap_action) { write_instance_mutations(Student, options) }
 
       it_behaves_like "output mutations examples"
     end

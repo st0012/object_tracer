@@ -153,6 +153,7 @@ class TappingDevice
       defined_class: tp.defined_class,
       trace: get_traces(tp),
       is_private_call?: tp.defined_class.private_method_defined?(tp.callee_id),
+      tag: options[:tag],
       tp: tp
     })
   end
