@@ -2,6 +2,7 @@
 class TappingDevice
   module Output
     class FileWriter < Writer
+      sig {params(options: Hash, output_block: Proc).void}
       def initialize(options, output_block)
         @path = options[:log_file]
 
@@ -10,6 +11,7 @@ class TappingDevice
         super
       end
 
+      sig {params(payload: TappingDevice::Payload).void}
       def write!(payload)
         output = generate_output(payload)
 
