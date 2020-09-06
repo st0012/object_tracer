@@ -35,6 +35,7 @@ class TappingDevice
   include Configurable
   include Output::Helpers
 
+  sig{params(options: Hash, block: T.nilable(Proc)).void}
   def initialize(options = {}, &block)
     @block = block
     @output_block = nil
@@ -45,23 +46,28 @@ class TappingDevice
     TappingDevice.devices << self
   end
 
+  sig{params(block: T.nilable(Proc)).void}
   def with(&block)
     @with_condition = block
   end
 
+  sig{params(block: T.nilable(Proc)).void}
   def set_block(&block)
     @block = block
   end
 
+  sig{void}
   def stop!
     @disabled = true
     TappingDevice.delete_device(self)
   end
 
+  sig{params(block: T.nilable(Proc)).void}
   def stop_when(&block)
     @stop_when = block
   end
 
+  sig{returns(TappingDevice)}
   def create_child_device
     new_device = self.class.new(@options.merge(root_device: root_device), &@block)
     new_device.stop_when(&@stop_when)
@@ -70,10 +76,12 @@ class TappingDevice
     new_device
   end
 
+  sig{returns(TappingDevice)}
   def root_device
     options[:root_device]
   end
 
+  sig{returns(T::Array[TappingDevice])}
   def descendants
     options[:descendants]
   end
@@ -117,8 +125,10 @@ class TappingDevice
     end
   end
 
+  sig{void}
   def validate_target!; end
 
+  sig {params(tp: TracePoint).returns(T::Boolean)}
   def filter_condition_satisfied?(tp)
     false
   end
@@ -203,6 +213,7 @@ class TappingDevice
     end
   end
 
+  sig {params(tp: TracePoint).returns(T::Hash[Symbol, T.untyped])}
   def collect_arguments(tp)
     parameters =
       if RUBY_VERSION.to_f >= 2.6
@@ -216,6 +227,7 @@ class TappingDevice
     end
   end
 
+  sig {params(options: T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped])}
   def process_options(options)
     options[:filter_by_paths] ||= config[:filter_by_paths]
     options[:exclude_by_paths] ||= config[:exclude_by_paths]
