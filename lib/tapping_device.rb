@@ -37,12 +37,12 @@ class TappingDevice
 
   sig{params(options: Hash, block: T.nilable(Proc)).void}
   def initialize(options = {}, &block)
-    @block = block
-    @output_block = nil
-    @options = process_options(options.dup)
-    @calls = []
-    @disabled = false
-    @with_condition = nil
+    @block = T.let(block, T.nilable(Proc))
+    @output_block = T.let(nil, T.nilable(Proc))
+    @options = T.let(process_options(options.dup), T::Hash[Symbol, T.untyped])
+    @calls = T.let([], T::Array[Payload])
+    @disabled = T.let(false, T::Boolean)
+    @with_condition = T.let(nil, T.nilable(Proc))
     TappingDevice.devices << self
   end
 
