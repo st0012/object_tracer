@@ -29,7 +29,7 @@ class TappingDevice
       # so we can get a correct state for the later comparison
       sig{void}
       def insert_snapshot_taking_trace_point
-        @ivar_snapshot_trace_point = build_minimum_trace_point(event_type: :call) do
+        @ivar_snapshot_trace_point = build_minimum_trace_point([:call]) do
           snapshot_instance_variables
         end
 

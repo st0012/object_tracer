@@ -93,7 +93,7 @@ class TappingDevice
 
     MethodHijacker.new(@target).hijack_methods! if options[:hijack_attr_methods]
 
-    @trace_point = build_minimum_trace_point(event_type: options[:event_type]) do |payload|
+    @trace_point = build_minimum_trace_point(Array(options[:event_type])) do |payload|
       record_call!(payload)
 
       stop_if_condition_fulfilled!(payload)
@@ -106,8 +106,11 @@ class TappingDevice
 
   private
 
-  def build_minimum_trace_point(event_type:)
-    TracePoint.new(*event_type) do |tp|
+  sig{params(event_types: T::Array[Symbol]).returns(TracePoint)}
+  def build_minimum_trace_point(event_types)
+    # sorbet doesn't accept splat arguments
+    # see https://sorbet.org/docs/error-reference#7019
+    T.unsafe(TracePoint).new(*event_types) do |tp|
       next unless filter_condition_satisfied?(tp)
 
       call_site = get_call_location(tp)
