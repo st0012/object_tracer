@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tapping_device (0.5.6)
+    tapping_device (0.5.7)
       activerecord (>= 5.2)
       activesupport
       pastel
