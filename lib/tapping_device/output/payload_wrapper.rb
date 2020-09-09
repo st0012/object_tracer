@@ -2,18 +2,38 @@ require "pastel"
 
 class TappingDevice
   module Output
-    class Payload < Payload
+    class PayloadWrapper
       UNDEFINED = "[undefined]"
       PRIVATE_MARK = " (private)"
 
       PASTEL = Pastel.new
       PASTEL.alias_color(:orange, :bright_red, :bright_yellow)
 
+      TappingDevice::Payload::ATTRS.each do |attr|
+        define_method attr do |options = {}|
+          @payload.send(attr)
+        end
+      end
+
+      alias :is_private_call? :is_private_call
+
+      def method_head
+        @payload.method_head
+      end
+
+      def location(options = {})
+        @payload.location(options)
+      end
+
       alias :raw_arguments :arguments
       alias :raw_return_value :return_value
 
+      def initialize(payload)
+        @payload = payload
+      end
+
       def method_name(options = {})
-        name = ":#{super(options)}"
+        name = ":#{@payload.method_name}"
 
         name += " [#{tag}]" if tag
         name += PRIVATE_MARK if is_private_call?
@@ -95,7 +115,7 @@ class TappingDevice
       end
 
       def ivar_changes(options = {})
-        super.map do |ivar, value_changes|
+        @payload.ivar_changes.map do |ivar, value_changes|
           before = generate_string_result(value_changes[:before], options[:inspect])
           after = generate_string_result(value_changes[:after], options[:inspect])
 
