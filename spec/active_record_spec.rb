@@ -1,6 +1,23 @@
 require "spec_helper"
 require "shared_examples/stoppable_examples"
 require "shared_examples/optionable_examples"
+require "database_cleaner"
+require "model"
+
+RSpec.configure do |config|
+  DatabaseCleaner.strategy = :truncation
+
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
+end
 
 RSpec.describe "ActiveRecord" do
   describe "#tap_init!" do

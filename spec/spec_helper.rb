@@ -2,10 +2,9 @@ require "tapping_device"
 require "tapping_device/trackable"
 require "bundler/setup"
 require "pry"
-require "model"
-require "database_cleaner"
 require "matchers/write_to_file_matcher"
 require 'simplecov'
+
 SimpleCov.start
 
 RSpec.configure do |config|
@@ -19,20 +18,52 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  DatabaseCleaner.strategy = :truncation
-
-  config.before(:suite) do
-    DatabaseCleaner.strategy = :transaction
-    DatabaseCleaner.clean_with(:truncation)
-  end
-
-  config.around(:each) do |example|
-    DatabaseCleaner.cleaning do
-      example.run
-    end
-  end
-
   config.after do
     TappingDevice.reset!
   end
 end
+
+class Student
+  attr_writer :name
+
+  def initialize(name, age)
+    @name = name
+    @age = age
+  end
+
+  def self.foo; end
+
+  def name
+    @name
+  end
+
+  def age
+    @age
+  end
+
+  def age=(age)
+    @age = age
+  end
+
+  def id=(id)
+    @id = id
+  end
+
+  def id
+    @id
+  end
+end
+
+class HighSchoolStudent < Student;end
+
+class School
+  def initialize(name)
+    @name = name
+  end
+
+  def name
+    @name
+  end
+end
+
+
