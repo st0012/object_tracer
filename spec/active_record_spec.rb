@@ -1,3 +1,5 @@
+return unless ENV["WITH_ACTIVE_RECORD"]
+
 require "spec_helper"
 require "shared_examples/stoppable_examples"
 require "shared_examples/optionable_examples"

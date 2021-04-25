@@ -3,6 +3,10 @@ require "spec_helper"
 RSpec.describe TappingDevice do
   include TappingDevice::Trackable
 
+  it "doesn't depend on ActiveRecord" do
+    expect(defined?(ActiveRecord)).to eq(nil)
+  end
+
   it "supports multiple tappings" do
     stan = Student.new("Stan", 18)
 
