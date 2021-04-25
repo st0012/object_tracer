@@ -34,15 +34,10 @@ RSpec.describe TappingDevice::Trackable do
     end
 
     it "prints out target's calls in detail" do
-      tap_action
-
-      expect { service.perform(cart) }.to produce_expected_output(expected_output)
-    end
-
-    it "prints out target's calls in detail" do
-      tap_action
-
-      expect { service.perform(cart) }.to produce_expected_output(expected_output)
+      expect do
+        tap_action
+        service.perform(cart)
+      end.to produce_expected_output(expected_output)
     end
 
     context "visual test" do
@@ -80,9 +75,10 @@ RSpec.describe TappingDevice::Trackable do
       end
 
       it "prints out target's calls in detail" do
-        tap_action
-
-        expect { service.perform(cart) }.to produce_expected_output(expected_output)
+        expect do
+          tap_action
+          service.perform(cart)
+        end.to produce_expected_output(expected_output)
       end
     end
 
@@ -94,11 +90,12 @@ RSpec.describe TappingDevice::Trackable do
     => #<Order:.*>/
       end
       it "only prints the calls that matches the with condition" do
-        tap_action.with do |payload|
-          payload.method_name.to_s.match?(/order/)
-        end
-
-        expect { service.perform(cart) }.to produce_expected_output(expected_output)
+        expect do
+          tap_action.with do |payload|
+            payload.method_name.to_s.match?(/order/)
+          end
+          service.perform(cart)
+        end.to produce_expected_output(expected_output)
       end
     end
   end
@@ -114,9 +111,10 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     end
 
     it "prints out what the target sees" do
-      tap_action
-
-      expect { service.perform(cart) }.to produce_expected_output(expected_output)
+      expect do
+        tap_action
+        service.perform(cart)
+      end.to produce_expected_output(expected_output)
     end
 
     context "when chained with .with" do
@@ -128,12 +126,13 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
       end
 
       it "filters output according to the condition" do
-        proxy = tap_action
-        proxy.with do |trace|
-          trace.arguments.keys.include?(:cart)
-        end
-
-        expect { service.perform(cart) }.to produce_expected_output(expected_output)
+        expect do
+          proxy = tap_action
+          proxy.with do |trace|
+            trace.arguments.keys.include?(:cart)
+          end
+          service.perform(cart)
+        end.to produce_expected_output(expected_output)
       end
     end
 
@@ -168,9 +167,10 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     changes:
       @name: "Stan" => "Sean"/
 
-      tap_action
-
-      expect { student.name = "Sean" }.to produce_expected_output(expected_output)
+      expect do
+        tap_action
+        student.name = "Sean"
+      end.to produce_expected_output(expected_output)
     end
 
     it "prints calls that define/undefine an object's instance variables" do
@@ -184,9 +184,9 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     changes:
       @id: 1 => \[undefined\].*/
 
-      tap_action
-
       expect do
+        tap_action
+
         student.id = 1
         student.remove_id
       end.to produce_expected_output(expected_output)
@@ -203,9 +203,9 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
     changes:
       @id: 1 => nil/
 
-      tap_action
-
       expect do
+        tap_action
+
         student.id = 1
         student.id = 1
         student.id = nil
@@ -225,11 +225,11 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
       @age: 26 => 0
       @id: 1 => 0/
 
-      tap_action
-
-      student.id = 1
-
-      expect { student.reset_data! }.to produce_expected_output(expected_output)
+      expect do
+        tap_action
+        student.id = 1
+        student.reset_data!
+      end.to produce_expected_output(expected_output)
     end
 
     context "visual test" do

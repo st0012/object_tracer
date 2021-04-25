@@ -58,11 +58,11 @@ RSpec.describe TappingDevice do
   describe "#and_print" do
     it "outputs payload with given payload method" do
       stan = Student.new("Stan", 18)
-      tap_on!(stan).and_print(:method_name_and_arguments)
 
       expect do
+        tap_on!(stan).and_print(:method_name_and_arguments)
         stan.name
-      end.to output(":name <= {}\n").to_stdout
+      end.to output(":name <= {}").to_stdout
     end
   end
 
