@@ -1,8 +1,9 @@
 class TappingDevice
   module Output
     class StdoutWriter < Writer
-      def write!(payload)
-        puts(generate_output(payload))
+      def initialize(options, output_block)
+        super
+        @logger = Logger.new($stdout)
       end
     end
   end

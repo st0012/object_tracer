@@ -7,7 +7,8 @@ class TappingDevice
       end
 
       def write!(payload)
-        raise NotImplementedError
+        output = generate_output(payload)
+        @logger << output
       end
 
       private

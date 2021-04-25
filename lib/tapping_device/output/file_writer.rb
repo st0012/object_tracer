@@ -3,18 +3,13 @@ class TappingDevice
     class FileWriter < Writer
       def initialize(options, output_block)
         @path = options[:log_file]
-
-        File.write(@path, "") # clean file
-
+        @logger = Logger.new(@path)
         super
       end
 
       def write!(payload)
         output = generate_output(payload)
-
-        File.open(@path, "a") do |f|
-          f << output
-        end
+        @logger << output
       end
     end
   end
