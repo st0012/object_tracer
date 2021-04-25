@@ -155,29 +155,4 @@ RSpec.describe "tap_on!" do
       end
     end
   end
-
-  context "when targets are ActiveRecord::Base instances" do
-    context "with track_as_records: true" do
-      it "tracks ActiveRecord::Base instances with their ids" do
-        post = Post.create!(title: "foo", content: "bar")
-
-        device = tap_on!(post, exclude_by_paths: [/gems/], track_as_records: true)
-
-        Post.last.title
-
-        expect(device.calls.count).to eq(1)
-      end
-    end
-    context "without track_as_records: true" do
-      it "treats the record like normal objects" do
-        post = Post.create!(title: "foo", content: "bar")
-
-        device = tap_on!(post, exclude_by_paths: [/gems/])
-
-        Post.last.title
-
-        expect(device.calls.count).to eq(0)
-      end
-    end
-  end
 end

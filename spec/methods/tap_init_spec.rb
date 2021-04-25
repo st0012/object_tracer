@@ -44,16 +44,6 @@ RSpec.describe "tap_init!" do
    expect(device.calls.first.receiver).to eq(Student)
   end
 
-  it "returns the instance object for ActiveRecord models" do
-   device = tap_init!(Post)
-
-   post = Post.new
-
-   expect(device.calls.count).to eq(1)
-   expect(device.calls.first.return_value).to eq(post)
-   expect(device.calls.first.receiver).to eq(Post)
-  end
-
   it "can track subclass's initialization as well" do
     device = tap_init!(HighSchoolStudent)
 
