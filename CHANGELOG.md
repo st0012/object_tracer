@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/st0012/tapping_device/tree/HEAD)
+## [v0.6.0](https://github.com/st0012/tapping_device/tree/v0.6.0) (2021-04-25)
 
-[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.7...HEAD)
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.7...v0.6.0)
 
 **Implemented enhancements:**
 
@@ -18,6 +18,10 @@
 ## [v0.5.7](https://github.com/st0012/tapping_device/tree/v0.5.7) (2020-09-09)
 
 [Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.6...v0.5.7)
+
+**Implemented enhancements:**
+
+- Use pastel in output payload [\#62](https://github.com/st0012/tapping_device/issues/62)
 
 **Closed issues:**
 
