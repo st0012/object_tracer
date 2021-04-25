@@ -11,7 +11,7 @@ class TappingDevice
 
       def track(object)
         super
-        @is_active_record_model = target.ancestors.include?(ActiveRecord::Base)
+        @is_active_record_model = defined?(ActiveRecord) && target.ancestors.include?(ActiveRecord::Base)
         self
       end
 

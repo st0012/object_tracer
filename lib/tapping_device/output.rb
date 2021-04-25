@@ -1,3 +1,4 @@
+require "logger"
 require "tapping_device/output/payload_wrapper"
 require "tapping_device/output/writer"
 

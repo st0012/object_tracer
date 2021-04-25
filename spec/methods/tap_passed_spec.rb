@@ -37,12 +37,12 @@ RSpec.describe "tap_passed!" do
 
     expect(device.calls.count).to eq(2)
 
-    call = device.calls.first
+    call = device.calls[0]
     expect(call.target).to eq(s)
     expect(call.method_name).to eq(:foo)
     expect(call.line_number).to eq(line_1.to_s)
 
-    call = device.calls.second
+    call = device.calls[1]
     expect(call.target).to eq(s)
     expect(call.method_name).to eq(:bar)
     expect(call.line_number).to eq(line_2.to_s)

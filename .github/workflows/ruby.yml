@@ -42,7 +42,9 @@ jobs:
         bundle install --jobs 4 --retry 3
 
     - name: Run test with Rails ${{ matrix.rails_version }}
-      run: bundle exec rake
+      env:
+        RAILS_VERSION: ${{ matrix.rails_version }}
+      run: make test
 
     - name: Publish Test Coverage
       uses: paambaati/codeclimate-action@v2.6.0
