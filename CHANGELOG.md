@@ -1,5 +1,72 @@
 # Changelog
 
+## [Unreleased](https://github.com/st0012/tapping_device/tree/HEAD)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.7...HEAD)
+
+**Implemented enhancements:**
+
+- Support Ruby 3.0 [\#71](https://github.com/st0012/tapping_device/pull/71) ([st0012](https://github.com/st0012))
+
+**Merged pull requests:**
+
+- Drop activerecord requirement [\#73](https://github.com/st0012/tapping_device/pull/73) ([st0012](https://github.com/st0012))
+- Improve file-writing tests [\#72](https://github.com/st0012/tapping_device/pull/72) ([st0012](https://github.com/st0012))
+- Simplify output logic with Ruby' Logger class [\#70](https://github.com/st0012/tapping_device/pull/70) ([st0012](https://github.com/st0012))
+- Refactor Payload classes [\#68](https://github.com/st0012/tapping_device/pull/68) ([st0012](https://github.com/st0012))
+
+## [v0.5.7](https://github.com/st0012/tapping_device/tree/v0.5.7) (2020-09-09)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.6...v0.5.7)
+
+**Closed issues:**
+
+- Support tag option [\#64](https://github.com/st0012/tapping_device/issues/64)
+
+**Merged pull requests:**
+
+- Use pastel to replace handmade colorizing logic [\#66](https://github.com/st0012/tapping_device/pull/66) ([st0012](https://github.com/st0012))
+- Add tag option [\#65](https://github.com/st0012/tapping_device/pull/65) ([st0012](https://github.com/st0012))
+
+## [v0.5.6](https://github.com/st0012/tapping_device/tree/v0.5.6) (2020-07-17)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.5...v0.5.6)
+
+## [v0.5.5](https://github.com/st0012/tapping_device/tree/v0.5.5) (2020-07-16)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.4...v0.5.5)
+
+**Fixed bugs:**
+
+- InitializationTracker's logic can cause error [\#60](https://github.com/st0012/tapping_device/issues/60)
+
+**Closed issues:**
+
+- Refactor get\_method\_from\_object [\#59](https://github.com/st0012/tapping_device/issues/59)
+
+**Merged pull requests:**
+
+- Fix init tracker [\#61](https://github.com/st0012/tapping_device/pull/61) ([st0012](https://github.com/st0012))
+
+## [v0.5.4](https://github.com/st0012/tapping_device/tree/v0.5.4) (2020-07-05)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.3...v0.5.4)
+
+**Closed issues:**
+
+- Add with\_print\_calls method [\#52](https://github.com/st0012/tapping_device/issues/52)
+- Tapping any instance of class [\#51](https://github.com/st0012/tapping_device/issues/51)
+- Add ignore\_private option [\#50](https://github.com/st0012/tapping_device/issues/50)
+
+**Merged pull requests:**
+
+- Restructure README.md [\#58](https://github.com/st0012/tapping_device/pull/58) ([st0012](https://github.com/st0012))
+- Better support on private methods [\#57](https://github.com/st0012/tapping_device/pull/57) ([st0012](https://github.com/st0012))
+- Add with\_\* helpers \(e.g. with\_print\_calls\) [\#56](https://github.com/st0012/tapping_device/pull/56) ([st0012](https://github.com/st0012))
+- Add force\_recording option for debugging [\#55](https://github.com/st0012/tapping_device/pull/55) ([st0012](https://github.com/st0012))
+- Add print\_instance\_\* and write\_instance\_\* helpers [\#54](https://github.com/st0012/tapping_device/pull/54) ([st0012](https://github.com/st0012))
+- Fix tap\_init by adding c\_\* event type [\#53](https://github.com/st0012/tapping_device/pull/53) ([st0012](https://github.com/st0012))
+
 ## [v0.5.3](https://github.com/st0012/tapping_device/tree/v0.5.3) (2020-06-21)
 
 [Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.2...v0.5.3)
