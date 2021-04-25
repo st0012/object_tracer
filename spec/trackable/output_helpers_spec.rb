@@ -6,6 +6,10 @@ RSpec.describe TappingDevice::Trackable do
   let(:service) { OrderCreationService.new }
   let(:options) { { colorize: false } }
 
+  after do
+    File.delete("/tmp/tapping_device.log") if File.exist?("/tmp/tapping_device.log")
+  end
+
   shared_examples "output calls examples" do
     let(:expected_output) do
 /:validate_cart # OrderCreationService
