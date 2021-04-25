@@ -20,10 +20,14 @@ class TappingDevice
 
     def is_writer_method?(method_name)
       has_definition_source?(method_name) && method_name.match?(/\w+=/) && target.method(method_name).source.match?(/attr_writer|attr_accessor/)
+    rescue MethodSource::SourceNotFoundError
+      false
     end
 
     def is_reader_method?(method_name)
       has_definition_source?(method_name) && target.method(method_name).source.match?(/attr_reader|attr_accessor/)
+    rescue MethodSource::SourceNotFoundError
+      false
     end
 
     def has_definition_source?(method_name)
