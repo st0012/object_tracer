@@ -20,7 +20,7 @@ class TappingDevice
 
       def and_output(payload_method = nil, options: {}, logger:, &block)
         output_block = generate_output_block(payload_method, block)
-        @output_writer = Writer.new(options, output_block, logger: logger)
+        @output_writer = Writer.new(options: options, output_block: output_block, logger: logger)
         self
       end
 

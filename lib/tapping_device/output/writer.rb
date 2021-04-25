@@ -1,7 +1,7 @@
 class TappingDevice
   module Output
     class Writer
-      def initialize(options, output_block, logger:)
+      def initialize(options:, output_block:, logger:)
         @options = options
         @output_block = output_block
         @logger = logger
