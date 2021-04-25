@@ -26,12 +26,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  if ENV["RAILS_VERSION"]
-    spec.add_dependency "activerecord", "~> #{ENV["RAILS_VERSION"]}"
-  else
-    spec.add_dependency "activerecord", ">= 5.2"
-  end
-
   spec.add_dependency "pry" # for using Method#source in MutationTracker
   spec.add_dependency "activesupport"
   spec.add_dependency "pastel"

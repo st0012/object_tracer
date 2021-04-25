@@ -1,4 +1,3 @@
-require "active_record"
 require "active_support/core_ext/module/introspection"
 require "pry" # for using Method#source
 
