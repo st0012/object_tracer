@@ -1,7 +1,7 @@
 require "tapping_device"
 require "tapping_device/trackable"
 require "bundler/setup"
-require "pry"
+# require "pry"
 require "matchers/write_to_file_matcher"
 require 'simplecov'
 

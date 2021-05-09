@@ -1,5 +1,5 @@
 require "active_support/core_ext/module/introspection"
-require "pry" # for using Method#source
+require "method_source" # for using Method#source
 
 require "tapping_device/version"
 require "tapping_device/manageable"
