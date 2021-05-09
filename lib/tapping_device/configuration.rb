@@ -1,10 +1,5 @@
-require "active_support/configurable"
-require "active_support/concern"
-
 class TappingDevice
-  module Configurable
-    extend ActiveSupport::Concern
-
+  class Configuration
     DEFAULTS = {
       filter_by_paths: [],
       exclude_by_paths: [],
@@ -16,12 +11,24 @@ class TappingDevice
       only_private: false
     }.merge(TappingDevice::Output::DEFAULT_OPTIONS)
 
-    included do
-      include ActiveSupport::Configurable
+    def initialize
+      @options = {}
 
       DEFAULTS.each do |key, value|
-        config[key] = value
+        @options[key] = value
       end
     end
+
+    def [](key)
+      @options[key]
+    end
+
+    def []=(key, value)
+      @options[key] = value
+    end
+  end
+
+  def self.config
+    @config ||= Configuration.new
   end
 end
