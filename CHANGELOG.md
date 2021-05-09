@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.6.1](https://github.com/st0012/tapping_device/tree/v0.6.1) (2021-05-09)
+
+[Full Changelog](https://github.com/st0012/tapping_device/compare/v0.6.0...v0.6.1)
+
+**Fixed bugs:**
+
+- Fix issues with pastel [\#78](https://github.com/st0012/tapping_device/pull/78) ([st0012](https://github.com/st0012))
+
+**Merged pull requests:**
+
+- Drop activesupport [\#77](https://github.com/st0012/tapping_device/pull/77) ([st0012](https://github.com/st0012))
+- Implement Configuration class manually [\#76](https://github.com/st0012/tapping_device/pull/76) ([st0012](https://github.com/st0012))
+- Clean gemspec [\#75](https://github.com/st0012/tapping_device/pull/75) ([st0012](https://github.com/st0012))
+- Replace pry with method_source [\#74](https://github.com/st0012/tapping_device/pull/74) ([st0012](https://github.com/st0012))
+
 ## [v0.6.0](https://github.com/st0012/tapping_device/tree/v0.6.0) (2021-04-25)
 
 [Full Changelog](https://github.com/st0012/tapping_device/compare/v0.5.7...v0.6.0)
