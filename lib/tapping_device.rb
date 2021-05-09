@@ -1,5 +1,3 @@
-require "active_support/core_ext/module/introspection"
-require "active_support/core_ext/object/blank"
 require "method_source" # for using Method#source
 
 require "tapping_device/version"
@@ -119,8 +117,10 @@ class TappingDevice
 
   # this needs to be placed upfront so we can exclude noise before doing more work
   def should_be_skipped_by_paths?(filepath)
-    options[:exclude_by_paths].any? { |pattern| pattern.match?(filepath) } ||
-      (options[:filter_by_paths].present? && !options[:filter_by_paths].any? { |pattern| pattern.match?(filepath) })
+    exclude_by_paths = options[:exclude_by_paths]
+    filter_by_paths = options[:filter_by_paths]
+    exclude_by_paths.any? { |pattern| pattern.match?(filepath) } ||
+      (filter_by_paths && !filter_by_paths.empty? && !filter_by_paths.any? { |pattern| pattern.match?(filepath) })
   end
 
   def is_tapping_device_call?(tp)
@@ -136,7 +136,7 @@ class TappingDevice
   end
 
   def with_condition_satisfied?(payload)
-    @with_condition.blank? || @with_condition.call(payload)
+    @with_condition.nil? || @with_condition.call(payload)
   end
 
   def build_payload(tp:, filepath:, line_number:)
