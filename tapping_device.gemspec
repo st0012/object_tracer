@@ -25,5 +25,5 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "method_source", "~> 1.0.0"
-  spec.add_dependency "pastel"
+  spec.add_dependency "pastel", "~> 0.7"
 end
