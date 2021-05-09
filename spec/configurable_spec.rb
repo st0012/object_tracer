@@ -6,7 +6,7 @@ RSpec.describe TappingDevice do
   around do |example|
     example.run
 
-    TappingDevice::Configurable::DEFAULTS.each do |key, value|
+    TappingDevice::Configuration::DEFAULTS.each do |key, value|
       TappingDevice.config[key] = value
     end
   end

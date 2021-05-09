@@ -1,4 +1,5 @@
 require "active_support/core_ext/module/introspection"
+require "active_support/core_ext/object/blank"
 require "method_source" # for using Method#source
 
 require "tapping_device/version"
@@ -6,7 +7,7 @@ require "tapping_device/manageable"
 require "tapping_device/payload"
 require "tapping_device/output"
 require "tapping_device/trackable"
-require "tapping_device/configurable"
+require "tapping_device/configuration"
 require "tapping_device/exceptions"
 require "tapping_device/method_hijacker"
 require "tapping_device/trackers/initialization_tracker"
@@ -27,7 +28,6 @@ class TappingDevice
 
   extend Manageable
 
-  include Configurable
   include Output::Helpers
 
   def initialize(options = {}, &block)
