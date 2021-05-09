@@ -13,4 +13,9 @@ else
 end
 
 gem "activerecord", "~> #{rails_version}"
+
+gem "rake", "~> 13.0"
+gem "rspec", "~> 3.0"
+gem "simplecov", "~> 0.17.1"
+gem "database_cleaner", "~> 2.0.0"
 gem "pry"

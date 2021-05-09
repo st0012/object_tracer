@@ -29,10 +29,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "method_source", "~> 1.0.0"
   spec.add_dependency "activesupport"
   spec.add_dependency "pastel"
-
-  spec.add_development_dependency "database_cleaner"
-  spec.add_development_dependency "bundler", "~> 2.0"
-  spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "simplecov", "0.17.1"
 end
