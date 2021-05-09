@@ -65,7 +65,7 @@ class TappingDevice
 
         # regenerate attributes with `colorize: true` support
         define_method attribute do |options = {}|
-          call_result = send("original_#{attribute}", options)
+          call_result = send("original_#{attribute}", options).to_s
 
           if options[:colorize]
             PASTEL.send(color, call_result)
@@ -120,7 +120,7 @@ class TappingDevice
           after = generate_string_result(value_changes[:after], options[:inspect])
 
           if options[:colorize]
-            ivar = PASTEL.orange(ivar)
+            ivar = PASTEL.orange(ivar.to_s)
             before = PASTEL.bright_blue(before.to_s)
             after = PASTEL.bright_blue(after.to_s)
           end
