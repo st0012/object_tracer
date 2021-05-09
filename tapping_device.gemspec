@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "pry" # for using Method#source in MutationTracker
+  spec.add_dependency "method_source", "~> 1.0.0"
   spec.add_dependency "activesupport"
   spec.add_dependency "pastel"
 

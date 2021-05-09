@@ -13,3 +13,4 @@ else
 end
 
 gem "activerecord", "~> #{rails_version}"
+gem "pry"
