@@ -1,6 +1,6 @@
-class TappingDevice
+class ObjectTracer
   module Trackers
-    class InitializationTracker < TappingDevice
+    class InitializationTracker < ObjectTracer
       def initialize(options = {}, &block)
         super
         event_type = @options[:event_type]

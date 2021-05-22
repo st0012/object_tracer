@@ -1,8 +1,8 @@
 require "spec_helper"
 require 'benchmark'
 
-RSpec.describe TappingDevice do
-  include TappingDevice::Trackable
+RSpec.describe ObjectTracer do
+  include ObjectTracer::Trackable
 
   it "takes very short time even with multiple tapping enabled" do
     time = Benchmark.realtime do

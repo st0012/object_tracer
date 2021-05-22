@@ -1,6 +1,6 @@
-class TappingDevice
+class ObjectTracer
   module Trackers
-    class AssociactionCallTracker < TappingDevice
+    class AssociactionCallTracker < ObjectTracer
       def validate_target!
         raise NotAnActiveRecordInstanceError.new(target) unless target.is_a?(ActiveRecord::Base)
       end

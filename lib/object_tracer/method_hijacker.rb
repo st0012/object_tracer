@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   class MethodHijacker
     attr_reader :target
 

@@ -1,12 +1,12 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::Output::PayloadWrapper do
-  include TappingDevice::Trackable
+RSpec.describe ObjectTracer::Output::PayloadWrapper do
+  include ObjectTracer::Trackable
 
   let(:stan) { Student.new("Stan", 25) }
   let(:options) { {colorize: false} }
   subject do
-    payload = TappingDevice::Payload.new(
+    payload = ObjectTracer::Payload.new(
       method_name: :foo,
       defined_class: Student,
       arguments: [stan],

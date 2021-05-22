@@ -13,7 +13,7 @@ RSpec.describe "tap_init!" do
   it_behaves_like "optionable"
 
   it "raises error if the object is not a calss" do
-    expect { tap_init!(1) }.to raise_error(TappingDevice::NotAClassError)
+    expect { tap_init!(1) }.to raise_error(ObjectTracer::NotAClassError)
   end
 
   it "tracks class that doesn't define the initialize method (c_call or c_return)" do

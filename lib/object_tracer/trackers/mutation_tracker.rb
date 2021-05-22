@@ -1,6 +1,6 @@
-class TappingDevice
+class ObjectTracer
   module Trackers
-    class MutationTracker < TappingDevice
+    class MutationTracker < ObjectTracer
       def initialize(options, &block)
         options[:hijack_attr_methods] = true
         super
@@ -27,7 +27,7 @@ class TappingDevice
           snapshot_instance_variables
         end
 
-        @ivar_snapshot_trace_point.enable unless TappingDevice.suspend_new
+        @ivar_snapshot_trace_point.enable unless ObjectTracer.suspend_new
       end
 
       def filter_condition_satisfied?(tp)

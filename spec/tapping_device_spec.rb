@@ -1,7 +1,7 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice do
-  include TappingDevice::Trackable
+RSpec.describe ObjectTracer do
+  include ObjectTracer::Trackable
 
   it "doesn't depend on ActiveRecord" do
     expect(defined?(ActiveRecord)).to eq(nil)
