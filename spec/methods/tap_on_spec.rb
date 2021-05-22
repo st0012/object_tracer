@@ -40,7 +40,7 @@ RSpec.describe "tap_on!" do
     expect(call.method_name).to eq(:age)
     expect(call.return_value).to eq(18)
   end
-  it "doesn't track the calls from tapping_device" do
+  it "doesn't track the calls from object_tracer" do
     device = tap_on!(self)
     device.stop!
 

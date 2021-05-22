@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   class Payload
     ATTRS = [
       :target, :receiver, :method_name, :method_object, :arguments, :return_value, :filepath, :line_number,

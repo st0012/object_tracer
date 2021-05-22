@@ -1,6 +1,6 @@
 require "pastel"
 
-class TappingDevice
+class ObjectTracer
   module Output
     class PayloadWrapper
       UNDEFINED = "[undefined]"
@@ -9,7 +9,7 @@ class TappingDevice
       PASTEL = Pastel.new
       PASTEL.alias_color(:orange, :bright_red, :bright_yellow)
 
-      TappingDevice::Payload::ATTRS.each do |attr|
+      ObjectTracer::Payload::ATTRS.each do |attr|
         define_method attr do |options = {}|
           @payload.send(attr)
         end

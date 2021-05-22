@@ -1,20 +1,20 @@
-# TappingDevice
+# ObjectTracer (previously called TappingDevice)
 
-![GitHub Action](https://github.com/st0012/tapping_device/workflows/Ruby/badge.svg)
-[![Gem Version](https://badge.fury.io/rb/tapping_device.svg)](https://badge.fury.io/rb/tapping_device)
-[![Maintainability](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/maintainability)](https://codeclimate.com/github/st0012/tapping_device/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/test_coverage)](https://codeclimate.com/github/st0012/tapping_device/test_coverage)
-[![Open Source Helpers](https://www.codetriage.com/st0012/tapping_device/badges/users.svg)](https://www.codetriage.com/st0012/tapping_device)
+![GitHub Action](https://github.com/st0012/object_tracer/workflows/Ruby/badge.svg)
+[![Gem Version](https://badge.fury.io/rb/object_tracer.svg)](https://badge.fury.io/rb/object_tracer)
+[![Maintainability](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/maintainability)](https://codeclimate.com/github/st0012/object_tracer/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/3e3732a6983785bccdbd/test_coverage)](https://codeclimate.com/github/st0012/object_tracer/test_coverage)
+[![Open Source Helpers](https://www.codetriage.com/st0012/object_tracer/badges/users.svg)](https://www.codetriage.com/st0012/object_tracer)
 
 
 ## Introduction
-As the name states, `TappingDevice` allows you to secretly listen to different events of an object:
+As the name states, `ObjectTracer` allows you to secretly listen to different events of an object:
 
 - `Method Calls` - what does the object do
 - `Traces` - how is the object used by the application
 - `State Mutations` - what happens inside the object
 
-After collecting the events, `TappingDevice` will output them in a nice, readable format to either stdout or a file. 
+After collecting the events, `ObjectTracer` will output them in a nice, readable format to either stdout or a file. 
 
 **Ultimately, its goal is to let you know all the information you need for debugging with just 1 line of code.**
 
@@ -24,7 +24,7 @@ After collecting the events, `TappingDevice` will output them in a nice, readabl
 
 By tracking an object's method calls, you'll be able to observe the object's behavior very easily
 
-<img src="https://github.com/st0012/tapping_device/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
+<img src="https://github.com/st0012/object_tracer/blob/master/images/print_calls.png" alt="image of print_calls output" width="50%">
 
 Each entry consists of 5 pieces of information:
 - method name
@@ -33,13 +33,13 @@ Each entry consists of 5 pieces of information:
 - arguments
 - return value
 
-![explanation of individual entry](https://github.com/st0012/tapping_device/blob/master/images/print_calls%20-%20single%20entry.png)
+![explanation of individual entry](https://github.com/st0012/object_tracer/blob/master/images/print_calls%20-%20single%20entry.png)
 
 #### Helpers
 
 - `print_calls(object)` - prints the result to stdout
 - `write_calls(object, log_file: "file_name")` - writes the result to a file
-	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
+	- the default file is `/tmp/object_tracer.log`, but you can change it with `log_file: "new_path"` option
 
 #### Use Cases
 - Understand a service object/form object's behavior
@@ -49,13 +49,13 @@ Each entry consists of 5 pieces of information:
 
 By tracking an object's traces, you'll be able to observe the object's journey in your application
 
-![image of print_traces output](https://github.com/st0012/tapping_device/blob/master/images/print_traces.png)
+![image of print_traces output](https://github.com/st0012/object_tracer/blob/master/images/print_traces.png)
 
 #### Helpers
 
 - `print_traces(object)` - prints the result to stdout
 - `write_traces(object, log_file: "file_name")` - writes the result to a file
-	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
+	- the default file is `/tmp/object_tracer.log`, but you can change it with `log_file: "new_path"` option
 
 #### Use Cases
 - Debug argument related issues
@@ -65,13 +65,13 @@ By tracking an object's traces, you'll be able to observe the object's journey i
 
 By tracking an object's traces, you'll be able to observe the state changes happen inside the object between each method call
 
-<img src="https://github.com/st0012/tapping_device/blob/master/images/print_mutations.png" alt="image of print_mutations output" width="50%">
+<img src="https://github.com/st0012/object_tracer/blob/master/images/print_mutations.png" alt="image of print_mutations output" width="50%">
 
 #### Helpers
 
 - `print_mutations(object)` - prints the result to stdout
 - `write_mutations(object, log_file: "file_name")` - writes the result to a file
-	- the default file is `/tmp/tapping_device.log`, but you can change it with `log_file: "new_path"` option
+	- the default file is `/tmp/object_tracer.log`, but you can change it with `log_file: "new_path"` option
 
 #### Use Cases
 - Debug state related issues
@@ -105,7 +105,7 @@ print_calls(service, options)
 service.perform
 ```
 
-This kind of code changes are usually annoying, and that's one of the problems I want to solve with `TappingDevice`.
+This kind of code changes are usually annoying, and that's one of the problems I want to solve with `ObjectTracer`.
 
 So here's another option, just insert a `with_HELPER_NAME` call in between:
 
@@ -125,7 +125,7 @@ service.perform
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'tapping_device', group: :development
+gem 'object_tracer', group: :development
 ```
 
 And then execute:
@@ -137,10 +137,10 @@ $ bundle
 Or install it directly:
 
 ```
-$ gem install tapping_device
+$ gem install object_tracer
 ```
 
-**Depending on the size of your application, `TappingDevice` could harm the performance significantly.  So make sure you don't put it inside the production group**
+**Depending on the size of your application, `ObjectTracer` could harm the performance significantly.  So make sure you don't put it inside the production group**
 
 
 ## Advance Usages & Options 
@@ -161,7 +161,7 @@ end
 There are many options you can pass when using a helper method. You can list all available options and their default value with
 
 ```ruby
-TappingDevice::Configurable::DEFAULTS #=> {
+ObjectTracer::Configurable::DEFAULTS #=> {
   :filter_by_paths=>[], 
   :exclude_by_paths=>[], 
   :with_trace_to=>50, 
@@ -170,7 +170,7 @@ TappingDevice::Configurable::DEFAULTS #=> {
   :track_as_records=>false, 
   :inspect=>false, 
   :colorize=>true, 
-  :log_file=>"/tmp/tapping_device.log"
+  :log_file=>"/tmp/object_tracer.log"
 }
 ```
 
@@ -267,27 +267,27 @@ This option does the opposite of the `ignore_private` option does.
 If you don't want to pass options every time you use a helper, you can use global configuration to change the default values:
 
 ```ruby
-TappingDevice.config[:colorize] = false
-TappingDevice.config[:hijack_attr_methods] = true
+ObjectTracer.config[:colorize] = false
+ObjectTracer.config[:hijack_attr_methods] = true
 ```
 
-And if you're using Rails, you can put the configs under `config/initializers/tapping_device.rb` like this:
+And if you're using Rails, you can put the configs under `config/initializers/object_tracer.rb` like this:
 
 ```ruby
-if defined?(TappingDevice)
-  TappingDevice.config[:colorize] = false
-  TappingDevice.config[:hijack_attr_methods] = true
+if defined?(ObjectTracer)
+  ObjectTracer.config[:colorize] = false
+  ObjectTracer.config[:hijack_attr_methods] = true
 end
 ```
 
 
 ### Lower-Level Helpers
-`print_calls` and `print_traces` aren't the only helpers you can get from `TappingDevice`. They are actually built on top of other helpers, which you can use as well. To know more about them, please check [this page](https://github.com/st0012/tapping_device/wiki/Advance-Usages)
+`print_calls` and `print_traces` aren't the only helpers you can get from `ObjectTracer`. They are actually built on top of other helpers, which you can use as well. To know more about them, please check [this page](https://github.com/st0012/object_tracer/wiki/Advance-Usages)
 
 
 ### Related Blog Posts
-- [Optimize Your Debugging Process With Object-Oriented Tracing and tapping_device](http://bit.ly/object-oriented-tracing) 
-- [Debug Rails issues effectively with tapping_device](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
+- [Optimize Your Debugging Process With Object-Oriented Tracing and object_tracer](http://bit.ly/object-oriented-tracing) 
+- [Debug Rails issues effectively with object_tracer](https://dev.to/st0012/debug-rails-issues-effectively-with-tappingdevice-c7c)
 - [Want to know more about your Rails app? Tap on your objects!](https://dev.to/st0012/want-to-know-more-about-your-rails-app-tap-on-your-objects-bd3)
 
 
@@ -298,7 +298,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/st0012/tapping_device. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/st0012/object_tracer. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
@@ -306,5 +306,5 @@ The gem is available as open-source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the TappingDevice project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/tapping_device/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the ObjectTracer project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [code of conduct](https://github.com/st0012/object_tracer/blob/master/CODE_OF_CONDUCT.md).
 

@@ -1,23 +1,23 @@
-class TappingDevice
+class ObjectTracer
   module Trackable
     def tap_init!(object, options = {}, &block)
-      TappingDevice::Trackers::InitializationTracker.new(options, &block).track(object)
+      ObjectTracer::Trackers::InitializationTracker.new(options, &block).track(object)
     end
 
     def tap_passed!(object, options = {}, &block)
-      TappingDevice::Trackers::PassedTracker.new(options, &block).track(object)
+      ObjectTracer::Trackers::PassedTracker.new(options, &block).track(object)
     end
 
     def tap_assoc!(object, options = {}, &block)
-      TappingDevice::Trackers::AssociactionCallTracker.new(options, &block).track(object)
+      ObjectTracer::Trackers::AssociactionCallTracker.new(options, &block).track(object)
     end
 
     def tap_on!(object, options = {}, &block)
-      TappingDevice::Trackers::MethodCallTracker.new(options, &block).track(object)
+      ObjectTracer::Trackers::MethodCallTracker.new(options, &block).track(object)
     end
 
     def tap_mutation!(object, options = {}, &block)
-      TappingDevice::Trackers::MutationTracker.new(options, &block).track(object)
+      ObjectTracer::Trackers::MutationTracker.new(options, &block).track(object)
     end
 
     [:calls, :traces, :mutations].each do |subject|
@@ -78,7 +78,7 @@ class TappingDevice
 
     def separate_options(options)
       output_options = Output::DEFAULT_OPTIONS.keys.each_with_object({}) do |key, hash|
-        hash[key] = options.fetch(key, TappingDevice.config[key])
+        hash[key] = options.fetch(key, ObjectTracer.config[key])
         options.delete(key)
       end
 
@@ -130,4 +130,4 @@ class TappingDevice
   end
 end
 
-include TappingDevice::Trackable
+include ObjectTracer::Trackable

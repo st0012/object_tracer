@@ -1,5 +1,5 @@
-require "tapping_device"
-require "tapping_device/trackable"
+require "object_tracer"
+require "object_tracer/trackable"
 require "bundler/setup"
 # require "pry"
 require "matchers/write_to_file_matcher"
@@ -19,7 +19,7 @@ RSpec.configure do |config|
   end
 
   config.after do
-    TappingDevice.reset!
+    ObjectTracer.reset!
   end
 end
 

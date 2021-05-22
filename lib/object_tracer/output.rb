@@ -1,13 +1,13 @@
 require "logger"
-require "tapping_device/output/payload_wrapper"
-require "tapping_device/output/writer"
+require "object_tracer/output/payload_wrapper"
+require "object_tracer/output/writer"
 
-class TappingDevice
+class ObjectTracer
   module Output
     DEFAULT_OPTIONS = {
       inspect: false,
       colorize: true,
-      log_file: "/tmp/tapping_device.log"
+      log_file: "/tmp/object_tracer.log"
     }
 
     module Helpers

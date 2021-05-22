@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::Trackable do
+RSpec.describe ObjectTracer::Trackable do
   describe "#tap_passed!" do
     def foo(obj)
       obj

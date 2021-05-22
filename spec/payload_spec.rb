@@ -1,7 +1,7 @@
 require "spec_helper"
 
-RSpec.describe TappingDevice::Payload do
-  include TappingDevice::Trackable
+RSpec.describe ObjectTracer::Payload do
+  include ObjectTracer::Trackable
 
   let(:stan) { Student.new("Stan", 25) }
   subject do

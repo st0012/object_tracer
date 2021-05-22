@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   class Configuration
     DEFAULTS = {
       filter_by_paths: [],
@@ -9,7 +9,7 @@ class TappingDevice
       track_as_records: false,
       ignore_private: false,
       only_private: false
-    }.merge(TappingDevice::Output::DEFAULT_OPTIONS)
+    }.merge(ObjectTracer::Output::DEFAULT_OPTIONS)
 
     def initialize
       @options = {}

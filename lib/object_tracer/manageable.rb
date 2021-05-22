@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   module Manageable
 
     def suspend_new

@@ -1,20 +1,20 @@
 require "method_source" # for using Method#source
 
-require "tapping_device/version"
-require "tapping_device/manageable"
-require "tapping_device/payload"
-require "tapping_device/output"
-require "tapping_device/trackable"
-require "tapping_device/configuration"
-require "tapping_device/exceptions"
-require "tapping_device/method_hijacker"
-require "tapping_device/trackers/initialization_tracker"
-require "tapping_device/trackers/passed_tracker"
-require "tapping_device/trackers/association_call_tracker"
-require "tapping_device/trackers/method_call_tracker"
-require "tapping_device/trackers/mutation_tracker"
+require "object_tracer/version"
+require "object_tracer/manageable"
+require "object_tracer/payload"
+require "object_tracer/output"
+require "object_tracer/trackable"
+require "object_tracer/configuration"
+require "object_tracer/exceptions"
+require "object_tracer/method_hijacker"
+require "object_tracer/trackers/initialization_tracker"
+require "object_tracer/trackers/passed_tracker"
+require "object_tracer/trackers/association_call_tracker"
+require "object_tracer/trackers/method_call_tracker"
+require "object_tracer/trackers/mutation_tracker"
 
-class TappingDevice
+class ObjectTracer
 
   CALLER_START_POINT = 3
   C_CALLER_START_POINT = 2
@@ -35,7 +35,7 @@ class TappingDevice
     @calls = []
     @disabled = false
     @with_condition = nil
-    TappingDevice.devices << self
+    ObjectTracer.devices << self
   end
 
   def with(&block)
@@ -48,7 +48,7 @@ class TappingDevice
 
   def stop!
     @disabled = true
-    TappingDevice.delete_device(self)
+    ObjectTracer.delete_device(self)
   end
 
   def stop_when(&block)
@@ -83,7 +83,7 @@ class TappingDevice
       stop_if_condition_fulfilled!(payload)
     end
 
-    @trace_point.enable unless TappingDevice.suspend_new
+    @trace_point.enable unless ObjectTracer.suspend_new
 
     self
   end
@@ -98,7 +98,7 @@ class TappingDevice
       payload = build_payload(tp: tp, filepath: filepath, line_number: line_number)
 
       unless @options[:force_recording]
-        next if is_tapping_device_call?(tp)
+        next if is_object_tracer_call?(tp)
         next if should_be_skipped_by_paths?(filepath)
         next unless with_condition_satisfied?(payload)
         next if payload.is_private_call? && @options[:ignore_private]
@@ -123,15 +123,15 @@ class TappingDevice
       (filter_by_paths && !filter_by_paths.empty? && !filter_by_paths.any? { |pattern| pattern.match?(filepath) })
   end
 
-  def is_tapping_device_call?(tp)
-    if tp.defined_class == TappingDevice::Trackable || tp.defined_class == TappingDevice
+  def is_object_tracer_call?(tp)
+    if tp.defined_class == ObjectTracer::Trackable || tp.defined_class == ObjectTracer
       return true
     end
 
     if Module.respond_to?(:module_parents)
-      tp.defined_class.module_parents.include?(TappingDevice)
+      tp.defined_class.module_parents.include?(ObjectTracer)
     elsif Module.respond_to?(:parents)
-      tp.defined_class.parents.include?(TappingDevice)
+      tp.defined_class.parents.include?(ObjectTracer)
     end
   end
 
@@ -253,6 +253,6 @@ class TappingDevice
   end
 
   def config
-    TappingDevice.config
+    ObjectTracer.config
   end
 end

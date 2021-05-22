@@ -1,13 +1,13 @@
 require "spec_helper"
 require "contexts/order_creation"
 
-RSpec.describe TappingDevice::Trackable do
+RSpec.describe ObjectTracer::Trackable do
   let(:cart) { Cart.new }
   let(:service) { OrderCreationService.new }
   let(:options) { { colorize: false } }
 
   after do
-    File.delete("/tmp/tapping_device.log") if File.exist?("/tmp/tapping_device.log")
+    File.delete("/tmp/object_tracer.log") if File.exist?("/tmp/object_tracer.log")
   end
 
   shared_examples "output calls examples" do
@@ -357,7 +357,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
       it_behaves_like "output mutations examples"
     end
 
-    let(:output_log_file) { "/tmp/tapping_device.log" }
+    let(:output_log_file) { "/tmp/object_tracer.log" }
 
     it "writes to designated file if log_file is provided" do
       student = Student.new("Stan", 26)
@@ -377,7 +377,7 @@ Passed as :cart in 'OrderCreationService#:create_order' at .*:\d+/
   end
 
   describe "write_instance_* helpers" do
-    let(:output_log_file) { "/tmp/tapping_device.log" }
+    let(:output_log_file) { "/tmp/object_tracer.log" }
 
     def produce_expected_output(log_file = output_log_file, expected_output)
       write_to_file(log_file, expected_output)

@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   module Output
     class Writer
       def initialize(options:, output_block:, logger:)

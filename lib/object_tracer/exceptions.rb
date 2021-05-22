@@ -1,4 +1,4 @@
-class TappingDevice
+class ObjectTracer
   class Exception < StandardError
   end
 
