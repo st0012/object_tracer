@@ -20,8 +20,14 @@ class ObjectTracer
       ObjectTracer::Trackers::MutationTracker.new(options, &block).track(object)
     end
 
-    [:calls, :traces, :mutations].each do |subject|
-      [:print, :write].each do |output_action|
+    # each combination generates 3 methods: (uses action "print" and subject "call" as example)
+    #
+    # - #print_calls(object)
+    # - #with_print_calls
+    # - #print_instance_calls(klass)
+    #
+    [:print, :write].each do |output_action|
+      [:calls, :traces, :mutations].each do |subject|
         helper_method_name = "#{output_action}_#{subject}"
 
         define_method helper_method_name do |target, options = {}|
