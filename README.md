@@ -1,3 +1,6 @@
+> [!WARNING]
+> This gem has been deprecated in favor of [ruby/tracer](https://github.com/ruby/tracer)
+
 # ObjectTracer (previously called TappingDevice)
 
 ![GitHub Action](https://github.com/st0012/object_tracer/workflows/Ruby/badge.svg)
